@@ -52,10 +52,6 @@
     </a>
     <!-- Header Navbar: style can be found in header.less -->
     <nav class="navbar navbar-static-top">
-      <!-- Sidebar toggle button-->
-      <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
-        <span class="sr-only">Toggle navigation</span>
-      </a>
 
       <div class="navbar-custom-menu">
         <ul class="nav navbar-nav">
@@ -148,10 +144,6 @@
                 Dashboard
                 <small>Control panel</small>
               </h1>
-              <ol class="breadcrumb">
-                <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
-                <li class="active">Dashboard</li>
-              </ol>
             </section>
 
             <!-- Main content -->
@@ -182,7 +174,7 @@
                         <div class="inner">
                           <h4>全部数据</h4>
 
-                          <p>Bounce Rate</p>
+                          <p>All Data</p>
                         </div>
                         <div class="icon">
                           <i class="ion ion-stats-bars"></i>
@@ -199,7 +191,7 @@
                         <div class="inner">
                           <h4>传感器详情</h4>
 
-                          <p>User Registrations</p>
+                          <p>Sensor Details</p>
                         </div>
                         <div class="icon">
                           <i class="ion ion-clipboard"></i>
@@ -216,7 +208,7 @@
                         <div class="inner">
                           <h4>厚度曲线</h4>
 
-                          <p>Unique Visitors</p>
+                          <p>Thickness Chart</p>
                         </div>
                         <div class="icon">
                           <i class="ion ion-arrow-graph-up-right"></i>
@@ -234,9 +226,9 @@
                 <section class="col-lg-7 connectedSortable">
 
                   <!-- BAR CHART -->
-                  <div class="box box-success">
+                  <div class="box box-solid box-success">
                     <div class="box-header with-border">
-                      <h3 class="box-title">Bar Chart</h3>
+                      <h3 class="box-title">日报警量</h3>
 
                       <div class="box-tools pull-right">
                         <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
@@ -255,9 +247,9 @@
 
                   <div class="row">
                       <div class="col-xs-12">
-                          <div class="box">
+                          <div class="box box-solid box-success">
                             <div class="box-header">
-                              <h3 class="box-title">Hover Data Table</h3>
+                              <h3 class="box-title">最新数据</h3>
                               <div class="box-tools pull-right">
                                 <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
                                 </button>
@@ -300,62 +292,68 @@
 
                 <section class="col-lg-5 connectedSortable">
                     <!-- /.Rotation chart-->
-{#                      <div class="box box-solid">#}
-{#                        <div class="box-header with-border">#}
-{#                          <h3 class="box-title">Carousel</h3>#}
-{#                          <div class="box-tools pull-right">#}
-{#                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>#}
-{#                        </button>#}
-{#                        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>#}
-{#                      </div>#}
-{#                        </div>#}
-{#                        <!-- /.box-header -->#}
-{#                        <div class="box-body">#}
-{#                          <div id="carousel-example-generic" class="carousel slide" data-ride="carousel">#}
-{#                            <ol class="carousel-indicators">#}
-{#                              <li data-target="#carousel-example-generic" data-slide-to="0" class="active"></li>#}
-{#                              <li data-target="#carousel-example-generic" data-slide-to="1" class=""></li>#}
-{#                              <li data-target="#carousel-example-generic" data-slide-to="2" class=""></li>#}
-{#                            </ol>#}
-{#                            <div class="carousel-inner">#}
-{#                              <div class="item active">#}
-{#                                  <a href="http://www.orisonic.com/pd.jsp?id=14#_pp=8_513"><img src="/static/images/product/电磁超声探伤仪.png" alt="First slide"></a>#}
-{##}
-{#                                <div class="carousel-caption">#}
-{#                                  电磁超声探伤仪#}
-{#                                </div>#}
-{#                              </div>#}
-{#                              <div class="item">#}
-{#                                <a href="http://www.orisonic.com/pd.jsp?id=14#_pp=8_513"><img src="/static/images/product/电磁超声高温测厚仪.png" alt="First slide"></a>#}
-{##}
-{#                                <div class="carousel-caption">#}
-{#                                  电磁超声高温测厚仪#}
-{#                                </div>#}
-{#                              </div>#}
-{#                              <div class="item">#}
-{#                                <img src="http://placehold.it/900x500/f39c12/ffffff&text=I+Love+Bootstrap" alt="Third slide">#}
-{##}
-{#                                <div class="carousel-caption">#}
-{#                                  Third Slide#}
-{#                                </div>#}
-{#                              </div>#}
-{#                            </div>#}
-{#                            <a class="left carousel-control" href="#carousel-example-generic" data-slide="prev">#}
-{#                              <span class="fa fa-angle-left"></span>#}
-{#                            </a>#}
-{#                            <a class="right carousel-control" href="#carousel-example-generic" data-slide="next">#}
-{#                              <span class="fa fa-angle-right"></span>#}
-{#                            </a>#}
-{#                          </div>#}
-{#                        </div>#}
-{#                        <!-- /.box-body -->#}
-{#                      </div>#}
+
+                  <div class="box box-solid box-success">
+                        <div class="box-header with-border">
+                          <h3 class="box-title">公司产品</h3>
+                          <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                        </button>
+                        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                      </div>
+                        </div>
+                        <!-- /.box-header -->
+                        <div class="box-body">
+                          <div id="carousel-example-generic" class="carousel slide" data-ride="carousel">
+                            <ol class="carousel-indicators">
+                              <li data-target="#carousel-example-generic" data-slide-to="0" class="active"></li>
+                              <li data-target="#carousel-example-generic" data-slide-to="1" class=""></li>
+                              <li data-target="#carousel-example-generic" data-slide-to="2" class=""></li>
+                              <li data-target="#carousel-example-generic" data-slide-to="3" class=""></li>
+                            </ol>
+                            <div class="carousel-inner">
+                              <div class="item active">
+                                  <a href="http://www.orisonic.com/pd.jsp?id=14#_pp=8_513" target="_blank"><img src="/static/images/product/多功能电磁超声探伤仪.png" alt="First slide"></a>
+                                  <div class="carousel-caption">
+                                      多功能电磁超声探伤仪
+                                  </div>
+                              </div>
+                              <div class="item">
+                                <a href="http://www.orisonic.com/pd.jsp?id=10#_pp=8_513" target="_blank"><img src="/static/images/product/电磁超声高温测厚仪.png" alt="First slide"></a>
+                                <div class="carousel-caption">
+                                  电磁超声高温测厚仪
+                                </div>
+                              </div>
+                              <div class="item">
+                                <a href="http://www.orisonic.com/pd.jsp?id=15" target="_blank"><img src="/static/images/product/笔式电磁超声高温腐蚀检测仪.png" alt="First slide"></a>
+                                <div class="carousel-caption">
+                                  笔式电磁超声高温腐蚀检测仪
+                                </div>
+                              </div>
+                              <div class="item">
+                                <a href="http://www.orisonic.com/pd.jsp?id=11#_pp=8_513" target="_blank"><img src="/static/images/product/长距离磁致伸缩导波检测系统.png" alt="First slide"></a>
+                                <div class="carousel-caption">
+                                  长距离磁致伸缩导波检测系统
+                                </div>
+                              </div>
+                            </div>
+                            <a class="left carousel-control" href="#carousel-example-generic" data-slide="prev">
+                              <span class="fa fa-angle-left"></span>
+                            </a>
+                            <a class="right carousel-control" href="#carousel-example-generic" data-slide="next">
+                              <span class="fa fa-angle-right"></span>
+                            </a>
+                          </div>
+                        </div>
+                        <!-- /.box-body -->
+                      </div>
+
                     <!-- /.Rotation chart -->
 
                     <!-- introduce -->
-                      <div class="box box-success">
+                      <div class="box box-solid box-success">
                         <div class="box-header with-border">
-                          <h3 class="box-title">Title</h3>
+                          <h3 class="box-title">公司简介</h3>
                           <div class="box-tools pull-right">
                             <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip"
                                     title="Collapse">
