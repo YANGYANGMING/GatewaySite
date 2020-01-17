@@ -1,0 +1,249 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+
+{% block main_content %}
+
+    <!-- Main content -->
+    <section class="content">
+        <!-- models -->
+      <button type="button" class="btn btn-default" data-toggle="modal" data-target="#modal-default">
+        Launch Default Modal
+      </button>
+
+      <div class="modal fade" id="modal-default">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title"></h4>
+          </div>
+          <div class="modal-body">
+              <form class="form-horizontal">
+                <div class="box-body">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">名称：</label>
+                        <div class="col-sm-5">
+                            <input type="text" class="form-control" id="modal-alias" value="1号传感器" placeholder="1号传感器">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">传感器ID：</label>
+                        <div class="col-sm-5">
+                            <input type="text" class="form-control" id="modal-sensor-id"  value="" disabled>
+                        </div>
+                    </div>
+                  <label class="col-sm-4 control-label">周波数：&nbsp;&nbsp;</label>
+                  <div class="col-sm-5">
+                      <div class="form-group">
+                        <select class="form-control select2" id="modal-chz" style="width: 92%; margin-left: 10px;">
+                          <option></option>
+                            {% for cHz_item in context.cHz %}
+                                <option value="{{ cHz_item }}">{{ cHz_item }}</option>
+                            {% endfor %}
+                        </select>
+                      </div>
+                  </div>
+                    <label class="col-sm-4 control-label">增益：&nbsp;&nbsp;</label>
+                    <div class="col-sm-5">
+                      <div class="form-group">
+                        <select class="form-control select2" id="modal-gain" style="width: 92%; margin-left: 10px;">
+                          <option></option>
+                            {% for gain_item in context.gain %}
+                                <option value="{{ gain_item }}">{{ gain_item }}</option>
+                            {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <label class="col-sm-4 control-label">平均次数：&nbsp;&nbsp;</label>
+                    <div class="col-sm-5">
+                      <div class="form-group">
+                        <select class="form-control select2" id="modal-avg-time" style="width: 92%; margin-left: 10px;">
+                          <option></option>
+                            {% for avg_time_item in context.avg_time %}
+                                <option value="{{ avg_time_item }}">{{ avg_time_item }}</option>
+                            {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <label class="col-sm-4 control-label">频率：&nbsp;&nbsp;</label>
+                    <div class="col-sm-5">
+                      <div class="form-group">
+                        <select class="form-control select2" id="modal-hz" style="width: 92%; margin-left: 10px;">
+                          <option></option>
+                            {% for Hz_item in context.Hz %}
+                                <option value="{{ Hz_item }}">{{ Hz_item }}</option>
+                            {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <label class="col-sm-4 control-label">采样深度：&nbsp;&nbsp;</label>
+                    <div class="col-sm-5">
+                      <div class="form-group">
+                        <select class="form-control select2" id="modal-Sample-depth" style="width: 92%; margin-left: 10px;">
+                          <option></option>
+                            {% for Sample_depth_item in context.Sample_depth %}
+                                <option value="{{ Sample_depth_item }}">{{ Sample_depth_item }}</option>
+                            {% endfor %}
+                        </select>
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="col-sm-4 control-label">采样频率：</label>
+                      <div class="col-sm-5">
+                        <input type="text" class="form-control" id="modal-Sample-hz" value=""  placeholder="范围：200-5000">
+                      </div>
+                    </div>
+
+
+              </div>
+              </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default pull-left" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" id="save-param">保存</button>
+          </div>
+        </div>
+        <!-- /.modal-content -->
+      </div>
+      <!-- /.modal-dialog -->
+    </div>
+      <!-- /.modal -->
+
+      <!-- /.table -->
+      <div class="box">
+        <div class="box-header with-border">
+          <h3 class="box-title">全部数据</h3>
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-remove"></i></button>
+          </div>
+        </div>
+            <!-- /.box-header -->
+        <div class="box-body">
+          <div class="row">
+            <div class="col-xs-12" style="overflow-x: auto">
+                <table id="example1" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>名称</th>
+                            <th>ID</th>
+                            <th>周波数</th>
+                            <th>增益</th>
+                            <th>平均次数</th>
+                            <th>Hz</th>
+                            <th>采样深度</th>
+                            <th>采样频率</th>
+                            <th>下次运行时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in sensor_obj %}
+                            <tr>
+                                <td>{{ item.alias }}</td>
+                                <td><a href="" data-toggle="modal" data-target="#modal-default" onclick="ShowModel(this);"><i class="fa fa-pencil fa-fw"></i>{{ item.sensor_id }}</a></td>
+                                <td>{{ item.cHz }}</td>
+                                <td>{{ item.gain }}</td>
+                                <td>{{ item.avg_time }}</td>
+                                <td>{{ item.Hz }}</td>
+                                <td>{{ item.Sample_depth }}</td>
+                                <td>{{ item.Sample_Hz }}</td>
+                                <td>{{ item.next_run_time }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+          <!-- /.box-body -->
+          </div>
+        <!-- /.col -->
+        </div>
+        <!-- /.row -->
+      </div>
+      <!-- /.box -->
+
+    </section>
+    <!-- /.content -->
+
+
+{% endblock %}
+
+{% block script %}
+
+    <script>
+
+      $(function () {
+
+        $('#example1').DataTable();
+
+      });
+
+      // 显示模态框
+      function ShowModel(ths) {
+          var $cur_tr = $(ths).parent().parent();
+          var alias = $cur_tr.children().eq(0).text();
+          var sensor_id = $cur_tr.children().eq(1).text();
+          var cHz = $cur_tr.children().eq(2).text();
+          var gain = $cur_tr.children().eq(3).text();
+          var avg_time = $cur_tr.children().eq(4).text();
+          var Hz = $cur_tr.children().eq(5).text();
+          var Sample_depth = $cur_tr.children().eq(6).text();
+          var Sample_hz = $cur_tr.children().eq(7).text();
+
+          $(".modal-title").html(alias + "详细信息");
+          $("#modal-alias").val(alias);
+          $("#modal-sensor-id").val(sensor_id);
+          $("#modal-chz").val(cHz);
+          $("#modal-gain").val(gain);
+          $("#modal-avg-time").val(avg_time);
+          $("#modal-hz").val(Hz);
+          $("#modal-Sample-depth").val(Sample_depth);
+          $("#modal-Sample-hz").val(Sample_hz);
+
+          SaveModalParam();
+      }
+
+      function SaveModalParam() {
+          $('#save-param').click(function () {
+              var val_dict = {
+                  'alias': $("#modal-alias").val(),
+                  'sensor_id': $("#modal-sensor-id").val(),
+                  'cHz': $("#modal-chz").val(),
+                  'gain': $("#modal-gain").val(),
+                  'avg_time': $("#modal-avg-time").val(),
+                  'Hz': $("#modal-hz").val(),
+                  'Sample_depth': $("#modal-Sample-depth").val(),
+                  'Sample_Hz': $("#modal-Sample-hz").val()
+                };
+
+          $.ajax({
+               url: '/gateway/sensor-data-val-set',
+               type: 'POST',
+               data: {'val_dict': JSON.stringify(val_dict)},
+               dataType: 'JSON',
+               success: function (arg) {
+                   if(arg['status'] === true){
+                       window.location.reload();
+                   }else{
+                       $('#error-msg').text(arg.message);
+                        ClearMSG('error-msg');
+                   }
+               }
+            });
+          })
+      }
+
+      //清除提示信息
+        function ClearMSG(nid) {
+            setTimeout(function () {
+                $("#"+nid).text('')
+            }, 3000);
+        }
+
+
+
+
+    </script>
+
+{% endblock %}
+

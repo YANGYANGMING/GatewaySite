@@ -1,0 +1,731 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+
+{% block main_content %}
+
+    <!-- Main content -->
+    <section class="content">
+
+      <!-- SELECT2 EXAMPLE -->
+      <div class="box box-default">
+        <div class="box-header with-border">
+          <h3 class="box-title">选择时间设置模式</h3>
+
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-remove"></i></button>
+          </div>
+        </div>
+        <!-- /.box-header -->
+        <div class="box-body">
+          <!--/.row 模式选择 redio-->
+          <div class="row">
+            <div class="col-md-6 col-sm-8">
+              <div class="form-group">
+                  <label style="color: red;">
+                      选择模式：
+                  </label>
+                <label>
+                  <input type="radio" id="Cycle" name="group" class="flat-red">
+                    循环模式;
+                </label>
+                <label>
+                  <input type="radio" id="Timing" name="group" class="flat-red">
+                    定时模式
+                </label>
+              </div>
+              <!-- /.form-group -->
+            </div>
+            <!-- /.col -->
+          </div>
+          <!-- /.row 循环模式-->
+          <div class="row">
+            <div class="col-md-2">
+              <div class="form-group">
+                <label>循环模式：天数：</label>
+                <select class="form-control select2" name="days" id="days" style="width: 100%;" data-placeholder="天数">
+                  <option></option>
+                  {% for days_item in context.Day_interval %}
+                      <option value="{{ days_item }}">{{ days_item }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <!-- /.form-group -->
+            </div>
+            <!-- /.col -->
+            <div class="col-md-2">
+              <div class="form-group">
+                <label >循环模式：小时数：</label>
+{#                  <label class="col-sm-8 control-label">循环模式：小时数</label>#}
+                <select class="form-control select2" name="hours" id="hours" style="width: 100%;" data-placeholder="小时数">
+                  <option></option>
+                  {% for hours_item in context.Hour_interval %}
+                      <option value="{{ hours_item }}">{{ hours_item }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <!-- /.form-group -->
+           </div>
+            <!-- /.col -->
+            <div class="col-md-2">
+              <div class="form-group">
+                <label >循环模式：分钟数：</label>
+                <select class="form-control select2" name="mins" id="mins" style="width: 100%;" data-placeholder="分钟数">
+                  <option></option>
+                  {% for mins_item in context.Minute_interval %}
+                      <option value="{{ mins_item }}">{{ mins_item }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <!-- /.form-group -->
+           </div>
+            <!-- /.col -->
+          <div class="col-md-2">
+              <label></label>
+              <div class="layui-inline" style="margin-top: 8px">
+                  <span id="cycle-sub-msg" style="color: red; margin-left: 10px"></span>
+              </div>
+          </div>
+            <!-- /.col -->
+          </div>
+          <!-- /.row 定时模式-->
+          <div class="row">
+            <div class="col-md-2">
+              <div class="form-group">
+                <label>定时模式：周内天数：</label>
+                <select class="form-control select2" multiple="multiple" data-placeholder="周内天数"
+                       name="day_of_week" id="day_of_week" style="width: 100%;">
+                  {% for k, v in context.day_of_week_cron.items %}
+                      <option value="{{ v }}">{{ k }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <!-- /.form-group -->
+            </div>
+            <!-- /.col -->
+            <div class="col-md-2">
+              <div class="form-group">
+                <label>定时模式：月内天数：</label>
+                <select class="form-control select2" multiple="multiple" data-placeholder="月内天数"
+                       name="day" id="day" style="width: 100%;">
+                  {% for day_item in context.Day_cron %}
+                      <option value="{{ day_item }}">{{ day_item }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <!-- /.form-group -->
+            </div>
+            <!-- /.col -->
+            <div class="col-md-2">
+              <div class="form-group">
+                <label>定时模式：小时：</label>
+                <select class="form-control select2" multiple="multiple" data-placeholder="小时"
+                       name="hour" id="hour" style="width: 100%;">
+                  {% for hour_item in context.Hour_cron %}
+                      <option value="{{ hour_item }}">{{ hour_item }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <!-- /.form-group -->
+            </div>
+            <!-- /.col -->
+            <div class="col-md-2">
+              <div class="form-group">
+                <label>定时模式：分钟：</label>
+                <select class="form-control select2" multiple="multiple" data-placeholder="分钟"
+                       name="min" id="min" style="width: 100%;">
+                  {% for min_item in context.Minute_cron %}
+                      <option value="{{ min_item }}">{{ min_item }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <!-- /.form-group -->
+            </div>
+            <!-- /.col -->
+          <div class="col-md-2">
+              <label></label>
+              <div class="layui-inline" style="margin-top: 8px">
+                  <span id="timing-sub-msg" style="color: red; margin-left: 10px"></span>
+              </div>
+          </div>
+            <!-- /.col -->
+          </div>
+          <!-- /.row 状态-->
+          <div class="row">
+            <!-- /.col 状态信息-->
+            <div class="col-md-2">
+              <div class="form-group">
+                   <label>运行状态：</label>
+                    <i class="fa fa-circle icon-status" style="font-size: 20px; color: #8f8f8f"></i>
+                   <label id="run-status">已暂停</label>
+              </div>
+              <!-- /.form-group -->
+            </div>
+            <!-- /.col 按钮-->
+            <div class="col-md-2">
+              <div class="form-group">
+                  <button type="button" class="btn btn-block btn-success" onclick="SubSetting()">启动定时器</button>
+              </div>
+              <!-- /.form-group -->
+            </div>
+            <!-- /.col -->
+            <!-- /.col 按钮-->
+            <div class="col-md-1">
+              <div class="form-group">
+                  <button type="button" class="btn btn-block btn-warning" id="btn-status">暂停</button>
+              </div>
+              <!-- /.form-group -->
+            </div>
+            <!-- /.col -->
+            <!-- /.col 按钮-->
+            <div class="col-md-1">
+              <div class="form-group">
+                  <button type="button" class="btn btn-block btn-danger" onclick="ResetTime()">重置</button>
+              </div>
+              <!-- /.form-group -->
+            </div>
+            <!-- /.col -->
+          </div>
+          <!-- /.row 手动设置传感器-->
+          <div class="row">
+            <!-- left column -->
+            <div class="col-md-4">
+                <!-- form start -->
+                    <div class="form-group">
+                        <label>传感器：</label>
+                        <select class="form-control select2" id="selected-sensor-id" style="width: 50%; display: inline;" data-placeholder="传感器">
+                            <option></option>
+                            {% for sche_id, sche_alias in sche_job_id_dict.items %}
+                                <option value="{{ sche_id }}">{{ sche_alias }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary" id="refresh-data-manual" style="display: inline; margin-left: 20px">手动获取</button>
+
+                    </div>
+                  <!-- /.box-body -->
+              <!-- /.box -->
+            </div>
+            <div class="">
+                <label></label>
+                <div class="layui-inline">
+                    <span id="refresh-data-manual-msg" style="display: inline; color: red;"></span>
+                </div>
+            </div>
+        </div>
+          <!-- /.row -->
+        </div>
+      </div>
+      <!-- /.box -->
+
+      <!-- /.table -->
+      <div class="box">
+        <div class="box-header with-border">
+          <h3 class="box-title">最新数据</h3>
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-remove"></i></button>
+          </div>
+        </div>
+            <!-- /.box-header -->
+        <div class="box-body">
+          <div class="row">
+            <div class="col-xs-12" style="overflow-x: auto">
+                <table id="example1" class="table table-bordered table-striped">
+                    <thead>
+                            <tr>
+                                {% for item in origin_obj.list_display %}
+                                    <th>{{ item }}</th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                    <tbody>
+                        {% for row in latest_data %}
+                            <tr>
+                                <td>{{ row.id }}</td>
+                                <td>{{ row.sensor_id }}</td>
+                                <td>{{ row.battery }}</td>
+                                <td>{{ row.temperature }}</td>
+                                <td>{{ row.thickness }}</td>
+                                <td><a href="javascript:;" onclick="GetData(this);"><i class="fa fa-pencil"></i> 数据详情</a></td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+          <!-- /.box-body -->
+          </div>
+        <!-- /.col -->
+        </div>
+        <!-- /.row -->
+      </div>
+      <!-- /.box -->
+
+    <div class="box">
+        <div class="box-header with-border">
+          <h3 class="box-title">最新数据曲线图</h3>
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-remove"></i></button>
+          </div>
+        </div>
+            <!-- /.box-header -->
+
+        <div class="box-body">
+          <div class="row">
+            <!-- 曲线图 -->
+                <div id="container">
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /.col -->
+
+
+    </section>
+    <!-- /.content -->
+
+
+{% endblock %}
+
+{% block script %}
+
+    <script>
+      $(function () {
+        //Initialize Select2 Elements
+        $('.select2').select2();
+
+        //Flat red color scheme for iCheck
+        $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
+          checkboxClass: 'icheckbox_flat-green',
+          radioClass   : 'iradio_flat-green'
+        });
+
+        {#$('#example1').DataTable();#}
+
+        //刷新页面后显示原来的值
+        ShowOriginData();
+
+        //禁止定时/循环时间输入
+        ForbidInput();
+
+        //暂停、恢复时间
+        PauseTime();
+
+        //手动获取数据
+        RefreshDataManual();
+
+      });
+
+
+      //刷新页面保留上次数据
+    function ShowOriginData() {
+
+        //手动获取的id
+        var menu_id = "{{ latest_set_id.menu_get_id }}";
+        $('#selected-sensor-id').val([menu_id]).trigger("change");
+
+        //Timing-time
+        var day_of_week = "{{ latest_Timing_time.day_of_week }}";
+        day_of_week = day_of_week.split(',');
+        $('#day_of_week').val(day_of_week).trigger("change");
+        var day = "{{ latest_Timing_time.day }}";
+        day = day.split(',');
+        $('#day').select2("val", [day]);
+        var hour = "{{ latest_Timing_time.hour }}";
+        hour = hour.split(',');
+        $('#hour').select2("val", [hour]);
+        var min = "{{ latest_Timing_time.mins }}";
+        min = min.split(',');
+        $('#min').select2("val", [min]);
+
+        //Cycle-time
+        var days = "{{ latest_Cycle_time.day }}";
+        days = days.split(',');
+        $('#days').select2("val", [days]);
+        var hours = "{{ latest_Cycle_time.hour }}";
+        hours = hours.split(',');
+        $('#hours').select2("val", [hours]);
+        var mins = "{{ latest_Cycle_time.mins }}";
+        mins = mins.split(',');
+        $('#mins').select2("val", [mins]);
+
+        //time_status
+        if ({{ latest_time_status.timing_status }}) {
+            $('#Timing').iCheck('check');
+            OperationTiming();
+        }
+        if ({{ latest_time_status.cycle_status }}) {
+            $('#Cycle').iCheck('check');
+            OperationCycle();
+        }
+
+        $('#run-status').text('{{ latest_time_status.text_status }}');
+        $('#btn-status').text('{{ latest_time_status.button_status }}');
+        if('{{ latest_time_status.text_status }}'==='已暂停'){
+            $(".icon-status").css('color', '#8f8f8f');
+         }else{
+            $(".icon-status").css('color', '#3E8F03');
+         }
+        if('{{ latest_time_status.button_status }}'==='暂停'){
+            $("#btn-status").addClass('btn-warning');
+         }else{
+            $("#btn-status").removeClass('btn-warning');
+         }
+    }
+
+     //禁止定时/循环时间输入
+    function ForbidInput() {
+        // day 和 day_of_week 互斥，所以刷新页面的时候只允许输入day_of_week，选中模式后可自由选择day_of_week和day
+        $('#day').prop('disabled', true);
+        $('#Timing').on('ifChecked', function(){
+            OperationTiming();
+        });
+
+        $('#Cycle').on('ifChecked', function(){
+            OperationCycle();
+        });
+        }
+
+    //启动定时任务
+    function SubSetting() {
+        if($('#Timing').prop('checked')){
+            var day_of_week = $('#day_of_week').val();
+            var day = $('#day').val();
+            var hour = $('#hour').val();
+            var min = $('#min').val();
+            var TimingDateList = [day_of_week, day, hour, min];
+            $.ajax({
+                url:'/gateway/set-Timing-time',
+                type:'POST',
+                data:{'TimingDateList': TimingDateList},
+                traditional:true,
+                dataType:'JSON',
+                success:function (arg) {
+                    if(arg.status){
+                        console.log('Timing'+arg.message);
+                        $(".icon-status").css('color', '#3E8F03');
+                        $("#run-status").text('运行中...');
+                        $('#btn-status').text('暂停');
+                        SaveStatus();
+                    }
+                    $('#timing-sub-msg').text(arg.message);
+                    ClearMSG('timing-sub-msg');
+                }
+            })
+        }
+        if($('#Cycle').prop('checked')){
+            var days = $('#days').val();
+            var hours = $('#hours').val();
+            var mins = $('#mins').val();
+            var CycleDateList = [days, hours, mins];
+            console.log('CycleDateList', CycleDateList);
+            $.ajax({
+                url:'/gateway/set-cycle-time',
+                type:'POST',
+                data:{'CycleDateList': CycleDateList},
+                traditional:true,
+                dataType:'JSON',
+                success:function (arg) {
+                    if(arg.status){
+                        console.log('Cycle'+arg.message);
+                        $(".icon-status").css('color', '#3E8F03');
+                        $("#run-status").text('运行中...');
+                        $('#btn-status').text('暂停');
+                        SaveStatus();
+                    }
+                    $('#cycle-sub-msg').text(arg.message);
+                    ClearMSG('cycle-sub-msg');
+                }
+            })
+        }
+    }
+
+
+    //操作定时模式输入框
+      function OperationTiming() {
+          console.log('Timing', $('#Timing').prop('checked'));
+        // Cycle
+        $('#days').prop('disabled', true);
+        $('#hours').prop('disabled', true);
+        $('#mins').prop('disabled', true);
+        //Timing
+        $('#day_of_week').prop('disabled', false);
+        $('#day').prop('disabled', false);
+        $('#hour').prop('disabled', false);
+        $('#min').prop('disabled', false);
+        // day_of_week & day 互斥
+        $('#day_of_week').on('select2:select', function () {
+            // 选中触发的事件
+            if($('#day_of_week').val()){
+                $('#day').val(null).trigger("change").prop('disabled', true);
+            }
+        });
+        $('#day_of_week').on('select2:unselect', function () {
+            // 取消选中触发的事件
+            if($('#day_of_week').val().length === 0){
+                $('#day').prop('disabled', false);
+            }
+        });
+        $('#day').on('select2:select', function () {
+            // 选中触发的事件
+            if($('#day').val()){
+                $('#day_of_week').val(null).trigger("change").prop('disabled', true);
+            }
+        });
+        $('#day').on('select2:unselect', function () {
+            // 取消选中触发的事件
+            if($('#day').val().length === 0){
+                $('#day_of_week').prop('disabled', false);
+            }
+        });
+      }
+
+    // 操作循环模式输入框
+      function OperationCycle() {
+          console.log('Cycle', $('#Cycle').prop('checked'));
+        // Cycle
+        $('#days').prop('disabled', false);
+        $('#hours').prop('disabled', false);
+        $('#mins').prop('disabled', false);
+        //Timing
+        $('#day_of_week').prop('disabled', true);
+        $('#day').prop('disabled', true);
+        $('#hour').prop('disabled', true);
+        $('#min').prop('disabled', true);
+      }
+
+    //重置/清除
+    function ResetTime() {
+        if($('#Timing').prop('checked')){
+            $.ajax({
+                url: '/gateway/reset-Timing-time',
+                type:'POST',
+                dataType:'JSON',
+                success:function (arg) {
+                    if(arg.status){
+                        $(".icon-status").css('color', '#8f8f8f');
+                        $("#run-status").text('已暂停');
+                        $('#btn-status').text('暂停').addClass('btn-warning');
+                        SaveStatus();
+                        window.location.reload();
+                    }
+                }
+            })
+        }
+        if($('#Cycle').prop('checked')){
+            $.ajax({
+                url: '/gateway/reset-Cycle-time',
+                type:'POST',
+                dataType:'JSON',
+                success:function (arg) {
+                    if(arg.status){
+                        $(".icon-status").css('color', '#8f8f8f');
+                        $("#run-status").text('已暂停');
+                        $('#btn-status').text('暂停').addClass('btn-warning');
+                        window.location.reload();
+                        SaveStatus();
+                    }
+                }
+            })
+        }
+    }
+
+    //暂停、恢复
+    function PauseTime() {
+        $("#btn-status").click(function () {
+            if($('#Cycle').prop('checked')){
+                //暂停循环时间
+                var editing = $(this).hasClass('btn-warning');
+                var ths = this;
+                if(editing){
+                    $.ajax({
+                        url:'/gateway/pause-cycle-time',
+                        dataType:'JSON',
+                        success:function (arg) {
+                            if(arg.status){
+                                console.log(arg.message);
+                                $(ths).removeClass('btn-warning');
+                                $(ths).text('恢复');
+                                $(".icon-status").css('color', '#8f8f8f');
+                                $("#run-status").text('已暂停');
+                                SaveStatus();
+                            }
+                        }
+                   });
+                }else{
+                    //恢复循环时间
+                    $.ajax({
+                        url:'/gateway/resume-cycle-time',
+                        dataType:'JSON',
+                        success:function (arg) {
+                            if(arg.status){
+                                console.log(arg.message);
+                                $(ths).addClass('btn-warning');
+                                $(ths).text('暂停');
+                                $(".icon-status").css('color', '#3E8F03');
+                                $("#run-status").text('运行中...');
+                                SaveStatus();
+                            }
+                        }
+                   })
+                }
+            }
+            if($('#Timing').prop('checked')){
+                var editing = $(this).hasClass('btn-warning');
+                var ths = this;
+                if(editing){
+                    $.ajax({
+                        url:'/gateway/pause-Timing-time',
+                        dataType:'JSON',
+                        success:function (arg) {
+                            if(arg.status){
+                                console.log(arg.message);
+                                $(ths).removeClass('btn-warning');
+                                $(ths).text('恢复');
+                                $(".icon-status").css('color', '#8f8f8f');
+                                $("#run-status").text('已暂停');
+                                SaveStatus();
+                            }
+                        }
+                   })
+                }else{
+                    //恢复定时时间
+                    $.ajax({
+                        url:'/gateway/resume-Timing-time',
+                        dataType:'JSON',
+                        success:function (arg) {
+                            if(arg.status){
+                                console.log(arg.message);
+                                $(ths).addClass('btn-warning');
+                                $(ths).text('暂停');
+                                $(".icon-status").css('color', '#3E8F03');
+                                $("#run-status").text('运行中...');
+                                SaveStatus();
+                            }
+                        }
+                   })
+                }
+        }
+        })
+    }
+
+    //手动获取数据
+    function RefreshDataManual() {
+    $('#refresh-data-manual').click(function () {
+        var sensor_id = $('#selected-sensor-id').val();
+            $.ajax({
+                url:'/gateway/manual-get',
+                type:'POST',
+                data:{'sensor_id': sensor_id},
+                dataType:'JSON',
+                success:function (arg) {
+                    if(arg.status){
+                        $('#refresh-data-manual-msg').text(arg.message);
+                        ClearMSG('refresh-data-manual-msg');
+                        window.location.reload()
+                    }else{
+                        $('#refresh-data-manual-msg').text(arg.message);
+                        ClearMSG('refresh-data-manual-msg');
+                    }
+                }
+            })
+         })
+    }
+
+    //保存状态
+    function SaveStatus() {
+        var cycle_status = $('#Cycle').prop('checked');
+        var timing_status = $('#Timing').prop('checked');
+        var text_status = $('#run-status').text();
+        var button_status = $('#btn-status').text();
+        var data = {'cycle_status':cycle_status.toString(), 'timing_status':timing_status.toString(), 'text_status':text_status, 'button_status':button_status};
+        $.ajax({
+            url:'/gateway/save-status',
+            type:'POST',
+            data:{'data':JSON.stringify(data)},
+            dataType:'JSON',
+            traditional:true,
+            success:function (arg) {
+                console.log('save status'+arg.message)
+            }
+        })
+
+    }
+
+    //初始化heightchart
+     function GetData(ths) {
+            var config = {
+                chart: {
+                    type: 'spline',
+                    shadow: true,
+                    zoomType: 'x',
+                    panning: true,
+			        panKey: 'shift',
+                },
+                title: {
+                    text: null
+                },
+                xAxis: {
+                    type: 'linear'
+                },
+                yAxis: {
+                    endOnTick: false, //对数Y轴不强制结束于标线
+                    title: {
+                        text: '值'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#808080'
+                    }]
+                },
+                tooltip: {
+                    followTouchMove: true,
+                    formatter: function () {
+                        return '<b>' + this.series.name + '</b><br/>' +
+                                Highcharts.numberFormat(this.x) + '<br/>' +
+                                Highcharts.numberFormat(this.y, 2);
+                    }
+                },
+                legend: {
+                    enabled: false
+                },
+                exporting: {
+                    enabled: false
+                },
+                series: [
+                    {
+                        name: '',
+                        data: [
+                        ]
+                    },
+                ]
+            };
+            {#$('#container').highcharts(config);#}
+            // 数据库中获取 serie
+            var nid = $(ths).parent().parent().children().eq(0).text();
+            $.ajax({
+                url: '/gateway/data-json-report-'+nid,
+                type:'GET',
+                dataType: 'JSON',
+                success:function(arg){
+                    config['series'] = arg;
+                    config['title']['text'] = arg[0]['name'];
+                    $('#container').highcharts(config);
+                }
+             })
+        }
+
+    //清除提示信息
+    function ClearMSG(nid) {
+        setTimeout(function () {
+            $("#"+nid).text('')
+        }, 3000);
+    }
+
+
+
+    </script>
+
+{% endblock %}
+

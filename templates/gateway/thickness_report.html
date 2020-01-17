@@ -1,0 +1,144 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+
+{% block main_content %}
+
+    <!-- Main content -->
+    <section class="content">
+      <!-- BAR CHART -->
+      <div class="box box-success">
+        <div class="box-header with-border">
+          <h3 class="box-title">单个传感器厚度曲线</h3>
+
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+            </button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+          </div>
+        </div>
+        <!-- 曲线图 -->
+        <div class="box-body">
+            <div class="row">
+            <!-- left column -->
+            <div class="col-md-6">
+                    <div class="form-group">
+                        <label>传感器：</label>
+                        <select class="form-control select2" id="selected-sensor-id" style="width: 50%; display: inline;" data-placeholder="传感器">
+                            <option></option>
+                            {% for sche_id, sche_alias in sche_job_id_dict.items %}
+                                <option value="{{ sche_id }}">{{ sche_alias }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary" style="display: inline; margin-left: 20px" id="show-thickness">确定</button>
+                        <label id="show-thickness-msg" style="color: red;"></label>
+                    </div>
+                  <!-- /.box-body -->
+              <!-- /.box -->
+            </div>
+        </div>
+          <!-- /.row -->
+            <div id="container">
+            </div>
+        </div>
+        <!-- /.box-body -->
+      </div>
+      <!-- /.box -->
+
+    </section>
+    <!-- /.content -->
+
+
+{% endblock %}
+
+{% block script %}
+
+    <script>
+
+      $(function () {
+          ShowThickness();
+
+        //Initialize Select2 Elements
+        $('.select2').select2();
+
+      });
+
+        function ShowThickness() {
+            var config = {
+                chart: {
+                    type: 'spline',
+                    shadow: true,
+                    zoomType: 'x',
+                    panning: true,
+			        panKey: 'shift',
+                },
+                tooltip: {
+                    followTouchMove: true,
+                },
+                title: {
+                    text: null
+                },
+                xAxis: {
+                    type: 'linear'
+                },
+                yAxis: {
+                    endOnTick: false, //对数Y轴不强制结束于标线
+                    title: {
+                        text: '值'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#808080'
+                    }]
+                },
+                tooltip: {
+                    formatter: function () {
+                        return '<b>' + this.series.name + '</b><br/>' +
+                                Highcharts.numberFormat(this.x) + '<br/>' +
+                                Highcharts.numberFormat(this.y, 2);
+                    }
+                },
+                legend: {
+                    enabled: false
+                },
+                exporting: {
+                    enabled: true
+                },
+                series: [
+                    {
+                        name: '',
+                        data: [
+
+                        ]
+                    },
+                ]
+            };
+            $('#container').highcharts(config);
+            $('#show-thickness').click(function () {
+                var sensor_id = $('#selected-sensor-id').val();
+                $.ajax({
+                url: '/gateway/thickness-json-report',
+                type:'GET',
+                data:{'sensor_id': sensor_id},
+                dataType: 'JSON',
+                success:function(arg){
+                    config['series'] = arg;
+                    $('#container').highcharts(config);
+                    {#$('#thickness-header').text(arg[0]['name']);#}
+                    if(arg[0]['data'].length===0){
+                        $('#show-thickness-msg').text('当前传感器暂无数据！');
+                        setTimeout(function () {
+                            $("#show-thickness-msg").text('')
+                            }, 3000);
+                    }
+
+                }
+             })
+
+            })
+        }
+
+    </script>
+
+{% endblock %}
+

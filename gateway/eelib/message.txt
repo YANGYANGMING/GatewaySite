@@ -1,0 +1,31 @@
+
+i=0
+Test time: 2019-06-18 13:13:14
+
+i=0
+Test time: 2019-06-18 13:42:37
+
+i=0
+Test time: 2019-06-18 13:43:20
+
+i=0
+Test time: 2019-06-18 13:43:55
+
+i=0
+Test time: 2019-06-18 13:46:17
+
+i=0
+Test time: 2019-06-18 13:48:30
+
+i=0
+Test time: 2019-06-18 14:28:51
+
+i=0
+Test time: 2019-06-18 14:30:58
+
+i=0
+Test time: 2019-06-18 14:32:55
+post,return:
+{'result': {}, 'statusCode': 200, 'message': {'msgType': 'tsuccess', 'msg': 'success'}, 'elapsedTime': 9}
+i=1
+Test time: 2019-06-18 14:33:08

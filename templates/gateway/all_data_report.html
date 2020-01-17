@@ -1,0 +1,225 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+
+{% block main_content %}
+
+    <!-- Main content -->
+    <section class="content">
+      <!-- BAR CHART -->
+      <div class="box box-success">
+        <div class="box-header with-border">
+          <h3 class="box-title">数据波形图</h3>
+
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+            </button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+          </div>
+        </div>
+        <!-- 曲线图 -->
+        <div class="box-body">
+            <div id="container">
+            </div>
+        </div>
+        <!-- /.box-body -->
+      </div>
+      <!-- /.box -->
+
+      <!-- /.table -->
+      <div class="box">
+        <div class="box-header with-border">
+          <h3 class="box-title">全部数据</h3>
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-remove"></i></button>
+          </div>
+        </div>
+            <!-- /.box-header -->
+        <div class="box-body">
+          <div class="row">
+            <div class="col-xs-12" style="overflow-x: auto">
+                <table id="example1" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            {% for item in origin_obj.list_display %}
+                                <th>{{ item }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                            {% for row in data_obj %}
+                                <tr>
+                                    <td>{{ row.id }}</td>
+                                    <td>{{ row.sensor_id }}</td>
+                                    <td>{{ row.battery }}</td>
+                                    <td>{{ row.temperature }}</td>
+                                    <td>{{ row.thickness }}</td>
+                                    <td><a href="javascript:;" style="cursor: pointer;" onclick="GetData(this);"><i class="fa fa-pencil"></i> 数据详情</a></td>
+{#                                    <td><a href="javascript:;" style="cursor: pointer;" onclick="GetData(this);"><i class="fa fa-pencil"></i> 数据详情</a></td>#}
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                </table>
+            </div>
+          <!-- /.box-body -->
+          </div>
+        <!-- /.col -->
+        </div>
+        <!-- /.row -->
+      </div>
+      <!-- /.box -->
+
+    </section>
+    <!-- /.content -->
+
+
+{% endblock %}
+
+{% block script %}
+
+    <script>
+
+        $(function () {
+          initChart();
+
+        //Date range picker
+        $('#reservation').daterangepicker();
+
+        $('#example1').DataTable();
+
+
+        });
+
+        function initChart() {
+            var chart = Highcharts.chart('container',{
+                chart: {
+                    type: 'spline',
+                    shadow: true,
+                    zoomType: 'x',
+                    panning: true,
+                    panKey: 'shift',
+                },
+                tooltip: {
+                    followTouchMove: true,
+                },
+                title: {
+                    text: null
+                },
+                xAxis: {
+                    type: 'linear'
+                },
+                yAxis: {
+                    endOnTick: false, //对数Y轴不强制结束于标线
+                    title: {
+                        text: '值'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#808080'
+                    }]
+                },
+                tooltip: {
+                    formatter: function () {
+                        return '<b>' + this.series.name + '</b><br/>' +
+                                Highcharts.numberFormat(this.x) + '<br/>' +
+                                Highcharts.numberFormat(this.y, 2);
+                    }
+                },
+                legend: {
+                    enabled: false
+                },
+                exporting: {
+                    enabled: true
+                },
+                series: [
+                    {
+                        name: '',
+                        data: [
+                        ]
+                    },
+                ]
+            });
+
+            // 数据库中获取 serie
+            {#var nid = $('#latest-data-one').val();#}
+            {#$.ajax({#}
+            {#    url: '/gateway/data-json-report-'+nid,#}
+            {#    type:'GET',#}
+            {#    dataType: 'JSON',#}
+            {#    success:function(arg){#}
+            {#        config['series'] = arg;#}
+            {#        $('#container').highcharts(config);#}
+            {#        $('#title-header').text(arg[0]['name']);#}
+            {#    }#}
+            {# })#}
+        }
+
+        function GetData(ths) {
+            var config = {
+                chart: {
+                    type: 'spline',
+                    shadow: true,
+                    zoomType: 'x',
+                    panning: true,
+			        panKey: 'shift',
+                },
+                title: {
+                    text: null
+                },
+                xAxis: {
+                    type: 'linear'
+                },
+                yAxis: {
+                    endOnTick: false, //对数Y轴不强制结束于标线
+                    title: {
+                        text: '值'
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 1,
+                        color: '#808080'
+                    }]
+                },
+                tooltip: {
+                    followTouchMove: true,
+                    formatter: function () {
+                        return '<b>' + this.series.name + '</b><br/>' +
+                                Highcharts.numberFormat(this.x) + '<br/>' +
+                                Highcharts.numberFormat(this.y, 2);
+                    }
+                },
+                legend: {
+                    enabled: false
+                },
+                exporting: {
+                    enabled: false
+                },
+                series: [
+                    {
+                        name: '',
+                        data: [
+                        ]
+                    },
+                ]
+            };
+            {#$('#container').highcharts(config);#}
+            // 数据库中获取 serie
+            var nid = $(ths).parent().parent().children().eq(0).text();
+            $.ajax({
+                url: '/gateway/data-json-report-'+nid,
+                type:'GET',
+                dataType: 'JSON',
+                success:function(arg){
+                    config['series'] = arg;
+                    config['title']['text'] = arg[0]['name'];
+                    $('#container').highcharts(config);
+                }
+             })
+        }
+
+
+    </script>
+
+{% endblock %}
+
