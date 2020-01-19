@@ -10,7 +10,7 @@ from gateway import models
 #                             gain=60, battery=50, data_len=2048, thickness=10, data="122132", alias=obj
 #                              )
 # print(models.GWData.objects.values('alias__alias').first())
-snr_num = models.Sensor_data.objects.values('sensor_id').all()
-print(snr_num)
+# snr_num = models.Sensor_data.objects.values('sensor_id').all()
+# print(snr_num)
 
 

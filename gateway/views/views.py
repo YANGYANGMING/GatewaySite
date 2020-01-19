@@ -304,7 +304,6 @@ def config_time(request):
 
     # scheduler调度器中已经存在的定时任务的sensor_id列表
     sche_job_id_list, sche_job_time_list = job_id_list()
-    print('sche_job_id_list', sche_job_id_list)
     sche_job_id_dict = {}
     for item in sche_job_id_list:
         if item != "0000":

@@ -55,7 +55,6 @@
                                     <td>{{ row.temperature }}</td>
                                     <td>{{ row.thickness }}</td>
                                     <td><a href="javascript:;" style="cursor: pointer;" onclick="GetData(this);"><i class="fa fa-pencil"></i> 数据详情</a></td>
-{#                                    <td><a href="javascript:;" style="cursor: pointer;" onclick="GetData(this);"><i class="fa fa-pencil"></i> 数据详情</a></td>#}
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -141,18 +140,6 @@
                 ]
             });
 
-            // 数据库中获取 serie
-            {#var nid = $('#latest-data-one').val();#}
-            {#$.ajax({#}
-            {#    url: '/gateway/data-json-report-'+nid,#}
-            {#    type:'GET',#}
-            {#    dataType: 'JSON',#}
-            {#    success:function(arg){#}
-            {#        config['series'] = arg;#}
-            {#        $('#container').highcharts(config);#}
-            {#        $('#title-header').text(arg[0]['name']);#}
-            {#    }#}
-            {# })#}
         }
 
         function GetData(ths) {
@@ -203,7 +190,6 @@
                     },
                 ]
             };
-            {#$('#container').highcharts(config);#}
             // 数据库中获取 serie
             var nid = $(ths).parent().parent().children().eq(0).text();
             $.ajax({
