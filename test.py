@@ -12,5 +12,14 @@ from gateway import models
 # print(models.GWData.objects.values('alias__alias').first())
 # snr_num = models.Sensor_data.objects.values('sensor_id').all()
 # print(snr_num)
+# st1 = models.Set_Time.objects.filter(id='4').values('day', 'hour', 'mins').first()
+# print('st1:', st1)
+
+# from datetime import datetime
+# pre_day = datetime(2015, 12, 7)
+# cur_day = datetime(2020, 2, 14)
+# print((cur_day - pre_day).days)
+
+
 
 

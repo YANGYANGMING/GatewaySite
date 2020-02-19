@@ -4,3 +4,412 @@ time task: 2020-01-15 09:27:09
 time task: 2020-01-15 09:27:55
 no sensor data
 time task: 2020-01-16 13:25:00
+
+time task: 2020-02-10 20:15:26
+
+time task: 2020-02-10 20:16:26
+
+time task: 2020-02-10 20:18:00
+
+time task: 2020-02-10 20:23:00
+no sensor data
+time task: 2020-02-10 20:23:00
+no sensor data
+time task: 2020-02-10 20:23:00
+no sensor data
+time task: 2020-02-10 21:23:00
+no sensor data
+time task: 2020-02-10 21:23:00
+no sensor data
+time task: 2020-02-10 21:23:00
+no sensor data
+time task: 2020-02-10 22:23:00
+no sensor data
+time task: 2020-02-10 22:23:00
+no sensor data
+time task: 2020-02-10 22:23:00
+no sensor data
+time task: 2020-02-11 14:52:00
+no sensor data
+time task: 2020-02-18 15:20:25
+no sensor data
+time task: 2020-02-18 15:20:28
+no sensor data
+time task: 2020-02-18 15:20:29
+no sensor data
+time task: 2020-02-18 15:26:00
+no sensor data
+time task: 2020-02-18 15:27:00
+no sensor data
+time task: 2020-02-18 15:43:00
+no sensor data
+time task: 2020-02-18 15:43:00
+no sensor data
+time task: 2020-02-18 15:43:00
+no sensor data
+time task: 2020-02-18 16:09:16
+no sensor data
+time task: 2020-02-18 16:10:00
+no sensor data
+time task: 2020-02-19 09:16:32
+no sensor data
+time task: 2020-02-19 09:17:11
+no sensor data
+time task: 2020-02-19 09:18:11
+no sensor data
+time task: 2020-02-19 09:23:00
+no sensor data
+time task: 2020-02-19 09:23:00
+no sensor data
+time task: 2020-02-19 09:23:00
+no sensor data
+time task: 2020-02-19 09:25:54
+
+time task: 2020-02-19 09:26:28
+no sensor data
+time task: 2020-02-19 09:26:49
+no sensor data
+time task: 2020-02-19 09:30:00
+no sensor data
+time task: 2020-02-19 09:30:10
+no sensor data
+time task: 2020-02-19 09:30:20
+no sensor data
+time task: 2020-02-19 09:32:00
+no sensor data
+time task: 2020-02-19 09:32:10
+no sensor data
+time task: 2020-02-19 09:32:20
+no sensor data
+time task: 2020-02-19 09:36:00
+no sensor data
+time task: 2020-02-19 09:36:10
+no sensor data
+time task: 2020-02-19 09:36:20
+no sensor data
+time task: 2020-02-19 09:36:37
+no sensor data
+time task: 2020-02-19 09:36:58
+no sensor data
+time task: 2020-02-19 09:42:28
+no sensor data
+time task: 2020-02-19 09:43:00
+no sensor data
+time task: 2020-02-19 09:43:10
+no sensor data
+time task: 2020-02-19 09:43:20
+no sensor data
+time task: 2020-02-19 09:43:35
+no sensor data
+time task: 2020-02-19 09:44:46
+no sensor data
+time task: 2020-02-19 09:51:00
+no sensor data
+time task: 2020-02-19 09:51:10
+no sensor data
+time task: 2020-02-19 09:51:20
+no sensor data
+time task: 2020-02-19 09:52:36
+no sensor data
+time task: 2020-02-19 09:54:00
+no sensor data
+time task: 2020-02-19 09:54:10
+no sensor data
+time task: 2020-02-19 09:54:20
+no sensor data
+time task: 2020-02-19 09:54:32
+no sensor data
+time task: 2020-02-19 09:55:00
+no sensor data
+time task: 2020-02-19 09:55:10
+no sensor data
+time task: 2020-02-19 09:55:20
+no sensor data
+time task: 2020-02-19 09:57:00
+no sensor data
+time task: 2020-02-19 09:58:00
+no sensor data
+time task: 2020-02-19 09:58:34
+no sensor data
+time task: 2020-02-19 09:59:00
+no sensor data
+time task: 2020-02-19 09:59:18
+no sensor data
+time task: 2020-02-19 10:01:00
+no sensor data
+time task: 2020-02-19 10:01:55
+no sensor data
+time task: 2020-02-19 10:03:00
+no sensor data
+time task: 2020-02-19 10:07:00
+no sensor data
+time task: 2020-02-19 10:08:00
+no sensor data
+time task: 2020-02-19 10:09:00
+no sensor data
+time task: 2020-02-19 10:11:00
+
+time task: 2020-02-19 10:11:00
+no sensor datano sensor data
+time task: 2020-02-19 10:11:10
+
+time task: 2020-02-19 10:11:10
+no sensor datano sensor data
+time task: 2020-02-19 10:11:20
+
+time task: 2020-02-19 10:11:20
+no sensor datano sensor data
+time task: 2020-02-19 10:12:00
+
+time task: 2020-02-19 10:12:00
+no sensor datano sensor data
+time task: 2020-02-19 10:12:10
+
+time task: 2020-02-19 10:12:10
+no sensor datano sensor data
+time task: 2020-02-19 10:12:20
+
+time task: 2020-02-19 10:12:20
+no sensor datano sensor data
+time task: 2020-02-19 10:13:00
+no sensor data
+time task: 2020-02-19 10:20:00
+no sensor data
+time task: 2020-02-19 10:21:00
+no sensor data
+time task: 2020-02-19 10:21:10
+no sensor data
+time task: 2020-02-19 10:21:20
+no sensor data
+time task: 2020-02-19 10:22:00
+no sensor data
+time task: 2020-02-19 10:22:10
+no sensor data
+time task: 2020-02-19 10:22:20
+no sensor data
+time task: 2020-02-19 10:23:00
+no sensor data
+time task: 2020-02-19 10:23:10
+no sensor data
+time task: 2020-02-19 10:23:20
+no sensor data
+time task: 2020-02-19 10:24:00
+no sensor data
+time task: 2020-02-19 10:24:10
+no sensor data
+time task: 2020-02-19 10:24:20
+no sensor data
+time task: 2020-02-19 10:25:00
+no sensor data
+time task: 2020-02-19 10:25:10
+no sensor data
+time task: 2020-02-19 10:25:20
+no sensor data
+time task: 2020-02-19 10:26:00
+no sensor data
+time task: 2020-02-19 10:26:10
+no sensor data
+time task: 2020-02-19 10:26:20
+no sensor data
+time task: 2020-02-19 10:27:00
+no sensor data
+time task: 2020-02-19 10:27:10
+no sensor data
+time task: 2020-02-19 10:27:20
+no sensor data
+time task: 2020-02-19 10:28:00
+no sensor data
+time task: 2020-02-19 10:28:10
+no sensor data
+time task: 2020-02-19 10:28:20
+no sensor data
+time task: 2020-02-19 10:33:00
+no sensor data
+time task: 2020-02-19 10:34:00
+no sensor data
+time task: 2020-02-19 10:35:00
+no sensor data
+time task: 2020-02-19 10:53:00
+no sensor data
+time task: 2020-02-19 10:54:00
+no sensor data
+time task: 2020-02-19 11:02:00
+no sensor data
+time task: 2020-02-19 11:03:00
+no sensor data
+time task: 2020-02-19 11:04:00
+no sensor data
+time task: 2020-02-19 11:06:00
+no sensor data
+time task: 2020-02-19 11:06:30
+no sensor data
+time task: 2020-02-19 11:07:00
+no sensor data
+time task: 2020-02-19 11:08:00
+no sensor data
+time task: 2020-02-19 11:08:30
+no sensor data
+time task: 2020-02-19 11:09:00
+no sensor data
+time task: 2020-02-19 11:11:00
+no sensor data
+time task: 2020-02-19 11:11:30
+no sensor data
+time task: 2020-02-19 11:12:00
+no sensor data
+time task: 2020-02-19 11:13:00
+no sensor data
+time task: 2020-02-19 11:13:30
+no sensor data
+time task: 2020-02-19 11:14:00
+no sensor data
+time task: 2020-02-19 11:20:00
+no sensor data
+time task: 2020-02-19 11:24:00
+no sensor data
+time task: 2020-02-19 13:13:00
+no sensor data
+time task: 2020-02-19 13:20:14
+no sensor data
+time task: 2020-02-19 13:21:56
+no sensor data
+time task: 2020-02-19 13:22:34
+no sensor data
+time task: 2020-02-19 13:22:52
+no sensor data
+time task: 2020-02-19 13:23:24
+no sensor data
+time task: 2020-02-19 13:23:38
+no sensor data
+time task: 2020-02-19 13:31:15
+no sensor data
+time task: 2020-02-19 13:32:21
+no sensor data
+time task: 2020-02-19 13:33:19
+no sensor data
+time task: 2020-02-19 13:34:30
+no sensor data
+time task: 2020-02-19 13:35:15
+no sensor data
+time task: 2020-02-19 13:36:18
+no sensor data
+time task: 2020-02-19 13:36:49
+no sensor data
+time task: 2020-02-19 13:38:48
+no sensor data
+time task: 2020-02-19 13:41:48
+no sensor data
+time task: 2020-02-19 13:42:28
+no sensor data
+time task: 2020-02-19 13:45:07
+no sensor data
+time task: 2020-02-19 13:47:23
+no sensor data
+time task: 2020-02-19 13:48:43
+no sensor data
+time task: 2020-02-19 13:50:19
+no sensor data
+time task: 2020-02-19 13:51:30
+no sensor data
+time task: 2020-02-19 14:09:15
+no sensor data
+time task: 2020-02-19 14:10:39
+no sensor data
+time task: 2020-02-19 14:11:38
+no sensor data
+time task: 2020-02-19 14:12:17
+no sensor data
+time task: 2020-02-19 14:16:43
+no sensor data
+time task: 2020-02-19 14:17:30
+no sensor data
+time task: 2020-02-19 14:18:37
+no sensor data
+time task: 2020-02-19 14:20:33
+no sensor data
+time task: 2020-02-19 14:21:00
+no sensor data
+time task: 2020-02-19 14:21:10
+no sensor data
+time task: 2020-02-19 14:21:20
+no sensor data
+time task: 2020-02-19 14:22:55
+no sensor data
+time task: 2020-02-19 15:02:00
+no sensor data
+time task: 2020-02-19 15:07:00
+no sensor data
+time task: 2020-02-19 15:11:00
+
+time task: 2020-02-19 15:12:00
+no sensor data
+time task: 2020-02-19 15:12:30
+no sensor data
+time task: 2020-02-19 15:13:00
+no sensor data
+time task: 2020-02-19 15:15:00
+no sensor data
+time task: 2020-02-19 15:30:00
+
+time task: 2020-02-19 15:31:00
+
+time task: 2020-02-19 15:32:00
+no sensor datano sensor data
+time task: 2020-02-19 15:33:05
+no sensor data
+time task: 2020-02-19 15:34:10
+no sensor data
+time task: 2020-02-19 15:40:00
+no sensor data
+time task: 2020-02-19 15:42:00
+no sensor data
+time task: 2020-02-19 15:43:05
+
+time task: 2020-02-19 15:47:00
+no sensor data
+time task: 2020-02-19 15:48:05
+no sensor data
+time task: 2020-02-19 15:49:10
+no sensor data
+time task: 2020-02-19 15:52:00
+no sensor data
+time task: 2020-02-19 15:57:00
+no sensor data
+time task: 2020-02-19 16:00:00
+no sensor data
+time task: 2020-02-19 16:04:00
+no sensor data
+time task: 2020-02-19 16:05:00
+no sensor data
+time task: 2020-02-19 16:06:00
+no sensor data
+time task: 2020-02-19 16:07:00
+no sensor data
+time task: 2020-02-19 16:09:43
+no sensor data
+time task: 2020-02-19 16:10:00
+no sensor data
+time task: 2020-02-19 16:10:33
+no sensor data
+time task: 2020-02-19 16:11:08
+no sensor data
+time task: 2020-02-19 16:13:56
+no sensor data
+time task: 2020-02-19 16:15:13
+no sensor data
+time task: 2020-02-19 16:15:56
+no sensor data
+time task: 2020-02-19 16:17:00
+no sensor data
+time task: 2020-02-19 16:17:33
+no sensor data
+time task: 2020-02-19 16:31:00
+no sensor data
+time task: 2020-02-19 16:32:00
+no sensor data
+time task: 2020-02-19 16:33:00
+no sensor data
+time task: 2020-02-19 16:33:10
+no sensor data
+time task: 2020-02-19 16:33:20
+no sensor data

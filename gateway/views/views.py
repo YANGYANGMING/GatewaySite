@@ -31,17 +31,25 @@ tstp_step = 24 * 60 * 60
 latest_job_id = '0000'
 latest_job1_id = '0000'
 
-# 手动获取数据时，同一时间只能有一个传感器在工作
-btn_single = True
+# Operation flag bit
+# When acquiring data manually, only one sensor can work in the same time
+btn_sample = False
+# Get data automatically
+auto_operation = False
+# Polling for data
+btn_polling = False
+# Running status of task id = 0000
+operation_status = None
+
 
 add_sensor = 0
 del_sensor = 0
 
-# 计时任务启动标志位
+# Timing task start flag bit
 CycleStatus = False
 TimingStatus = False
 
-# 实例化定时器任务
+# Instantiate timer task
 scheduler = BackgroundScheduler()
 scheduler1 = BackgroundScheduler()
 sche = BackgroundScheduler()
@@ -49,68 +57,71 @@ clear_sche = BackgroundScheduler()
 
 st = models.Set_Time.objects.filter(id=1).values('year', 'day_of_week', 'day', 'hour', 'mins')[0]
 st1 = models.Set_Time.objects.filter(id=3).values('day', 'hour', 'mins')[0]
-# 程序重启以后初始化之前的定时数据
+# Initialize timing data after program restart
 models.Set_Time.objects.filter(id=2).update(day_of_week='', day='', hour='', mins='')
 models.Set_Time.objects.filter(id=4).update(day='0', hour='0', mins='0')
-# 初始化原始状态信息
+# Initialize original status infomation
 models.TimeStatus.objects.filter(id=1).update(timing_status='false', cycle_status='false', text_status='已暂停',
                                               button_status='暂停')
 
 def auto_Timing_time():
     """
-    定时检查---更新/添加
+    Regular check ---- update/add
     :return:
     """
     try:
-        db_job_id_list = []
-        # 数据库中所有的任务时间和sensor_id
-        db_job_list = list(models.Rcv_server_data.objects.values('sensor_id', 'received_time_data'))
+        # if not manual sample or polling sample, check for updates
+        if not btn_sample and not btn_polling:
+            db_job_id_list = []
+            # All task time and sensor_id in the database
+            db_job_list = list(models.Rcv_server_data.objects.values('sensor_id', 'received_time_data'))
 
-        #scheduler调度器中已经存在的定时任务的sensor_id列表和sensor_time
-        sche_job_id_list, sche_job_time_list = job_id_list()
+            # The list of sensor_id and sensor_time for scheduled tasks that already exist in the scheduler
+            sche_job_id_list, sche_job_time_list = job_id_list()
 
-        # 比较：数据库中增加或者更新任务时，增加或者更新scheduler任务
-        for db_job in db_job_list:
-            received_time_data_dict = eval(db_job['received_time_data'])
-            jobs_id = 'cron_time ' + db_job['sensor_id']
-            db_job_id_list.append(db_job['sensor_id'])
-            if db_job['sensor_id'] in sche_job_id_list:
-                st_temp = {'year': '*', 'day_of_week': received_time_data_dict['day_of_week'],
-                           'day': received_time_data_dict['day'], 'hour': received_time_data_dict['hour'],
-                           'minute': received_time_data_dict['mins']}
-                temp_trigger = scheduler._create_trigger(trigger='cron', trigger_args=st_temp)
-                scheduler.modify_job(jobs_id, trigger=temp_trigger)
-                # 更新完数据后，需要resume_job()
-                scheduler.resume_job(jobs_id)
-                # print('更新任务')
-            else:
-                # 添加任务
-                scheduler.add_job(time_job, 'cron', year='*', day_of_week=received_time_data_dict['day_of_week'],
-                                  day=received_time_data_dict['day'], hour=received_time_data_dict['hour'],
-                                  minute=received_time_data_dict['mins'], second='00', id=jobs_id)
-                # print('添加任务')
+            # Compare: when adding or updating tasks in the database, add or update schedluer tasks
+            for db_job in db_job_list:
+                received_time_data_dict = eval(db_job['received_time_data'])
+                jobs_id = 'cron_time ' + db_job['sensor_id']
+                db_job_id_list.append(db_job['sensor_id'])
+                if db_job['sensor_id'] in sche_job_id_list:
+                    st_temp = {'year': '*', 'day_of_week': received_time_data_dict['day_of_week'],
+                               'day': received_time_data_dict['day'], 'hour': received_time_data_dict['hour'],
+                               'minute': received_time_data_dict['mins']}
+                    temp_trigger = scheduler._create_trigger(trigger='cron', trigger_args=st_temp)
+                    scheduler.modify_job(jobs_id, trigger=temp_trigger)
+                    # After updating the data, you need to resume_job()
+                    scheduler.resume_job(jobs_id)
+                    # print('update task')
+                else:
+                    # update task
+                    scheduler.add_job(time_job, 'cron', year='*', day_of_week=received_time_data_dict['day_of_week'],
+                                      day=received_time_data_dict['day'], hour=received_time_data_dict['hour'],
+                                      minute=received_time_data_dict['mins'], second='00', id=jobs_id)
+                    # print('add task')
 
-        # 比较：数据库中删除任务时，同时删除scheduler任务
-        for sche_job_id in sche_job_id_list:
-            if sche_job_id != '0000':
-                if sche_job_id not in db_job_id_list:
-                    temp_sche_job_id = 'cron_time ' + sche_job_id
-                    scheduler.remove_job(temp_sche_job_id)
-                    print('remove %s seccess' % sche_job_id)
-        global latest_job_id  # 0005
-        latest_job_id = scheduler.get_jobs()[0].id.split(' ')[1]
-        # print(latest_job_id)
-        # print(dir(scheduler.get_jobs()[0]))
-        # print(dir(scheduler.get_jobs()[0].trigger))
-        # print(scheduler.get_jobs()[0].trigger.fields)
-        # print(scheduler.get_jobs()[0].trigger.fields[5])
-        # print(scheduler.get_jobs()[0].trigger.fields[6])
-        # print(scheduler.get_jobs())
-        # print(scheduler.get_jobs()[0].next_run_time)
-        # print(scheduler.get_jobs()[0].id.split(' ')[1])
-        # print(scheduler.get_jobs()[0].trigger)
-        # scheduler.print_jobs()
-        # print(datetime.datetime.now())
+            # Compare: when a task is deleted in the database, the scheduler task is also deleted
+            for sche_job_id in sche_job_id_list:
+                if sche_job_id != '0000':
+                    if sche_job_id not in db_job_id_list:
+                        temp_sche_job_id = 'cron_time ' + sche_job_id
+                        scheduler.remove_job(temp_sche_job_id)
+                        print('remove %s seccess' % sche_job_id)
+            global latest_job_id  # 0005
+            latest_job_id = scheduler.get_jobs()[0].id.split(' ')[1]
+            # print(latest_job_id)
+            # print(dir(scheduler.get_jobs()[0]))
+            # print(dir(scheduler.get_jobs()[0].trigger))
+            # print(scheduler.get_jobs()[0].trigger.fields)
+            # print(scheduler.get_jobs()[0].trigger.fields[5])
+            # print(scheduler.get_jobs()[0].trigger.fields[6])
+            # print(scheduler.get_jobs())
+            # print(scheduler.get_jobs()[0].next_run_time)
+            # print(scheduler.get_jobs()[0].id.split('')[1])
+            # print(scheduler.get_jobs()[0].trigger)
+            # print(scheduler.get_jobs())
+            # scheduler.print_jobs()
+            # print(datetime.datetime.now())
     except Exception as e:
         print('start_Timing_time:', e)
 
@@ -144,7 +155,7 @@ def judge_time(received_time_data_dict, sche_job_time_list):
 
 def job_id_list():
     """
-    scheduler调度器中已经存在的定时任务的sensor_id列表
+    A list of the sensor_id of a scheduled task that already exists in the scheduler
     :return:
     """
     sche_job_id_list = []
@@ -159,18 +170,29 @@ def job_id_list():
 
 def time_job():
     """
-    定时模式任务: cron
+    Timed mode task: cron
     :return:
     """
     global i
     global latest_job_id
+    global btn_polling
+    global auto_operation
     if latest_job_id == '0000':
-        #轮询传感器
+        # Polling sensor
         snr_num = models.Sensor_data.objects.values('sensor_id').all()
         snr_num_list = [item['sensor_id'] for item in snr_num]
+        btn_polling = True  # Polling collection flag bit
+        pause_all_sensor()
     else:
-        #单一传感器
+        # 单一传感器，手动采集数据/自动采集数据
         snr_num_list = [latest_job_id]
+        if btn_sample:  # 如果是手动采样
+            pause_all_sensor()
+        else:
+            auto_operation = True  # 自动采集标志位
+    print('btn_polling', btn_polling)
+    print('auto_operation', auto_operation)
+    print('btn_sample', btn_sample)
     for snr_item in snr_num_list:
         time_now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
         msg_printer.print2File("\r\ntime task: " + str(time_now) + "\r\n")
@@ -189,6 +211,13 @@ def time_job():
         else:
             msg_printer.print2File(r.message)
             print(r.message)
+
+    btn_polling = False
+    auto_operation = False
+    resume_all_sensor()
+    print('btn_polling2', btn_polling)
+    print('auto_operation2', auto_operation)
+    print('btn_sample2', btn_sample)
 
 
 def time_job1():
@@ -246,6 +275,30 @@ except Exception as e:
     print('err:', e)
     scheduler.shutdown()
     scheduler1.shutdown()
+
+
+def pause_all_sensor():
+    """轮询or手动触发开始，暂停所有传感器"""
+    for job_obj in scheduler.get_jobs():
+        if job_obj.id[-4:] == "0000":
+            global operation_status     # 暂停之前先获取任务id=0000的运行状态
+            operation_status = job_obj.next_run_time
+            print('operation_status', operation_status)
+
+        job_obj.pause()
+        print('job_obj_pause', job_obj)
+
+
+def resume_all_sensor():
+    """轮询or手动触发结束，恢复所有传感器"""
+    for job_obj in scheduler.get_jobs():
+        print('operation_status', operation_status)
+        if job_obj.id[-4:] == "0000" and not operation_status:
+            print('job_obj_resume0000', job_obj)
+            pass
+        else:
+            job_obj.resume()
+            print('job_obj_resume', job_obj)
 
 
 # 每分钟执行一次更新/添加
@@ -411,13 +464,13 @@ def all_sensor_data(request):
 @csrf_exempt
 def set_Timing_time(request):
     """
-    设置定时时间
+    设置轮询定时时间
     :param request:
     :return:
     """
     ret = {'status': False, 'message': '定时时间设置失败'}
     try:
-        if request.method == 'POST':
+        if request.method == 'POST' and not btn_sample and not auto_operation:
             arr = request.POST.getlist('TimingDateList')
             time_list = handle_data(arr)  # 处理数据
             print('time_list', time_list)
@@ -437,6 +490,7 @@ def set_Timing_time(request):
                 conform = judge_time(received_time_data_dict, sche_job_time_list)
                 if conform:
                     for item in time_list:
+                        print('item', item)
                         models.Set_Time.objects.filter(id=2).update(**item)
                     start_Timing_time(2)
                     ret = {'status': True, 'message': '定时时间设置成功'}
@@ -444,6 +498,8 @@ def set_Timing_time(request):
                     TimingStatus = True
                 else:
                     ret['message'] = '设置时间冲突,请选择其他时间'
+        else:
+            ret['message'] = '其他节点正在采集数据，请稍等...'
     except Exception as e:
         print('set_Timing_time', e)
         return HttpResponse(json.dumps(ret))
@@ -504,7 +560,6 @@ def save_status(request):
     return HttpResponse(json.dumps(ret))
 
 
-@login_required
 def start_Timing_time(nid, reset=False):
     """
     定时时间
@@ -532,7 +587,6 @@ def start_Timing_time(nid, reset=False):
         scheduler.shutdown()
 
 
-@login_required
 def start_cycle_time(nid, reset=False):
     """
     循环时间
@@ -695,10 +749,10 @@ def manual_get(request):
     :return:
     """
     result = {'status': False, 'message': "获取失败"}
-    global btn_single
+    global btn_sample
     try:
-        if request.method == "POST" and btn_single == True:
-            btn_single = False
+        if request.method == "POST" and not btn_sample and not btn_polling and not auto_operation:
+            btn_sample = True  # 手动采集标志位
             global latest_job_id
             latest_job_id = request.POST.get('sensor_id')
             print(latest_job_id)
@@ -708,14 +762,18 @@ def manual_get(request):
             else:
                 time_job()
                 result = {'status': True, 'message': "获取成功"}
-            btn_single = True
+            btn_sample = False
+            print('btn_sample2', btn_sample)
         else:
-            result['message'] = "请稍等，已有传感器正在采集数据..."
+            if btn_polling:
+                result['message'] = "请稍等，定时轮询模式正在采集数据..."
+            elif auto_operation or btn_sample:
+                result['message'] = "请稍等，已有传感器正在采集数据..."
     except Exception as e:
         print(e)
-        btn_single = True
+        btn_sample = False
 
-    return HttpResponse(json.dumps(result))\
+    return HttpResponse(json.dumps(result))
 
 
 @login_required
@@ -770,6 +828,91 @@ def thickness_json_report(request):
         print(e)
 
     return HttpResponse(json.dumps(response))
+
+
+@csrf_exempt
+def receive_server_data(request):
+    """
+    接收服务器的数据
+    :param request:
+    :return:
+    """
+    sensor_id_list = list(models.Rcv_server_data.objects.values('sensor_id'))
+    if request.method == 'POST':
+        receive_data = request.POST.get('data')
+        receive_data = eval(receive_data)
+        response = {'status': False, 'msg': None, 'receive_data': receive_data}
+        # sensor_id_list = [{'sensor_id': '10010001201908230001'}, {'sensor_id': '10010001201908230002'}, {'sensor_id': '10010001201908230003'}]
+        # receive_data = [[{'time_data': {'day_of_week': '*', 'day': '*', 'hour': '16', 'mins': '37'}}, {'sensor_id': '9001'}, {'remove': 'false'}, {'alias': '传感器X号'}, ], ]
+        # print(receive_data)
+        for item in receive_data:
+            # 参数parameter数量有误
+            if len(item[0]['time_data']) != 4:
+                response['msg'] = '参数个数有误，需要4个参数，给了%s个！' % len(item[0]['time_data'])
+                return HttpResponse(json.dumps(response))
+            # 参数值有误
+            for k, v in item[0]['time_data'].items():  # {'day_of_week': '*', 'day': '*', 'hour': '16', 'mins': '37'}
+                if v == '*':
+                    pass
+                else:
+                    try:
+                        v_list = v.split(',')
+                        for vv in v_list:
+                            isinstance(int(vv), int)
+                    except Exception:
+                        response['msg'] = '输入参数值有误，请重新输入！参数值只支持*和int类型'
+                        return HttpResponse(json.dumps(response))
+
+            if item[2]['remove'] == 'false':
+                sche_job_time_list = []
+                #不验证正在修改的传感器的时间
+                for job_obj in scheduler.get_jobs():
+                    if job_obj.id.split(' ')[1] != item[1]['sensor_id']:
+                        sche_job_time_list.append({'day_of_week': str(job_obj.trigger.fields[4]),
+                                                   'day': str(job_obj.trigger.fields[2]),
+                                                   'hour': str(job_obj.trigger.fields[5]),
+                                                   'mins': str(job_obj.trigger.fields[6])})
+                conform = judge_time(item[0]['time_data'], sche_job_time_list)
+                if conform:
+                    # 更新任务
+                    if item[1] in sensor_id_list:
+                        models.Rcv_server_data.objects.filter(sensor_id=item[1]['sensor_id']).update(
+                                                                received_time_data=item[0]['time_data']
+                                                            )
+                        # # 更新sensor数据
+                        # models.Sensor_data.objects.filter(sensor_id=item[1]['sensor_id']).update()
+                        response['status'] = True
+                        response['msg'] = '更新任务成功'
+                    # 添加任务
+                    else:
+                        models.Rcv_server_data.objects.create(
+                                                                sensor_id=item[1]['sensor_id'],
+                                                                received_time_data=item[0]['time_data']
+                                                            )
+                        # 添加sensor数据
+                        models.Sensor_data.objects.create(
+                                                                sensor_id=item[1]['sensor_id'],
+                                                                alias=item[3]['alias']
+                                                            )
+                        global add_sensor
+                        add_sensor += 1
+                        response['status'] = True
+                        response['msg'] = '添加任务成功'
+                else:
+                    response['msg'] = '输入时间和现有传感器时间冲突，请输入其他时间'
+
+            # 删除任务
+            elif item[2]['remove'] == 'true':
+                if item[1] in sensor_id_list:
+                    models.Rcv_server_data.objects.filter(sensor_id=item[1]['sensor_id']).delete()
+                    # 删除sensor数据
+                    models.Sensor_data.objects.filter(sensor_id=item[1]['sensor_id']).delete()
+                    global del_sensor
+                    del_sensor += 1
+                    response['status'] = True
+                    response['msg'] = '删除任务成功'
+
+        return HttpResponse(json.dumps(response))
 
 
 @login_required

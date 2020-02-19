@@ -25,6 +25,8 @@ urlpatterns = [
     re_path(r'^reset-Timing-time$', views.reset_Timing_time),
     re_path(r'^reset-Cycle-time$', views.reset_Cycle_time),
 
+    re_path(r'^receive-server-data$', views.receive_server_data),
+
     re_path(r'^manual-get$', views.manual_get),
 
 

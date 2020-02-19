@@ -76,24 +76,29 @@ class SerialCtrl():
         cmd = str(data) + "\r\n"
         self.serialPort.write(cmd.encode('ascii'))
 
-    def getSerialData(self, latest_job_id, timeout_s=30):
+    def getSerialData(self, latest_job_id, timeout_s=10):
         """读取串口数据"""
         serdata = ''
         time_start = time.time()
         print('latest_job_id:', latest_job_id)
         command = 'get ' + latest_job_id[-4:]
         self.atCMD(command)
-        while ((time.time() - time_start) < timeout_s):
-            serdata = self.serialPort.readline().decode('ascii')
-            if (serdata != ''):
-                # 处理缓存问题
-                # print('serdata', serdata)
-                get_sensor_id = serdata.split(';')[0].split('=')[1]
-                print(get_sensor_id)
-                if get_sensor_id[-4:] == latest_job_id[-4:] and (time.time() - time_start) > 5:
-                    break
-                else:
-                    serdata = ''
+        try:
+            while ((time.time() - time_start) < timeout_s):
+                serdata = self.serialPort.readline().decode('ascii')
+                # if (serdata != ''):
+                #     # 处理缓存问题
+                #     # print('serdata', serdata)
+                #     get_sensor_id = serdata.split(';')[0].split('=')[1]
+                #     print(get_sensor_id)
+                #     if get_sensor_id[-4:] == latest_job_id[-4:] and (time.time() - time_start) > 5:
+                #         break
+                #     else:
+                #         serdata = ''
+        except Exception as e:
+            serdata = ''
+            print(e)
+        serdata = ''
         return serdata
 
     def getSerialresp(self, command, timeout_s=5):

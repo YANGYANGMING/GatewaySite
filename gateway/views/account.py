@@ -33,7 +33,6 @@ def acc_logout(request):
     """退出"""
     # request.session.clear()
     logout(request)
-    print('asfds')
     return redirect('/login/')
 
 def page_404(request):
