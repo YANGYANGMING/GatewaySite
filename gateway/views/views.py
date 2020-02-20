@@ -369,7 +369,7 @@ def config_time(request):
         "Hour_interval": [i for i in range(0, 24)],
         "Minute_interval": [i for i in range(0, 60)],
 
-        "day_of_week_cron": {"周一": 0, "周二": 1, "周三": 2, "周四": 3, "周五": 4, "周六": 5, "周日": 6},
+        "day_of_week_cron": [("周一", 0), ("周二", 1), ("周三", 2), ("周四", 3), ("周五", 4), ("周六", 5), ("周日", 6)],
         "Day_cron": [i for i in range(1, 29)],
         "Hour_cron": [i for i in range(0, 24)],
         "Minute_cron": [i for i in range(0, 60)],
@@ -525,7 +525,7 @@ def set_cycle_time(request):
                     key = list(item.keys())[0]
                     item[key] = '0'
             print(time_list)
-            if time_list[0] == time_list[1] == time_list[2] == '0':
+            if time_list[0]['day'] == time_list[1]['hour'] == time_list[2]['mins'] == '0':
                 pass
             else:
                 for item in time_list:

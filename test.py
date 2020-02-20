@@ -19,6 +19,10 @@ from gateway import models
 # pre_day = datetime(2015, 12, 7)
 # cur_day = datetime(2020, 2, 14)
 # print((cur_day - pre_day).days)
+# a = [{"周一": 0}, {"周二": 1}, {"周三": 2}, {"周四": 3}, {"周五": 4}, {"周六": 5}, {"周日": 6}]
+# for i in a:
+#     print(list(i.keys())[0])
+#     print(i.values())
 
 
 

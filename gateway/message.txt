@@ -413,3 +413,18 @@ time task: 2020-02-19 16:33:10
 no sensor data
 time task: 2020-02-19 16:33:20
 no sensor data
+time task: 2020-02-20 11:11:16
+no sensor data
+time task: 2020-02-20 11:11:26
+no sensor data
+time task: 2020-02-20 11:11:36
+no sensor data
+time task: 2020-02-20 11:18:51
+no sensor data
+time task: 2020-02-20 11:19:01
+no sensor data
+time task: 2020-02-20 11:19:11
+no sensor data
+time task: 2020-02-20 11:21:12
+
+time task: 2020-02-20 11:22:52

@@ -90,6 +90,12 @@
                         <input type="text" class="form-control" id="modal-Sample-hz" value=""  placeholder="范围：200-5000">
                       </div>
                     </div>
+                    <div class="form-group">
+                          <label class="col-sm-4 control-label"></label>
+                          <div class="col-sm-5">
+                            <span id="sensor-response-msg" style="display: inline; color: red;"></span>
+                          </div>
+                    </div>
               </div>
               </form>
           </div>
@@ -121,7 +127,7 @@
                     <thead>
                         <tr>
                             <th>名称</th>
-                            <th>ID</th>
+                            <th>传感器ID</th>
                             <th>周波数</th>
                             <th>增益</th>
                             <th>平均次数</th>
@@ -209,7 +215,8 @@
                   'Sample_depth': $("#modal-Sample-depth").val(),
                   'Sample_Hz': $("#modal-Sample-hz").val()
                 };
-
+          $('#sensor-response-msg').text('参数设置中...');
+          ClearMSG('sensor-response-msg-msg');
           $.ajax({
                url: '/gateway/sensor-data-val-set',
                type: 'POST',
@@ -217,10 +224,13 @@
                dataType: 'JSON',
                success: function (arg) {
                    if(arg['status'] === true){
+                       $('#sensor-response-msg').text(arg.message);
+                        ClearMSG('sensor-response-msg-msg');
+                        {#sleep(3000);#}
                        window.location.reload();
                    }else{
-                       $('#error-msg').text(arg.message);
-                        ClearMSG('error-msg');
+                       $('#sensor-response-msg').text(arg.message);
+                        ClearMSG('sensor-response-msg-msg');
                    }
                }
             });
@@ -233,6 +243,17 @@
                 $("#"+nid).text('')
             }, 3000);
         }
+
+        //睡眠时间
+        function sleep(numberMillis) {
+            var now = new Date();
+            var exitTime = now.getTime() + numberMillis;
+            while (true) {
+                now = new Date();
+                if (now.getTime() > exitTime)
+                return;
+                }
+            }
 
 
 

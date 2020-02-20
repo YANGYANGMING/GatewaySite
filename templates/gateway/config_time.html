@@ -95,8 +95,8 @@
                 <label>定时模式：周内天数：</label>
                 <select class="form-control select2" multiple="multiple" data-placeholder="周内天数"
                        name="day_of_week" id="day_of_week" style="width: 100%;">
-                  {% for k, v in context.day_of_week_cron.items %}
-                      <option value="{{ v }}">{{ k }}</option>
+                  {% for item in context.day_of_week_cron %}
+                      <option value="{{ item.1 }}">{{ item.0 }}</option>
                   {% endfor %}
                 </select>
               </div>
@@ -163,8 +163,9 @@
             </div>
             <!-- /.col 按钮-->
             <div class="col-md-2">
-              <div class="form-group">
+              <div id="start-scheduler" class="form-group">
                   <button type="button" class="btn btn-block btn-success" onclick="SubSetting()">启动定时器</button>
+{#                  <a onclick="SubSetting()" tabindex="0" class="btn btn-block btn-success" role="button" data-toggle="popover" data-trigger="focus" data-content="先选择模式">可消失的弹出框</a>#}
               </div>
               <!-- /.form-group -->
             </div>
@@ -242,7 +243,7 @@
                         {% for row in latest_data %}
                             <tr>
                                 <td>{{ row.id }}</td>
-                                <td>{{ row.sensor_id }}</td>
+                                <td>{{ row.sensor_id | slice:"-4:" }}</td>
                                 <td>{{ row.battery }}</td>
                                 <td>{{ row.temperature }}</td>
                                 <td>{{ row.thickness }}</td>
@@ -290,6 +291,7 @@
 {% block script %}
 
     <script>
+
       $(function () {
         //Initialize Select2 Elements
         $('.select2').select2();
@@ -299,6 +301,9 @@
           checkboxClass: 'icheckbox_flat-green',
           radioClass   : 'iradio_flat-green'
         });
+
+        //弹出框
+        {#$('[data-toggle="popover"]').popover();#}
 
         {#$('#example1').DataTable();#}
 
@@ -413,7 +418,7 @@
                 }
             });
         }
-        if($('#Cycle').prop('checked')){
+        else if($('#Cycle').prop('checked')){
             var days = $('#days').val();
             var hours = $('#hours').val();
             var mins = $('#mins').val();
@@ -437,6 +442,9 @@
                     ClearMSG('cycle-sub-msg');
                 }
             })
+        }
+        else{
+            alert('请先选择模式')
         }
     }
 
