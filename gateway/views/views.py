@@ -55,10 +55,10 @@ scheduler1 = BackgroundScheduler()
 sche = BackgroundScheduler()
 clear_sche = BackgroundScheduler()
 
-st = models.Set_Time.objects.filter(id=1).values('year', 'day_of_week', 'day', 'hour', 'mins')[0]
+st = models.Set_Time.objects.filter(id=1).values('year', 'month', 'day', 'hour', 'mins')[0]
 st1 = models.Set_Time.objects.filter(id=3).values('day', 'hour', 'mins')[0]
 # Initialize timing data after program restart
-models.Set_Time.objects.filter(id=2).update(day_of_week='', day='', hour='', mins='')
+models.Set_Time.objects.filter(id=2).update(month='', day='', hour='', mins='')
 models.Set_Time.objects.filter(id=4).update(day='0', hour='0', mins='0')
 # Initialize original status infomation
 models.TimeStatus.objects.filter(id=1).update(timing_status='false', cycle_status='false', text_status='已暂停',
@@ -75,17 +75,15 @@ def auto_Timing_time():
             db_job_id_list = []
             # All task time and sensor_id in the database
             db_job_list = list(models.Rcv_server_data.objects.values('sensor_id', 'received_time_data'))
-
             # The list of sensor_id and sensor_time for scheduled tasks that already exist in the scheduler
             sche_job_id_list, sche_job_time_list = job_id_list()
-
             # Compare: when adding or updating tasks in the database, add or update schedluer tasks
             for db_job in db_job_list:
                 received_time_data_dict = eval(db_job['received_time_data'])
                 jobs_id = 'cron_time ' + db_job['sensor_id']
                 db_job_id_list.append(db_job['sensor_id'])
                 if db_job['sensor_id'] in sche_job_id_list:
-                    st_temp = {'year': '*', 'day_of_week': received_time_data_dict['day_of_week'],
+                    st_temp = {'year': '*', 'month': received_time_data_dict['month'],
                                'day': received_time_data_dict['day'], 'hour': received_time_data_dict['hour'],
                                'minute': received_time_data_dict['mins']}
                     temp_trigger = scheduler._create_trigger(trigger='cron', trigger_args=st_temp)
@@ -95,7 +93,7 @@ def auto_Timing_time():
                     # print('update task')
                 else:
                     # update task
-                    scheduler.add_job(time_job, 'cron', year='*', day_of_week=received_time_data_dict['day_of_week'],
+                    scheduler.add_job(time_job, 'cron', year='*', month=received_time_data_dict['month'],
                                       day=received_time_data_dict['day'], hour=received_time_data_dict['hour'],
                                       minute=received_time_data_dict['mins'], second='00', id=jobs_id)
                     # print('add task')
@@ -114,41 +112,48 @@ def auto_Timing_time():
             # print(dir(scheduler.get_jobs()[0].trigger))
             # print(scheduler.get_jobs()[0].trigger.fields)
             # print(scheduler.get_jobs()[0].trigger.fields[5])
-            # print(scheduler.get_jobs()[0].trigger.fields[6])
             # print(scheduler.get_jobs())
             # print(scheduler.get_jobs()[0].next_run_time)
             # print(scheduler.get_jobs()[0].id.split('')[1])
             # print(scheduler.get_jobs()[0].trigger)
             # print(scheduler.get_jobs())
-            # scheduler.print_jobs()
+            scheduler.print_jobs()
             # print(datetime.datetime.now())
     except Exception as e:
-        print('start_Timing_time:', e)
+        print('auto_Timing_time:', e)
 
 
 def judge_time(received_time_data_dict, sche_job_time_list):
         """
         判断时间是否冲突，判断方法：先对比mins，如果mins有重复时间或者有'*'，以对比mins的方法对比hour的值，
-        如果hour有重复时间，对比day_of_week和day，一旦发现有重复时间，conform = False，并且跳出循环
-        :param received_time_data_dict: 接收到的时间字典：{'day': '*', 'day_of_week': '2', 'mins': '0,30', 'hour': '6'}
+        如果hour有重复时间，对比month和day，一旦发现有重复时间，conform = False，并且跳出循环
+        :param received_time_data_dict: 接收到的时间字典：{'day': '*', 'month': '2', 'mins': '0,30', 'hour': '6'}
         :param sche_job_time_list: 任务调度器中的任务时间：
-                            [{'day': '*', 'day_of_week': '2,5', 'mins': '0', 'hour': '6'},
-                            {'day': '*', 'day_of_week': '1,5', 'mins': '29', 'hour': '18'},
-                            {'day': '*', 'day_of_week': '1', 'mins': '29', 'hour': '18'},
-                            {'day': '*', 'day_of_week': '*', 'mins': '*', 'hour': '*'}]
+                            [{'year': '*', 'month': '2,5', 'day': '*', 'mins': '0', 'hour': '6'},
+                            {'year': '*', 'month': '1,5', 'day': '*', 'mins': '29', 'hour': '18'},
+                            {'year': '*', 'month': '1', 'day': '*', 'mins': '29', 'hour': '18'},
+                            {'year': '*', 'month': '*', 'day': '*', 'mins': '*', 'hour': '*'}]
         :return:
         """
         conform = True
         print('sche_job_time_list', sche_job_time_list)
         for sche_item in sche_job_time_list:
+            # check mins
             if [ii for ii in received_time_data_dict['mins'].split(',') if ii in sche_item['mins'].split(',')] != []\
                     or sche_item['mins'] == '*' or received_time_data_dict['mins'] == '*':
+                # check hour
                 if [ii for ii in received_time_data_dict['hour'].split(',') if ii in sche_item['hour'].split(',')] != []\
-                    or sche_item['hour'] == '*' or received_time_data_dict['hour'] == '*':
-                    if ([ii for ii in received_time_data_dict['day_of_week'].split(',') if ii in sche_item['day_of_week'].split(',')] != [] or sche_item['day_of_week'] == '*' or received_time_data_dict['day_of_week'] == '*')\
-                            and ([ii for ii in received_time_data_dict['day'].split(',') if ii in sche_item['day'].split(',')] != [] or sche_item['day'] == '*' or received_time_data_dict['day'] == '*'):
-                        conform = False
-                        break
+                        or sche_item['hour'] == '*' or received_time_data_dict['hour'] == '*':
+                    # check day
+                    if [ii for ii in received_time_data_dict['day'].split(',') if ii in sche_item['day'].split(',')] != [] \
+                            or sche_item['day'] == '*' or received_time_data_dict['day'] == '*':
+                        # check month
+                        if [ii for ii in received_time_data_dict['month'].split(',') if ii in sche_item['month'].split(',')] != [] \
+                                or sche_item['month'] == '*' or received_time_data_dict['month'] == '*':
+                            # check year
+                            if [ii for ii in ['*'] if ii in sche_item['year'].split(',')] != [] or sche_item['year'] == '*':
+                                conform = False
+                                break
         print('conform', conform)
         return conform
 
@@ -163,7 +168,7 @@ def job_id_list():
     for job_obj in scheduler.get_jobs():
         sche_job_id_list.append(job_obj.id.split(' ')[1])
         sche_job_time_list.append(
-            {'day_of_week': str(job_obj.trigger.fields[4]), 'day': str(job_obj.trigger.fields[2]),
+            {'month': str(job_obj.trigger.fields[1]), 'day': str(job_obj.trigger.fields[2]),
              'hour': str(job_obj.trigger.fields[5]), 'mins': str(job_obj.trigger.fields[6])})
     return sche_job_id_list, sche_job_time_list
 
@@ -256,7 +261,7 @@ def time_job1():
 
 try:
     """定时初始化"""
-    job = scheduler.add_job(time_job, 'cron', year=st['year'], day_of_week=st['day_of_week'], day=st['day'],
+    job = scheduler.add_job(time_job, 'cron', year=st['year'], month=st['month'], day=st['day'],
                             hour=st['hour'], minute=st['mins'], second='00', id='cron_time 0000')
     scheduler.start()
 
@@ -302,12 +307,12 @@ def resume_all_sensor():
 
 
 # 每分钟执行一次更新/添加
-try:
-    sche.add_job(auto_Timing_time, 'interval', minutes=0, seconds=10, id='interval_time')
-    sche.start()
-except Exception as e:
-    print(e)
-    sche.shutdown()
+# try:
+#     sche.add_job(auto_Timing_time, 'interval', minutes=0, seconds=10, id='interval_time')
+#     sche.start()
+# except Exception as e:
+#     print(e)
+#     sche.shutdown()
 
 
 @login_required
@@ -344,7 +349,7 @@ def config_time(request):
     # 服务器返回的最新的数据
     latest_post_return = models.Post_Return.objects.last()
     # 最新的定时时间/循环时间/时间状态/手动设置id/设置参数，用于刷新页面时保留输入信息
-    latest_Timing_time = models.Set_Time.objects.filter(id=2).values('day_of_week', 'day', 'hour', 'mins').first()
+    latest_Timing_time = models.Set_Time.objects.filter(id=2).values('month', 'day', 'hour', 'mins').first()
     for k, v in latest_Timing_time.items():
         if v == "*":
             latest_Timing_time[k] = ''
@@ -369,7 +374,7 @@ def config_time(request):
         "Hour_interval": [i for i in range(0, 24)],
         "Minute_interval": [i for i in range(0, 60)],
 
-        "day_of_week_cron": [("周一", 0), ("周二", 1), ("周三", 2), ("周四", 3), ("周五", 4), ("周六", 5), ("周日", 6)],
+        "month_cron": [i for i in range(1, 13)],
         "Day_cron": [i for i in range(1, 29)],
         "Hour_cron": [i for i in range(0, 24)],
         "Minute_cron": [i for i in range(0, 60)],
@@ -483,7 +488,8 @@ def set_Timing_time(request):
                 # 不验证正在修改的传感器的时间
                 for job_obj in scheduler.get_jobs():
                     if job_obj.id.split(' ')[1] != '0000':
-                        sche_job_time_list.append({'day_of_week': str(job_obj.trigger.fields[4]),
+                        sche_job_time_list.append({'year': str(job_obj.trigger.fields[0]),
+                                                   'month': str(job_obj.trigger.fields[1]),
                                                    'day': str(job_obj.trigger.fields[2]),
                                                    'hour': str(job_obj.trigger.fields[5]),
                                                    'mins': str(job_obj.trigger.fields[6])})
@@ -568,9 +574,9 @@ def start_Timing_time(nid, reset=False):
     :return:
     """
     global st
-    st = models.Set_Time.objects.filter(id=nid).values('year', 'day_of_week', 'day', 'hour', 'mins').first()
+    st = models.Set_Time.objects.filter(id=nid).values('year', 'month', 'day', 'hour', 'mins').first()
     print('st:', st)
-    st_temp = {'year': st['year'], 'day_of_week': st['day_of_week'], 'day': st['day'], 'hour': st['hour'],
+    st_temp = {'year': st['year'], 'month': st['month'], 'day': st['day'], 'hour': st['hour'],
                'minute': st['mins']}
     try:
         temp_trigger = scheduler._create_trigger(trigger='cron', trigger_args=st_temp)
@@ -707,7 +713,7 @@ def reset_Timing_time(request):
     """
     ret = {'status': False, 'message': None}
     try:
-        models.Set_Time.objects.filter(id=2).update(year='*', day_of_week='*', day='*', hour='*', mins='*')
+        models.Set_Time.objects.filter(id=2).update(year='*', month='1', day='1', hour='0', mins='0')
         start_Timing_time(2, reset=True)
         apscheduler.job.Job.pause(job)
         ret['status'] = True
@@ -843,7 +849,7 @@ def receive_server_data(request):
         receive_data = eval(receive_data)
         response = {'status': False, 'msg': None, 'receive_data': receive_data}
         # sensor_id_list = [{'sensor_id': '10010001201908230001'}, {'sensor_id': '10010001201908230002'}, {'sensor_id': '10010001201908230003'}]
-        # receive_data = [[{'time_data': {'day_of_week': '*', 'day': '*', 'hour': '16', 'mins': '37'}}, {'sensor_id': '9001'}, {'remove': 'false'}, {'alias': '传感器X号'}, ], ]
+        # receive_data = [[{'time_data': {'month': '*', 'day': '*', 'hour': '16', 'mins': '37'}}, {'sensor_id': '9001'}, {'remove': 'false'}, {'alias': '传感器X号'}, ], ]
         # print(receive_data)
         for item in receive_data:
             # 参数parameter数量有误
@@ -851,7 +857,7 @@ def receive_server_data(request):
                 response['msg'] = '参数个数有误，需要4个参数，给了%s个！' % len(item[0]['time_data'])
                 return HttpResponse(json.dumps(response))
             # 参数值有误
-            for k, v in item[0]['time_data'].items():  # {'day_of_week': '*', 'day': '*', 'hour': '16', 'mins': '37'}
+            for k, v in item[0]['time_data'].items():  # {'month': '*', 'day': '*', 'hour': '16', 'mins': '37'}
                 if v == '*':
                     pass
                 else:
@@ -868,7 +874,8 @@ def receive_server_data(request):
                 #不验证正在修改的传感器的时间
                 for job_obj in scheduler.get_jobs():
                     if job_obj.id.split(' ')[1] != item[1]['sensor_id']:
-                        sche_job_time_list.append({'day_of_week': str(job_obj.trigger.fields[4]),
+                        sche_job_time_list.append({'year': str(job_obj.trigger.fields[0]),
+                                                   'month': str(job_obj.trigger.fields[1]),
                                                    'day': str(job_obj.trigger.fields[2]),
                                                    'hour': str(job_obj.trigger.fields[5]),
                                                    'mins': str(job_obj.trigger.fields[6])})
@@ -898,6 +905,8 @@ def receive_server_data(request):
                         add_sensor += 1
                         response['status'] = True
                         response['msg'] = '添加任务成功'
+                    # 更新或者添加成功，同时同步数据库和调度器
+                    auto_Timing_time()
                 else:
                     response['msg'] = '输入时间和现有传感器时间冲突，请输入其他时间'
 
@@ -911,6 +920,8 @@ def receive_server_data(request):
                     del_sensor += 1
                     response['status'] = True
                     response['msg'] = '删除任务成功'
+                    # 删除成功，同时同步数据库和调度器
+                    auto_Timing_time()
 
         return HttpResponse(json.dumps(response))
 
@@ -985,7 +996,7 @@ def update_sensor_data(all_vals):
 def handle_data(arr):
     """
     处理定时模式发过来的数据
-    :param arr: [{'day_of_week': temp_list[0]}, {'day': temp_list[1]}, {'hour': temp_list[2]}, {'mins': temp_list[3]}]
+    :param arr: [{'month': temp_list[0]}, {'day': temp_list[1]}, {'hour': temp_list[2]}, {'mins': temp_list[3]}]
     :return:
     """
     # ['', '', '', '1,4,8']
@@ -999,7 +1010,7 @@ def handle_data(arr):
                     temp_list.append(item)
                 else:
                     temp_list.append('*')
-            time_list = [{'day_of_week': temp_list[0]}, {'day': temp_list[1]}, {'hour': temp_list[2]},
+            time_list = [{'month': temp_list[0]}, {'day': temp_list[1]}, {'hour': temp_list[2]},
                          {'mins': temp_list[3]}]
         return time_list
     if len(arr) == 3:

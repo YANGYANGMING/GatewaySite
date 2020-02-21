@@ -23,7 +23,7 @@ from gateway import models
 # for i in a:
 #     print(list(i.keys())[0])
 #     print(i.values())
-
-
-
-
+a = [ii for ii in '1,2,3'.split(',')]
+print(a)
+b = '1,2,3'.split(',')
+print(b)

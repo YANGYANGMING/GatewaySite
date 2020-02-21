@@ -26,8 +26,8 @@
                       选择模式：
                   </label>
                 <label>
-                  <input type="radio" id="Cycle" name="group" class="flat-red">
-                    循环模式;
+                  <input type="radio" id="Cycle" name="group" class="flat-red" disabled="disabled">
+                    循环模式(已禁用);
                 </label>
                 <label>
                   <input type="radio" id="Timing" name="group" class="flat-red">
@@ -42,7 +42,7 @@
           <div class="row">
             <div class="col-md-2">
               <div class="form-group">
-                <label>循环模式：天数：</label>
+                <label><b style="color: #ff1c1f;">循环模式：</b>天数：</label>
                 <select class="form-control select2" name="days" id="days" style="width: 100%;" data-placeholder="天数">
                   <option></option>
                   {% for days_item in context.Day_interval %}
@@ -55,7 +55,7 @@
             <!-- /.col -->
             <div class="col-md-2">
               <div class="form-group">
-                <label >循环模式：小时数：</label>
+                <label><b style="color: #ff1c1f">循环模式：</b>小时数：</label>
 {#                  <label class="col-sm-8 control-label">循环模式：小时数</label>#}
                 <select class="form-control select2" name="hours" id="hours" style="width: 100%;" data-placeholder="小时数">
                   <option></option>
@@ -69,7 +69,7 @@
             <!-- /.col -->
             <div class="col-md-2">
               <div class="form-group">
-                <label >循环模式：分钟数：</label>
+                <label ><b style="color: #ff1c1f">循环模式：</b>分钟数：</label>
                 <select class="form-control select2" name="mins" id="mins" style="width: 100%;" data-placeholder="分钟数">
                   <option></option>
                   {% for mins_item in context.Minute_interval %}
@@ -92,11 +92,11 @@
           <div class="row">
             <div class="col-md-2">
               <div class="form-group">
-                <label>定时模式：周内天数：</label>
-                <select class="form-control select2" multiple="multiple" data-placeholder="周内天数"
-                       name="day_of_week" id="day_of_week" style="width: 100%;">
-                  {% for item in context.day_of_week_cron %}
-                      <option value="{{ item.1 }}">{{ item.0 }}</option>
+                <label><b style="color: #ff1c1f">定时模式：</b>月份：</label>
+                <select class="form-control select2" multiple="multiple" data-placeholder="月份"
+                       name="month" id="month" style="width: 100%;">
+                  {% for item in context.month_cron %}
+                      <option value="{{ item }}">{{ item }}</option>
                   {% endfor %}
                 </select>
               </div>
@@ -105,8 +105,8 @@
             <!-- /.col -->
             <div class="col-md-2">
               <div class="form-group">
-                <label>定时模式：月内天数：</label>
-                <select class="form-control select2" multiple="multiple" data-placeholder="月内天数"
+                <label><b style="color: #ff1c1f">定时模式：</b>天：</label>
+                <select class="form-control select2" multiple="multiple" data-placeholder="天"
                        name="day" id="day" style="width: 100%;">
                   {% for day_item in context.Day_cron %}
                       <option value="{{ day_item }}">{{ day_item }}</option>
@@ -118,7 +118,7 @@
             <!-- /.col -->
             <div class="col-md-2">
               <div class="form-group">
-                <label>定时模式：小时：</label>
+                <label><b style="color: #ff1c1f">定时模式：</b>小时：</label>
                 <select class="form-control select2" multiple="multiple" data-placeholder="小时"
                        name="hour" id="hour" style="width: 100%;">
                   {% for hour_item in context.Hour_cron %}
@@ -131,7 +131,7 @@
             <!-- /.col -->
             <div class="col-md-2">
               <div class="form-group">
-                <label>定时模式：分钟：</label>
+                <label><b style="color: #ff1c1f">定时模式：</b>分钟：</label>
                 <select class="form-control select2" multiple="multiple" data-placeholder="分钟"
                        name="min" id="min" style="width: 100%;">
                   {% for min_item in context.Minute_cron %}
@@ -155,9 +155,9 @@
             <!-- /.col 状态信息-->
             <div class="col-md-2">
               <div class="form-group">
-                   <label>运行状态：</label>
-                    <i class="fa fa-circle icon-status" style="font-size: 20px; color: #8f8f8f"></i>
-                   <label id="run-status">已暂停</label>
+                   <label style="font-size: 18px;">运行状态：</label>
+                    <i class="fa fa-circle icon-status" style="font-size: 25px; color: #8f8f8f"></i>
+                   <label id="run-status" style="font-size: 25px;">已暂停</label>
               </div>
               <!-- /.form-group -->
             </div>
@@ -302,11 +302,6 @@
           radioClass   : 'iradio_flat-green'
         });
 
-        //弹出框
-        {#$('[data-toggle="popover"]').popover();#}
-
-        {#$('#example1').DataTable();#}
-
         //刷新页面后显示原来的值
         ShowOriginData();
 
@@ -325,14 +320,19 @@
       //刷新页面保留上次数据
     function ShowOriginData() {
 
+        //临时设置了禁止循环模式，如需使用循环模式，注释下面3行代码即可
+        $('#Cycle').prop('disabled', true);
+        $('#Timing').iCheck('check');
+        OperationTiming();
+
         //手动获取的id
         var menu_id = "{{ latest_set_id.menu_get_id }}";
         $('#selected-sensor-id').val([menu_id]).trigger("change");
 
         //Timing-time
-        var day_of_week = "{{ latest_Timing_time.day_of_week }}";
-        day_of_week = day_of_week.split(',');
-        $('#day_of_week').val(day_of_week).trigger("change");
+        var month = "{{ latest_Timing_time.month }}";
+        month = month.split(',');
+        $('#month').val(month).trigger("change");
         var day = "{{ latest_Timing_time.day }}";
         day = day.split(',');
         $('#day').select2("val", [day]);
@@ -370,6 +370,7 @@
             $(".icon-status").css('color', '#8f8f8f');
          }else{
             $(".icon-status").css('color', '#3E8F03');
+            $("#run-status").css('color', '#3E8F03');
          }
         if('{{ latest_time_status.button_status }}'==='暂停'){
             $("#btn-status").addClass('btn-warning');
@@ -380,8 +381,6 @@
 
      //禁止定时/循环时间输入
     function ForbidInput() {
-        // day 和 day_of_week 互斥，所以刷新页面的时候只允许输入day_of_week，选中模式后可自由选择day_of_week和day
-        $('#day').prop('disabled', true);
         $('#Timing').on('ifChecked', function(){
             OperationTiming();
         });
@@ -394,11 +393,11 @@
     //启动定时任务
     function SubSetting() {
         if($('#Timing').prop('checked')){
-            var day_of_week = $('#day_of_week').val();
+            var month = $('#month').val();
             var day = $('#day').val();
             var hour = $('#hour').val();
             var min = $('#min').val();
-            var TimingDateList = [day_of_week, day, hour, min];
+            var TimingDateList = [month, day, hour, min];
             $.ajax({
                 url:'/gateway/set-Timing-time',
                 type:'POST',
@@ -409,8 +408,8 @@
                     if(arg.status){
                         console.log('Timing'+arg.message);
                         $(".icon-status").css('color', '#3E8F03');
-                        $("#run-status").text('运行中...');
-                        $('#btn-status').text('暂停');
+                        $("#run-status").text('运行中...').css('color', '#3E8F03');
+                        $('#btn-status').text('暂停').addClass('btn-warning');
                         SaveStatus();
                     }
                     $('#timing-sub-msg').text(arg.message);
@@ -434,8 +433,8 @@
                     if(arg.status){
                         console.log('Cycle'+arg.message);
                         $(".icon-status").css('color', '#3E8F03');
-                        $("#run-status").text('运行中...');
-                        $('#btn-status').text('暂停');
+                        $("#run-status").text('运行中...').css('color', '#3E8F03');
+                        $('#btn-status').text('暂停').addClass('btn-warning');
                         SaveStatus();
                     }
                     $('#cycle-sub-msg').text(arg.message);
@@ -449,7 +448,7 @@
     }
 
 
-    //操作定时模式输入框
+    //操作定时模式输入框，则禁止循环模式输入框
       function OperationTiming() {
           console.log('Timing', $('#Timing').prop('checked'));
         // Cycle
@@ -457,38 +456,13 @@
         $('#hours').prop('disabled', true);
         $('#mins').prop('disabled', true);
         //Timing
-        $('#day_of_week').prop('disabled', false);
+        $('#month').prop('disabled', false);
         $('#day').prop('disabled', false);
         $('#hour').prop('disabled', false);
         $('#min').prop('disabled', false);
-        // day_of_week & day 互斥
-        $('#day_of_week').on('select2:select', function () {
-            // 选中触发的事件
-            if($('#day_of_week').val()){
-                $('#day').val(null).trigger("change").prop('disabled', true);
-            }
-        });
-        $('#day_of_week').on('select2:unselect', function () {
-            // 取消选中触发的事件
-            if($('#day_of_week').val().length === 0){
-                $('#day').prop('disabled', false);
-            }
-        });
-        $('#day').on('select2:select', function () {
-            // 选中触发的事件
-            if($('#day').val()){
-                $('#day_of_week').val(null).trigger("change").prop('disabled', true);
-            }
-        });
-        $('#day').on('select2:unselect', function () {
-            // 取消选中触发的事件
-            if($('#day').val().length === 0){
-                $('#day_of_week').prop('disabled', false);
-            }
-        });
       }
 
-    // 操作循环模式输入框
+    // 操作循环模式输入框，则禁止定时模式输入框
       function OperationCycle() {
           console.log('Cycle', $('#Cycle').prop('checked'));
         // Cycle
@@ -496,7 +470,7 @@
         $('#hours').prop('disabled', false);
         $('#mins').prop('disabled', false);
         //Timing
-        $('#day_of_week').prop('disabled', true);
+        $('#month').prop('disabled', true);
         $('#day').prop('disabled', true);
         $('#hour').prop('disabled', true);
         $('#min').prop('disabled', true);
@@ -528,7 +502,7 @@
                 success:function (arg) {
                     if(arg.status){
                         $(".icon-status").css('color', '#8f8f8f');
-                        $("#run-status").text('已暂停');
+                        $("#run-status").text('已暂停').css('color', '#8f8f8f');
                         $('#btn-status').text('暂停').addClass('btn-warning');
                         window.location.reload();
                         SaveStatus();
@@ -555,7 +529,7 @@
                                 $(ths).removeClass('btn-warning');
                                 $(ths).text('恢复');
                                 $(".icon-status").css('color', '#8f8f8f');
-                                $("#run-status").text('已暂停');
+                                $("#run-status").text('已暂停').css('color', '#8f8f8f');
                                 SaveStatus();
                             }
                         }
@@ -571,7 +545,7 @@
                                 $(ths).addClass('btn-warning');
                                 $(ths).text('暂停');
                                 $(".icon-status").css('color', '#3E8F03');
-                                $("#run-status").text('运行中...');
+                                $("#run-status").text('运行中...').css('color', '#3E8F03');
                                 SaveStatus();
                             }
                         }
@@ -591,7 +565,7 @@
                                 $(ths).removeClass('btn-warning');
                                 $(ths).text('恢复');
                                 $(".icon-status").css('color', '#8f8f8f');
-                                $("#run-status").text('已暂停');
+                                $("#run-status").text('已暂停').css('color', '#8f8f8f');
                                 SaveStatus();
                             }
                         }
@@ -607,7 +581,7 @@
                                 $(ths).addClass('btn-warning');
                                 $(ths).text('暂停');
                                 $(".icon-status").css('color', '#3E8F03');
-                                $("#run-status").text('运行中...');
+                                $("#run-status").text('运行中...').css('color', '#3E8F03');
                                 SaveStatus();
                             }
                         }
