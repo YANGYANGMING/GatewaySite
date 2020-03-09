@@ -41,16 +41,23 @@
                 <table id="example1" class="table table-bordered table-striped">
                     <thead>
                         <tr>
-                            {% for item in origin_obj.list_display %}
-                                <th>{{ item }}</th>
-                            {% endfor %}
+                            <tr>
+                                <th>id</th>
+                                <th>名称</th>
+                                <th>传感器ID</th>
+                                <th>电量</th>
+                                <th>温度</th>
+                                <th>厚度值</th>
+                                <th>数据详情</th>
+                            </tr>
                         </tr>
                     </thead>
                     <tbody>
                             {% for row in data_obj %}
                                 <tr>
                                     <td>{{ row.id }}</td>
-                                    <td>{{ row.sensor_id }}</td>
+                                    <td>{{ row.alias__alias }}</td>
+                                    <td>{{ row.sensor_id | slice:"-4:" }}</td>
                                     <td>{{ row.battery }}</td>
                                     <td>{{ row.temperature }}</td>
                                     <td>{{ row.thickness }}</td>

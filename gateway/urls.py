@@ -25,6 +25,12 @@ urlpatterns = [
     re_path(r'^reset-Timing-time$', views.reset_Timing_time),
     re_path(r'^reset-Cycle-time$', views.reset_Cycle_time),
 
+    re_path(r'^set-sensor-time$', views.set_sensor_time),
+    re_path(r'^edit-sensor-time/(\d+)$', views.edit_sensor_time),
+    re_path(r'^add-sensor-time$', views.add_sensor_time),
+    # re_path(r'^save-time$', views.save_time),
+
+
     re_path(r'^receive-server-data$', views.receive_server_data),
 
     re_path(r'^manual-get$', views.manual_get),

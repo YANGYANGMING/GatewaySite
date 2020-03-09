@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Set_Time(models.Model):
     """设置时间"""
     year = models.CharField(max_length=32, null=True, blank=True)
@@ -10,6 +11,7 @@ class Set_Time(models.Model):
     hour = models.CharField(max_length=32, null=True, blank=True)
     mins = models.CharField(max_length=32, null=True, blank=True)
 
+
 class URL(models.Model):
     """发送的URL"""
     mainURL = models.URLField(null=True, blank=True, default="http://ling.2tag.cn/api/collect_data")
@@ -17,11 +19,13 @@ class URL(models.Model):
     algURL = models.URLField(null=True, blank=True, default="http://118.24.12.152:8099/analyzer/b64")
     algHD = models.CharField(null=True, blank=True, max_length=32, default={'Content-Type': 'application/json'})
 
+
 class Post_Return(models.Model):
     """接收的信息"""
     """{'result': {}, 'statusCode': 200, 'message': {'msgType': 'tsuccess', 'msg': 'success'}, 'elapsedTime': 6}
     """
     result_all_data = models.CharField(max_length=128, null=True)
+
 
 class GWData(models.Model):
     """网关数据"""
@@ -34,7 +38,11 @@ class GWData(models.Model):
     data_len = models.IntegerField()
     thickness = models.CharField(max_length=16, default='-999')
     data = models.TextField()
-    alias = models.ForeignKey(to="Sensor_data", to_field="id", on_delete=models.CASCADE)
+    alias = models.ForeignKey(to="Sensor_data", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.alias
+
 
 class TimeStatus(models.Model):
     """运行状态表"""
@@ -43,26 +51,36 @@ class TimeStatus(models.Model):
     text_status = models.CharField(max_length=32)
     button_status = models.CharField(max_length=32)
 
+
 class Rcv_server_data(models.Model):
     """接收到服务器的数据"""
     sensor_id = models.CharField(max_length=32)
     received_time_data = models.CharField(max_length=128)
+
+    def __str__(self):
+        return self.sensor_id
+
 
 class Set_param(models.Model):
     """手动获取的id、设置参数"""
     menu_get_id = models.CharField(max_length=32)
     param = models.CharField(max_length=64)
 
+
 class Sensor_data(models.Model):
     """传感器详细数据信息"""
-    alias = models.CharField(max_length=64, verbose_name="别名", unique=True, blank=True, null=True)
-    sensor_id = models.CharField(max_length=32, unique=True)
+    alias = models.CharField(max_length=64, verbose_name="别名", blank=True, null=True)
+    sensor_id = models.CharField(max_length=32)
     cHz = models.CharField(max_length=32, default='2')
     gain = models.CharField(max_length=32, default='60')
     avg_time = models.CharField(max_length=32, default='4')
     Hz = models.CharField(max_length=32, default='2')
     Sample_depth = models.CharField(max_length=32, default='2')
     Sample_Hz = models.CharField(max_length=32, default='500')
+
+    def __str__(self):
+        return self.alias
+
 
 class UserProfile(models.Model):
     """用户信息表"""
@@ -73,14 +91,27 @@ class UserProfile(models.Model):
     def __str__(self):
         return self.name
 
+
 class Role(models.Model):
     """角色表"""
     name = models.CharField(max_length=64, unique=True)
+    menus = models.ManyToManyField('Menus')
 
     def __str__(self):
         return self.name
 
+class Menus(models.Model):
+    """动态菜单"""
+    name = models.CharField(max_length=64)
+    url_type_choices = ((0, 'absolute'), (1, 'dynamic'))
+    url_type = models.SmallIntegerField(choices=url_type_choices, default=0)
+    url_name = models.CharField(max_length=128)
 
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        unique_together = ('name', 'url_name')
 
 
 

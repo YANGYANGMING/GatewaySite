@@ -127,7 +127,12 @@
                 </li>
                 <li>
                   <a href="/gateway/all-sensor-data">
-                    <i class="fa fa-book"></i> <span>传感器详情</span>
+                    <i class="fa fa-book"></i> <span>传感器参数设置</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="/gateway/set-sensor-time">
+                    <i class="fa fa-book"></i> <span>传感器时间设置</span>
                   </a>
                 </li>
                  <li>
@@ -264,15 +269,20 @@
                               <table id="example2" class="table table-bordered table-hover">
                                 <thead>
                                     <tr>
-                                        {% for item in origin_obj.list_display %}
-                                            <th>{{ item }}</th>
-                                        {% endfor %}
+                                        <th>id</th>
+                                        <th>名称</th>
+                                        <th>传感器ID</th>
+                                        <th>电量</th>
+                                        <th>温度</th>
+                                        <th>厚度值</th>
+                                        <th>数据详情</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for row in latest_data %}
                                         <tr>
                                             <td>{{ row.id }}</td>
+                                            <td>{{ row.alias__alias }}</td>
                                             <td>{{ row.sensor_id | slice:"-4:" }}</td>
                                             <td>{{ row.battery }}</td>
                                             <td>{{ row.temperature }}</td>

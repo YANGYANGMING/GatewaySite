@@ -23,7 +23,16 @@ from gateway import models
 # for i in a:
 #     print(list(i.keys())[0])
 #     print(i.values())
-a = [ii for ii in '1,2,3'.split(',')]
-print(a)
-b = '1,2,3'.split(',')
-print(b)
+
+
+# receive_data = """['{"time_data":{"month":[],"day":[],"hour":["9"],"mins":["50","51"]}}', '{"sensor_id":"10010001201908230004"}', '{"alias":"4号传感器"}', '{"remove":"false"}']"""
+# # time_data = eval(receive_data[0])['time_data']  # {'month': [], 'day': [], 'hour': ['9'], 'mins': ['50', '51']}
+# # print(time_data)
+# receive_data = eval(receive_data)
+# print(type(receive_data))
+
+
+# latest_data = models.GWData.objects.values('alias__alias').order_by('-id')[:5]
+# print(latest_data)
+
+

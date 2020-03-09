@@ -76,7 +76,7 @@ class SerialCtrl():
         cmd = str(data) + "\r\n"
         self.serialPort.write(cmd.encode('ascii'))
 
-    def getSerialData(self, latest_job_id, timeout_s=10):
+    def getSerialData(self, latest_job_id, timeout_s=16):
         """读取串口数据"""
         serdata = ''
         time_start = time.time()

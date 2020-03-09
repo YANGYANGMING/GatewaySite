@@ -1,0 +1,215 @@
+
+{% extends 'index.html' %}
+{% load staticfiles %}
+
+{% block main_content %}
+
+    <!-- Main content -->
+    <section class="content">
+
+      <!-- /.table -->
+      <div class="box">
+        <div class="box-header with-border">
+          <h3 class="box-title">编辑信息</h3>
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-remove"></i></button>
+          </div>
+        </div>
+            <!-- /.box-header -->
+        <div class="box-body">
+              <div class="row">
+                <div class="col-xs-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="sensor-id">传感器ID</label>
+                        <input type="text" class="form-control" name="sensor-id" id="sensor-id" value="{{ sensor_id }}" disabled>
+                    </div>
+                </div>
+                <div class="col-xs-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="alias">传感器名称</label>
+                        <input type="text" class="form-control" name="alias" id="alias" value="{{ alias }}">
+                    </div>
+                </div>
+              </div>
+            <!-- /.col -->
+              <div class="row">
+                <div class="col-xs-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="month">月份：</label>
+                        <select class="form-control select2" multiple="multiple"
+                               name="month" id="month" style="width: 100%;">
+                          {% for item in context.month_cron %}
+                              <option value="{{ item }}">{{ item }}</option>
+                          {% endfor %}
+                        </select>
+                    </div>
+                      <!-- /.form-group -->
+                </div>
+                <div class="col-xs-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="day">天：</label>
+                        <select class="form-control select2" multiple="multiple"
+                               name="day" id="day" style="width: 100%;">
+                          {% for item in context.day_cron %}
+                              <option value="{{ item }}">{{ item }}</option>
+                          {% endfor %}
+                        </select>
+                    </div>
+                      <!-- /.form-group -->
+                </div>
+              </div>
+            <!-- /.col -->
+              <div class="row">
+                <div class="col-xs-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="hour">小时：</label>
+                        <select class="form-control select2" multiple="multiple"
+                               name="hour" id="hour" style="width: 100%;">
+                          {% for item in context.hour_cron %}
+                              <option value="{{ item }}">{{ item }}</option>
+                          {% endfor %}
+                        </select>
+                    </div>
+                      <!-- /.form-group -->
+                </div>
+                <div class="col-xs-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="mins">分钟：</label>
+                        <select class="form-control select2" multiple="multiple"
+                               name="mins" id="mins" style="width: 100%;">
+                          {% for item in context.minute_cron %}
+                              <option value="{{ item }}">{{ item }}</option>
+                          {% endfor %}
+                        </select>
+                    </div>
+                      <!-- /.form-group -->
+                </div>
+              </div>
+            <!-- /.col -->
+            <div class="row">
+                <div class="col-md-3 col-md-offset-5">
+                  <div class="form-group" style="margin-top: 10px">
+                      <span id="timing-save-msg" style="color: red;"></span>
+                  </div>
+                </div>
+                <div class="col-md-1">
+                  <div class="form-group">
+                      <button type="button" class="btn btn-success" onclick="Update()">更新</button>
+                  </div>
+                </div>
+                <div class="col-md-1">
+                  <div class="form-group">
+                      <button type="button" class="btn btn-danger" onclick="Delete()">删除</button>
+                  </div>
+                </div>
+        </div>
+        <!-- /.row -->
+      </div>
+      <!-- /.box -->
+    </div>
+    </section>
+
+
+{% endblock %}
+
+{% block script %}
+
+    <script>
+
+        $(function () {
+            $('.select2').select2();
+
+            ShowOriginData()
+        });
+
+        //刷新页面保留上次数据
+        function ShowOriginData() {
+
+            var month = "{{ received_time_data.month }}";
+            month = month.split(',');
+            $('#month').val(month).trigger("change");
+            var day = "{{ received_time_data.day }}";
+            day = day.split(',');
+            $('#day').select2("val", [day]);
+            var hour = "{{ received_time_data.hour }}";
+            hour = hour.split(',');
+            $('#hour').select2("val", [hour]);
+            var mins = "{{ received_time_data.mins }}";
+            mins = mins.split(',');
+            $('#mins').select2("val", [mins]);
+
+        }
+
+        function Update() {
+            var sensor_id = $('#sensor-id').val();
+            var alias = $('#alias').val();
+            var month = $('#month').val();
+            var day = $('#day').val();
+            var hour = $('#hour').val();
+            var mins = $('#mins').val();
+            var time_data = {'month': month, 'day': day, 'hour': hour, 'mins': mins};
+            var data = [JSON.stringify({'time_data': time_data}), JSON.stringify({'sensor_id': sensor_id}),
+                JSON.stringify({'alias': alias}), JSON.stringify({'choice': 'update'})];
+            $.ajax({
+                url: '/gateway/receive-server-data',
+                type:'POST',
+                data: {'data': data},
+                traditional: true,
+                dataType:'JSON',
+                success:function (arg) {
+                    if(arg.status){
+                        console.log(arg.msg);
+                        {#window.history.back(-1);#}
+                        window.location.href="/gateway/set-sensor-time";
+                    }else {
+                        $('#timing-save-msg').text(arg.msg);
+                        ClearMSG('timing-save-msg');
+                    }
+                }
+            })
+
+        }
+
+        // 删除传感器
+        function Delete() {
+            var sensor_id = $('#sensor-id').val();
+            var alias = '';
+            var time_data = {'month': [], 'day': [], 'hour': [], 'mins': []};
+            var data = [JSON.stringify({'time_data': time_data}), JSON.stringify({'sensor_id': sensor_id}),
+                JSON.stringify({'alias': alias}), JSON.stringify({'choice': 'remove'})];
+            $.ajax({
+                url: "/gateway/receive-server-data",
+                type:'POST',
+                data: {'data': data},
+                traditional: true,
+                dataType:'JSON',
+                success:function (arg) {
+                    if(arg.status){
+                        $('#timing-save-msg').text(arg.msg);
+                        Sleep()
+                    }else {
+                        $('#timing-save-msg').text(arg.msg);
+                        ClearMSG('timing-save-msg');
+                    }
+                }
+            })
+        }
+
+        //清除提示信息
+        function ClearMSG(nid) {
+            setTimeout(function () {
+                $("#"+nid).text('')
+            }, 3000);
+        }
+
+        //睡眠2秒
+        function Sleep() {
+            setTimeout(function () {
+                window.location.href="/gateway/set-sensor-time";
+            }, 2000);
+        }
+
+    </script>
+
+{% endblock %}

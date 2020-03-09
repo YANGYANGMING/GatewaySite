@@ -135,13 +135,14 @@
                             <th>采样深度</th>
                             <th>采样频率</th>
                             <th>下次运行时间</th>
+                            <th>编辑参数</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for item in sensor_obj %}
                             <tr>
                                 <td>{{ item.alias }}</td>
-                                <td><a href="" data-toggle="modal" data-target="#modal-default" onclick="ShowModel(this);"><i class="fa fa-pencil fa-fw"></i>{{ item.sensor_id }}</a></td>
+                                <td>{{ item.sensor_id | slice:"-4:" }}</td>
                                 <td>{{ item.cHz }}</td>
                                 <td>{{ item.gain }}</td>
                                 <td>{{ item.avg_time }}</td>
@@ -149,6 +150,7 @@
                                 <td>{{ item.Sample_depth }}</td>
                                 <td>{{ item.Sample_Hz }}</td>
                                 <td>{{ item.next_run_time }}</td>
+                                <td><a href="#" data-toggle="modal" data-target="#modal-default" onclick="ShowModel(this);"><button type="button" class="btn btn-success"><i class="fa fa-pencil fa-fw"></i>编辑</button></a></td>
                             </tr>
                         {% endfor %}
                     </tbody>
