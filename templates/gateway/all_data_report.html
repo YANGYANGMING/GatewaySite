@@ -56,8 +56,8 @@
                             {% for row in data_obj %}
                                 <tr>
                                     <td>{{ row.id }}</td>
-                                    <td>{{ row.alias__alias }}</td>
-                                    <td>{{ row.sensor_id | slice:"-4:" }}</td>
+                                    <td>{{ row.alias }}</td>
+                                    <td>{{ row.sensor_id }}</td>
                                     <td>{{ row.battery }}</td>
                                     <td>{{ row.temperature }}</td>
                                     <td>{{ row.thickness }}</td>

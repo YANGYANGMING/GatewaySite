@@ -25,8 +25,11 @@
                         <label>传感器：</label>
                         <select class="form-control select2" id="selected-sensor-id" style="width: 50%; display: inline;" data-placeholder="传感器">
                             <option></option>
-                            {% for sche_id, sche_alias in sche_job_id_dict.items %}
-                                <option value="{{ sche_id }}">{{ sche_alias }}</option>
+{#                            {% for sche_id, sche_alias in sche_job_id_dict.items %}#}
+{#                                <option value="{{ sche_id }}">{{ sche_alias }}</option>#}
+{#                            {% endfor %}#}
+                            {% for item in data_obj %}
+                                <option value="{{ item.sensor_id }}">{{ item.alias }}</option>
                             {% endfor %}
                         </select>
                         <button type="submit" class="btn btn-primary" style="display: inline; margin-left: 20px" id="show-thickness">确定</button>

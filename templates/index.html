@@ -77,7 +77,7 @@
               <!-- Menu Footer-->
               <li class="user-footer">
                 <div class="pull-left">
-                  <a href="#" class="btn btn-default btn-flat">Profile</a>
+                  <a href="/gateway/user-profile" class="btn btn-default btn-flat">Profile</a>
                 </div>
                 <div class="pull-right">
                   <a href="logout" class="btn btn-default btn-flat">Sign out</a>
@@ -105,41 +105,34 @@
 
               <ul class="sidebar-menu" data-widget="tree">
                 <li class="header">ORISONIC</li>
-                <li>
-                  <a href="/gateway/index">
-                    <i class="fa fa-dashboard"></i> <span>主页</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="/gateway/config-time">
-                    <i class="fa fa-cog"></i> <span>配置时间</span>
-                  </a>
-                </li>
-                  <li>
-                  <a href="/gateway/all-data-report">
-                    <i class="fa fa-table"></i> <span>全部数据</span>
-                  </a>
-                </li>
-                  <li>
-                  <a href="/gateway/thickness-report">
-                    <i class="fa fa-pie-chart"></i> <span>厚度曲线</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="/gateway/all-sensor-data">
-                    <i class="fa fa-book"></i> <span>传感器参数设置</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="/gateway/set-sensor-time">
-                    <i class="fa fa-book"></i> <span>传感器时间设置</span>
-                  </a>
-                </li>
-                 <li>
-                  <a href="/gateway/change-pwd">
-                    <i class="fa fa-book"></i> <span>修改密码</span>
-                  </a>
-                </li>
+
+               {% for role in user.role.select_related %}
+                  {% for menu in role.menus.select_related %}
+                      {% if request.path == menu.url_name %}
+                          <li class="active">
+                              <a href="{% if menu.url_type == 0 %}{{ menu.url_name }}{% else %}{% url menu.url_name %}{% endif %}"><span>{{ menu.name }}</span></a>
+                          </li>
+{#                      {% elif request.path == "/gateway/user-list" %}#}
+{#                          <li class="active treeview">#}
+{#                              <a href="#">#}
+{#                                <i class="fa fa-dashboard"></i> <span>用户管理</span>#}
+{#                                <span class="pull-right-container">#}
+{#                                  <i class="fa fa-angle-left pull-right"></i>#}
+{#                                </span>#}
+{#                              </a>#}
+{#                              <ul class="treeview-menu">#}
+{#                                <li class="active"><a href="#"><i class="fa fa-circle-o"></i> 用户列表</a></li>#}
+{#                                <li><a href="#"><i class="fa fa-circle-o"></i> 个人中心</a></li>#}
+{#                                <li><a href="#"><i class="fa fa-circle-o"></i> 修改密码</a></li>#}
+{#                              </ul>#}
+{#                          </li>#}
+                      {% else %}
+                          <li>
+                              <a href="{% if menu.url_type == 0 %}{{ menu.url_name }}{% else %}{% url menu.url_name %}{% endif %}"><span>{{ menu.name }}</span></a>
+                          </li>
+                      {% endif %}
+                  {% endfor %}
+               {% endfor %}
               </ul>
             </section>
           </aside>
@@ -150,6 +143,11 @@
             <section class="content-header">
               <h1>
                 Dashboard
+                  {% if tcp_status.tcp_client_status %}
+                      <p style="color: green;">已连接服务器</p>
+                  {% else %}
+                      <div style="color: red;">未连接服务器</div>
+                  {% endif %}
                 <small>Control panel</small>
               </h1>
             </section>
@@ -282,7 +280,7 @@
                                     {% for row in latest_data %}
                                         <tr>
                                             <td>{{ row.id }}</td>
-                                            <td>{{ row.alias__alias }}</td>
+                                            <td>{{ row.alias }}</td>
                                             <td>{{ row.sensor_id | slice:"-4:" }}</td>
                                             <td>{{ row.battery }}</td>
                                             <td>{{ row.temperature }}</td>
@@ -416,7 +414,8 @@
 <script src="/static/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
 <!-- hightchart -->
 <script src="/static/plugins/highcharts/highcharts.js"></script>
-<script src="/static/plugins/highcharts/dark-unica.js"></script>
+{#<script src="/static/plugins/highcharts/dark-unica.js"></script>#}
+<script src="/static/plugins/highcharts/grid.js"></script>
 <!-- daterangepicker -->
 <script src="/static/bower_components/moment/min/moment.min.js"></script>
 <script src="/static/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>

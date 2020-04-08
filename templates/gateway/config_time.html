@@ -9,7 +9,7 @@
       <!-- SELECT2 EXAMPLE -->
       <div class="box box-default">
         <div class="box-header with-border">
-          <h3 class="box-title">选择时间设置模式</h3>
+          <h3 class="box-title">节点轮询时间设置、手动获取节点</h3>
 
           <div class="box-tools pull-right">
             <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
@@ -207,7 +207,6 @@
               <!-- /.box -->
             </div>
             <div class="">
-                <label></label>
                 <div class="layui-inline">
                     <span id="refresh-data-manual-msg" style="display: inline; color: red;"></span>
                 </div>
@@ -237,6 +236,7 @@
                                 <th>id</th>
                                 <th>名称</th>
                                 <th>传感器ID</th>
+                                <th>时间</th>
                                 <th>电量</th>
                                 <th>温度</th>
                                 <th>厚度值</th>
@@ -247,8 +247,9 @@
                         {% for row in latest_data %}
                             <tr>
                                 <td>{{ row.id }}</td>
-                                <td>{{ row.alias__alias }}</td>
+                                <td>{{ row.alias }}</td>
                                 <td>{{ row.sensor_id | slice:"-4:" }}</td>
+                                <td>{{ row.time_tamp }}</td>
                                 <td>{{ row.battery }}</td>
                                 <td>{{ row.temperature }}</td>
                                 <td>{{ row.thickness }}</td>
@@ -592,24 +593,24 @@
                         }
                    })
                 }
-        }
+            }
         })
     }
 
     //手动获取数据
     function RefreshDataManual() {
     $('#refresh-data-manual').click(function () {
-        var sensor_id = $('#selected-sensor-id').val();
+        var sensor_id = $('#selected-sensor-id').val().replace(/\./g,"A");  // 把小数点替换成A，get不能传小数点
+        $('#refresh-data-manual-msg').text('正在获取数据中...');
             $.ajax({
-                url:'/gateway/manual-get',
+                url:'/gateway/manual-get/' + sensor_id,
                 type:'POST',
-                data:{'sensor_id': sensor_id},
                 dataType:'JSON',
                 success:function (arg) {
                     if(arg.status){
+                        window.location.reload();
                         $('#refresh-data-manual-msg').text(arg.message);
                         ClearMSG('refresh-data-manual-msg');
-                        window.location.reload()
                     }else{
                         $('#refresh-data-manual-msg').text(arg.message);
                         ClearMSG('refresh-data-manual-msg');

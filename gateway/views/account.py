@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-from django import forms
-from django.forms import fields
-from django.forms import widgets
+from utils.FormClass import *
+from gateway import models
+from gateway import permissions
 
 
 @csrf_exempt
@@ -39,11 +40,91 @@ def page_404(request):
     """404页面"""
     return render(request, '404.html')
 
-class ChangepwdForm(forms.Form):
-    old_pwd = fields.CharField(label='旧密码', max_length=32, widget=widgets.PasswordInput(attrs={'class': 'form-control'}))
-    new_pwd = fields.CharField(label='新密码', max_length=32, widget=widgets.PasswordInput(attrs={'class': 'form-control'}))
-    new_pwd_confirm = fields.CharField(label='重复新密码', max_length=32, widget=widgets.PasswordInput(attrs={'class': 'form-control'}))
 
+
+# @permissions.check_permission
+@login_required
+def user_add(request):
+    """
+    增加用户
+    :param request:
+    :return:
+    """
+    if request.method == "GET":
+        form_obj = UserAddForm()
+        return render(request, "gateway/user_add.html", locals())
+    elif request.method == "POST":
+        form_obj = UserAddForm(data=request.POST)
+        if form_obj.is_valid():
+            temp = form_obj.save(commit=False)  # 暂时获取一个数据库对象，对其他字段进行赋值
+            temp.password = make_password(form_obj.cleaned_data['password'])
+            temp.save()  # 真正插入数据库
+            return redirect('/gateway/user-list')
+
+
+# @permissions.check_permission
+@login_required
+def user_edit(request, nid):
+    """
+    编辑用户
+    :param request:
+    :return:
+    """
+    obj = models.UserProfile.objects.filter(id=nid).first()
+    if request.method == "GET":
+        form_obj = UserEditForm(instance=obj)
+        return render(request, "gateway/user_edit.html", locals())
+    elif request.method == "POST":
+        form_obj = UserEditForm(data=request.POST, instance=obj)
+        if form_obj.is_valid():
+            form_obj.save()
+        return redirect('/gateway/user-list')
+
+
+# @permissions.check_permission
+@login_required
+@csrf_exempt
+def user_delete(request, nid):
+    obj = models.UserProfile.objects.get(id=nid)
+
+    if request.method == "POST":
+        obj.delete()
+        return redirect("/gateway/user-list")
+
+    return render(request, "gateway/user_delete.html", locals())
+
+
+@permissions.check_permission
+@login_required
+def user_list(request):
+    """
+    用户列表
+    :param request:
+    :return:
+    """
+    user_list = models.UserProfile.objects.all()
+
+    return render(request, "gateway/user_list.html", locals())
+
+
+@csrf_exempt
+@login_required
+def user_profile(request):
+    """
+    查看修改个人信息
+    :param request:
+    :return:
+    """
+    obj = models.UserProfile.objects.get(id=request.user.id)
+    if request.method == "GET":
+        form = UserProfileForm({'email': obj.email, 'name': obj.name, 'role': obj.role.values('name').first()['name'], 'last_login': str(obj.last_login)})
+    if request.method == "POST":
+        form = UserProfileForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            name = form.cleaned_data['name']
+            models.UserProfile.objects.filter(id=request.user.id).update(email=email, name=name)
+    return render(request, 'gateway/userprofile.html', locals())
 
 @csrf_exempt
 @login_required

@@ -25,7 +25,7 @@ SECRET_KEY = ')n0vse!y)9)npl9z0h_td%9%hs6+u=1tl#3r=0sc4cubq8*ly-'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'GatewaySite.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, 'db2.sqlite3'),
     }
 }
 
@@ -113,11 +113,12 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
+AUTH_USER_MODEL = 'gateway.UserProfile'
 
 STATIC_URL = '/static/'
 
@@ -126,4 +127,18 @@ STATICFILES_DIRS = [
 ]
 
 LOGIN_URL = '/login/'
+
+ip_port = ('192.168.0.89', 8001)
+
+headers_dict = {
+    'gwntid': 'gwntid',
+    'get_data_manually': 'get_data_manually',
+    'gwdata': 'gwdata',
+    'add_sensor': 'add_sensor',
+    'update_sensor': 'update_sensor',
+    'remove_sensor': 'remove_sensor',
+    'sync_sensors': 'sync_sensors',
+    'server_status': 'server_status',
+
+}
 

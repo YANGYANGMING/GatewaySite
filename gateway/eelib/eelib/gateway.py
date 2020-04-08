@@ -70,6 +70,7 @@ class GatewayCtrl():
         return ret
 
 class Gateway(GatewayCtrl):
+
     def __init__(self, gser):
         self.serCtrl = SerialCtrl(gser)
         self.delete_data = Delete_data()
@@ -83,8 +84,9 @@ class Gateway(GatewayCtrl):
     def sendData2Server(self, latest_job_id, tstp=0):
         """发送数据给服务器"""
         ret = Message(st=False)
+        gwData = {}
         """snrdata是串口发送过来的原始数据"""
-        snrdata = self.serCtrl.getSensorData(latest_job_id)  #snrdata对象
+        snrdata = self.serCtrl.getSensorData(latest_job_id)  # snrdata对象
         # print(snrdata.sensorID)
         # print(snrdata.data)
 
@@ -93,6 +95,8 @@ class Gateway(GatewayCtrl):
             ret.message = 'no sensor data'
         else:
             gwData = snrdata.cvrt2gwData()
+            # print(gwData)
+
             # r = self.postGWData(gwData, tstp)
 
             # 更改times_tamp为time_tamp,并把gwData['times_tamp']转换成结构化时间，为从数据库取数比较做准备
@@ -105,7 +109,7 @@ class Gateway(GatewayCtrl):
             thickness = self.localCalThickness(svrdata=gwData)
             gwData['thickness'] = thickness
             sensor_obj = models.Sensor_data.objects.get(sensor_id=gwData['sensor_id'])
-            gwData['alias_id'] = sensor_obj.id
+            gwData['alias'] = sensor_obj.alias
             # 把网关数据写入数据库
             models.GWData.objects.create(**gwData)
             # 检查网关数据是否超限
@@ -120,5 +124,5 @@ class Gateway(GatewayCtrl):
             #     ret.status = False
             #     ret.message = 'post failed'
 
-        return ret
+        return ret, gwData
 

@@ -128,13 +128,14 @@
                         <tr>
                             <th>名称</th>
                             <th>传感器ID</th>
+{#                            <th>network_id</th>#}
                             <th>周波数</th>
                             <th>增益</th>
                             <th>平均次数</th>
                             <th>Hz</th>
                             <th>采样深度</th>
                             <th>采样频率</th>
-                            <th>下次运行时间</th>
+{#                            <th>下次运行时间</th>#}
                             <th>编辑参数</th>
                         </tr>
                     </thead>
@@ -142,14 +143,15 @@
                         {% for item in sensor_obj %}
                             <tr>
                                 <td>{{ item.alias }}</td>
-                                <td>{{ item.sensor_id | slice:"-4:" }}</td>
+                                <td>{{ item.sensor_id }}</td>
+{#                                <td>{{ item.network_id }}</td>#}
                                 <td>{{ item.cHz }}</td>
                                 <td>{{ item.gain }}</td>
                                 <td>{{ item.avg_time }}</td>
                                 <td>{{ item.Hz }}</td>
                                 <td>{{ item.Sample_depth }}</td>
                                 <td>{{ item.Sample_Hz }}</td>
-                                <td>{{ item.next_run_time }}</td>
+{#                                <td>{{ item.next_run_time }}</td>#}
                                 <td><a href="#" data-toggle="modal" data-target="#modal-default" onclick="ShowModel(this);"><button type="button" class="btn btn-success"><i class="fa fa-pencil fa-fw"></i>编辑</button></a></td>
                             </tr>
                         {% endfor %}

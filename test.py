@@ -30,9 +30,24 @@ from gateway import models
 # # print(time_data)
 # receive_data = eval(receive_data)
 # print(type(receive_data))
+# for sensor_obj in models.Sensor_data.objects.all().values('network_id', 'id'):
+#     network_id = sensor_obj['network_id']
+#     is_exist = models.Sensor_online_status.objects.filter(sensor__network_id=network_id).exists()
+#     print(is_exist)
+#     models.Sensor_online_status.objects.filter(sensor_id=sensor_obj['id']).update(sensor_status=1)
 
-
-# latest_data = models.GWData.objects.values('alias__alias').order_by('-id')[:5]
-# print(latest_data)
-
-
+# a = '0.0.1.2'
+# b = hex_network_id = '0x' + ''.join(a.split('.'))
+# print(str(int(hex_network_id, 16)))
+# hex_network_id = '0x'
+# for network_item in '0.0.1.4'.split('.'):
+#     if len(hex(int(network_item)).split('0x')[1]) == 1:
+#         hex_network_id += '0' + hex(int(network_item)).split('0x')[1]
+#     else:
+#         hex_network_id += hex(int(network_item)).split('0x')[1]
+# print(hex_network_id)
+# print(str(int(hex_network_id, 16)))
+d = {'status': True, 'msg': '更新任务成功', 'receive_data': {'received_time_data': {'month': '*', 'day': '*', 'hour': '2', 'mins': '2'}, 'alias': '1号传感器', 'network_id': '0.0.1.1', 'sensor_type': '0', 'Importance': '0', 'date_of_installation': '2020-03-24', 'initial_thickness': '10.0', 'alarm_thickness': '8.0', 'alarm_battery': '50', 'area': '一区', 'location': '1号出料管道处', 'assembly_crewman': 'yyy', 'location_img_path': '', 'description': '1号出料管道腐蚀测量'}, 'header': 'update_sensor'}
+key = list(d.keys())[0]
+value = d.get(key)
+print(value)

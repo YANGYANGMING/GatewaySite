@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="db" uuid="0aa878cf-b59b-4672-9235-d60275faf669">
+    <data-source source="LOCAL" name="db2" uuid="3e777c46-f64c-472c-befa-0950c31bbcaf">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:G:\YYY\Gateway_Project\版本\GatewaySite\db.sqlite3</jdbc-url>
+      <jdbc-url>jdbc:sqlite:G:\YYY\Gateway_Project\版本\GatewaySite--MQTT版本\GatewaySite\db2.sqlite3</jdbc-url>
       <driver-properties>
         <property name="enable_load_extension" value="true" />
       </driver-properties>

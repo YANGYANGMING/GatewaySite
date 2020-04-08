@@ -1,5 +1,6 @@
 
 import time
+from gateway import models
 from ..count_db import Delete_data
 from .message import *
 
@@ -76,41 +77,44 @@ class SerialCtrl():
         cmd = str(data) + "\r\n"
         self.serialPort.write(cmd.encode('ascii'))
 
-    def getSerialData(self, latest_job_id, timeout_s=16):
-        """读取串口数据"""
+    def getSerialData(self, latest_job_id, timeout_s=5):
+        """发送命令并读取串口数据"""
         serdata = ''
         time_start = time.time()
         print('latest_job_id:', latest_job_id)
-        command = 'get ' + latest_job_id[-4:]
+        command = 'get 83 ' + latest_job_id.rsplit('.', 1)[1]
+        print('cmd', command)
         self.atCMD(command)
         try:
             while ((time.time() - time_start) < timeout_s):
                 serdata = self.serialPort.readline().decode('ascii')
-                # if (serdata != ''):
-                #     # 处理缓存问题
-                #     # print('serdata', serdata)
-                #     get_sensor_id = serdata.split(';')[0].split('=')[1]
-                #     print(get_sensor_id)
-                #     if get_sensor_id[-4:] == latest_job_id[-4:] and (time.time() - time_start) > 5:
-                #         break
-                #     else:
-                #         serdata = ''
+                print('serdata', serdata)
+                # if time.time() - time_start < 3:
+                #     # 处理接收ok缓存问题
+                #     serdata = ''
+                if (serdata != ''):
+                    break
+                    # # 处理重复gwdata缓存问题
+                    # get_sensor_id = serdata.split(';')[0].split('=')[1]
+                    # latest_sensor_id = models.Sensor_data.objects.values('sensor_id').filter(network_id=latest_job_id)[0]['sensor_id']
+                    # if get_sensor_id == latest_sensor_id and (time.time() - time_start) > 5:
+                    #     break
+                    # else:
+                    #     serdata = ''
         except Exception as e:
-            serdata = ''
             print(e)
-        serdata = ''
         return serdata
 
-    def getSerialresp(self, command, timeout_s=5):
-        """读取ok"""
-        set_val_response = ''
+    def getSerialresp(self, command, timeout_s=6):
+        """发送命令并读取串口返回值"""
+        response = ''
         time_start = time.time()
         self.atCMD(command)
         while ((time.time() - time_start) < timeout_s):
-            set_val_response = self.serialPort.readline().decode('ascii')
-            if (set_val_response != ''):
+            response = self.serialPort.readline().decode('ascii')
+            if (response != ''):
                 break
-        return set_val_response
+        return response
 
 
     def ser2snrData(self, serdata):
