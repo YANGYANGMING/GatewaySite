@@ -1347,3 +1347,131 @@ time task: 2020-04-08 15:39:09
 no sensor data
 time task: 2020-04-08 15:41:53
 no sensor data
+time task: 2020-04-08 16:00:00
+
+time task: 2020-04-08 16:04:39
+no sensor data
+time task: 2020-04-08 16:06:00
+no sensor data
+time task: 2020-04-08 16:06:05
+no sensor data
+time task: 2020-04-08 16:08:00
+no sensor data
+time task: 2020-04-08 16:08:05
+no sensor data
+time task: 2020-04-08 16:08:18
+no sensor data
+time task: 2020-04-08 16:16:00
+no sensor data
+time task: 2020-04-08 16:17:00
+no sensor data
+time task: 2020-04-08 16:17:05
+no sensor data
+time task: 2020-04-08 16:19:00
+no sensor data
+time task: 2020-04-08 16:19:05
+no sensor data
+time task: 2020-04-08 16:21:00
+no sensor data
+time task: 2020-04-08 16:21:05
+no sensor data
+time task: 2020-04-09 08:57:41
+no sensor data
+time task: 2020-04-09 12:12:00
+no sensor data
+time task: 2020-04-09 12:48:03
+no sensor data
+time task: 2020-04-09 16:04:30
+no sensor data
+time task: 2020-04-09 16:05:06
+no sensor data
+time task: 2020-04-09 16:09:33
+no sensor data
+time task: 2020-04-09 16:15:48
+
+time task: 2020-04-09 16:27:47
+
+time task: 2020-04-09 16:35:21
+
+time task: 2020-04-09 17:39:01
+
+time task: 2020-04-09 17:40:16
+
+time task: 2020-04-10 12:12:00
+no sensor data
+time task: 2020-04-11 11:00:00
+no sensor data
+time task: 2020-04-11 12:00:00
+no sensor data
+time task: 2020-04-12 11:00:00
+no sensor data
+time task: 2020-04-12 12:00:00
+no sensor data
+time task: 2020-04-13 11:00:00
+
+time task: 2020-04-13 12:00:00
+
+time task: 2020-04-14 11:08:00
+no sensor data
+time task: 2020-04-14 17:08:02
+
+time task: 2020-04-14 17:08:33
+
+time task: 2020-04-14 17:09:02
+
+time task: 2020-04-14 17:09:42
+
+time task: 2020-04-14 17:11:15
+
+time task: 2020-04-14 17:11:17
+
+time task: 2020-04-14 17:11:23
+
+time task: 2020-04-14 17:13:09
+
+time task: 2020-04-14 17:13:46
+
+time task: 2020-04-14 17:15:53
+no sensor data
+time task: 2020-04-14 17:16:41
+no sensor data
+time task: 2020-04-14 17:38:18
+no sensor data
+time task: 2020-04-14 17:48:12
+no sensor data
+time task: 2020-04-14 17:49:55
+no sensor data
+time task: 2020-04-14 18:14:57
+no sensor data
+time task: 2020-04-14 19:09:07
+no sensor data
+time task: 2020-04-15 08:52:00
+no sensor data
+time task: 2020-04-15 11:08:00
+
+time task: 2020-04-15 16:30:46
+no sensor data
+time task: 2020-04-15 16:32:00
+no sensor data
+time task: 2020-04-15 16:32:30
+no sensor data
+time task: 2020-04-15 16:36:24
+no sensor data
+time task: 2020-04-15 16:37:30
+no sensor data
+time task: 2020-04-15 16:38:54
+no sensor data
+time task: 2020-04-15 16:41:06
+no sensor data
+time task: 2020-04-15 16:49:26
+no sensor data
+time task: 2020-04-15 16:51:53
+no sensor data
+time task: 2020-04-15 16:53:14
+no sensor data
+time task: 2020-04-15 16:54:41
+no sensor data
+time task: 2020-04-15 16:57:10
+no sensor data
+time task: 2020-04-15 17:00:57
+no sensor data

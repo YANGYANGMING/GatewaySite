@@ -13,7 +13,7 @@ class EMATData():
         self.gain = 0  # 1Bytes
         self.ADSampleDiv = 0  # 1Bytes
         self.Battery = 0  # 1Bytes
-        self.XPos = 0  # 4Bytes
+        self.networkID = -1  # 4Bytes
         self.YPos = 0  # 4Bytes
         self.data = []  # 2048个2Bytes
 
@@ -32,8 +32,9 @@ class SensorData(EMATData):
             if (com_version == "emat_com 0.1"):
                 gwData["com_version"] = com_version
                 gwData["sensor_id"] = str(self.sensorID)
+                gwData["network_id"] = str(self.networkID)
                 gwData["times_tamp"] = time.time()
-                gwData["temperature"] = -999
+                gwData["temperature"] = self.res1
                 gwData["gain"] = self.gain
                 gwData["battery"] = self.Battery
                 gwData["data_len"] = len(self.data)
@@ -77,7 +78,7 @@ class SerialCtrl():
         cmd = str(data) + "\r\n"
         self.serialPort.write(cmd.encode('ascii'))
 
-    def getSerialData(self, latest_job_id, timeout_s=5):
+    def getSerialData(self, latest_job_id, timeout_s=30):
         """发送命令并读取串口数据"""
         serdata = ''
         time_start = time.time()
@@ -86,9 +87,11 @@ class SerialCtrl():
         print('cmd', command)
         self.atCMD(command)
         try:
+
+            # 先清空串口缓存（暂时未处理缓存）
+
             while ((time.time() - time_start) < timeout_s):
                 serdata = self.serialPort.readline().decode('ascii')
-                print('serdata', serdata)
                 # if time.time() - time_start < 3:
                 #     # 处理接收ok缓存问题
                 #     serdata = ''
@@ -127,7 +130,7 @@ class SerialCtrl():
             bb = tmp[i].split("=")
             aa.append(bb)
         buff = dict(aa)
-        # print('buff', buff)
+        print('buff', buff)
         # print("buff:\r\n"+str(buff)+"\r\n")
 
         if (buff != {}):
@@ -138,8 +141,9 @@ class SerialCtrl():
             snrdata.gain = int(buff.get('gain', 0))
             snrdata.ADSampleDiv = int(buff.get('ADSampleDiv', 0))
             snrdata.Battery = int(buff.get('Battery', 0))
-            snrdata.XPos = int(buff.get('XPos', 0))
             snrdata.YPos = int(buff.get('YPos', 0))
+
+            snrdata.networkID = str(buff.get('networkID', -1))
 
             data_t = buff.get('Data', '')
             cc = data_t.split(",")

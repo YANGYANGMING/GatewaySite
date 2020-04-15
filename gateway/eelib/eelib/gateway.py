@@ -9,8 +9,9 @@ from .alg.emat.emat import *
 from .message import *
 
 from gateway import models
+from utils import handle_func
 
-url_dict = models.URL.objects.filter(id=1).values('mainURL', 'mainHD', 'algURL', 'algHD').first()
+# url_dict = models.URL.objects.filter(id=1).values('mainURL', 'mainHD', 'algURL', 'algHD').first()
 
 test_gwdata_file  = os.path.dirname(os.path.abspath(__file__)) + '/test_data/gatewaydata.txt'
 test_svrdata_file = os.path.dirname(os.path.abspath(__file__)) + '/test_data/serverdata.txt'
@@ -37,37 +38,37 @@ class GatewayCtrl():
         js_data = json.loads(data_t.decode('utf-8'))
         return js_data
 
-    def get_url(self):
-        global url_dict
-        url_dict_obj = models.URL.objects.filter(id=1)
-        if url_dict_obj:
-            url_dict = url_dict_obj.values('mainURL', 'mainHD', 'algURL', 'algHD')[0]
-        else:
-            url_dict = url_dict_obj
-        return url_dict
-
-    def postGWData(self, gwdata=test_gwdata, tstp=0, url_t=url_dict['mainURL'], hd_t=eval(url_dict['mainHD'])):
-        # print(url_t)
-        ret = Message(st=False)
-
-        if(tstp==0):
-            gwdata['times_tamp'] = int(tstp)
-        data_t = self.fmtEncode(gwdata)
-        r = requests.post(url=url_t, data=data_t, headers=hd_t)
-        if(r.status_code==200):
-            ret.status = True
-            ret.result = r.json()
-        return ret
-
-    def postSVRData(self, svrdata=test_svrdata, url_t=url_dict['algURL'], hd_t=eval(url_dict['algHD'])):
-        ret = Message(st=False)
-        data_t = self.fmtEncode(svrdata)
-        r = requests.post(url=url_t, data=data_t, headers=hd_t)
-        if(r.status_code==200):
-            ret.status = True
-            ret.result = self.fmtDecode(r.text)
-
-        return ret
+    # def get_url(self):
+    #     global url_dict
+    #     url_dict_obj = models.URL.objects.filter(id=1)
+    #     if url_dict_obj:
+    #         url_dict = url_dict_obj.values('mainURL', 'mainHD', 'algURL', 'algHD')[0]
+    #     else:
+    #         url_dict = url_dict_obj
+    #     return url_dict
+    #
+    # def postGWData(self, gwdata=test_gwdata, tstp=0, url_t=url_dict['mainURL'], hd_t=eval(url_dict['mainHD'])):
+    #     # print(url_t)
+    #     ret = Message(st=False)
+    #
+    #     if(tstp==0):
+    #         gwdata['times_tamp'] = int(tstp)
+    #     data_t = self.fmtEncode(gwdata)
+    #     r = requests.post(url=url_t, data=data_t, headers=hd_t)
+    #     if(r.status_code==200):
+    #         ret.status = True
+    #         ret.result = r.json()
+    #     return ret
+    #
+    # def postSVRData(self, svrdata=test_svrdata, url_t=url_dict['algURL'], hd_t=eval(url_dict['algHD'])):
+    #     ret = Message(st=False)
+    #     data_t = self.fmtEncode(svrdata)
+    #     r = requests.post(url=url_t, data=data_t, headers=hd_t)
+    #     if(r.status_code==200):
+    #         ret.status = True
+    #         ret.result = self.fmtDecode(r.text)
+    #
+    #     return ret
 
 class Gateway(GatewayCtrl):
 
@@ -96,9 +97,7 @@ class Gateway(GatewayCtrl):
         else:
             gwData = snrdata.cvrt2gwData()
             # print(gwData)
-
             # r = self.postGWData(gwData, tstp)
-
             # 更改times_tamp为time_tamp,并把gwData['times_tamp']转换成结构化时间，为从数据库取数比较做准备
             localTime = time.localtime(gwData['times_tamp'])
             strTime = time.strftime("%Y-%m-%d %H:%M:%S", localTime)
@@ -108,10 +107,11 @@ class Gateway(GatewayCtrl):
             #把厚度写入网关数据中
             thickness = self.localCalThickness(svrdata=gwData)
             gwData['thickness'] = thickness
-            sensor_obj = models.Sensor_data.objects.get(sensor_id=gwData['sensor_id'])
-            gwData['alias'] = sensor_obj.alias
+            # 转换network_id
+            gwData['network_id'] = handle_func.str_dec_hex(gwData['network_id'])
+            gwData.pop('sensor_id')
             # 把网关数据写入数据库
-            models.GWData.objects.create(**gwData)
+            # models.GWData.objects.create(**gwData)
             # 检查网关数据是否超限
             self.delete_data.count_gwdata()
 

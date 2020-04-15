@@ -23,13 +23,13 @@
             <div class="col-md-6">
                     <div class="form-group">
                         <label>传感器：</label>
-                        <select class="form-control select2" id="selected-sensor-id" style="width: 50%; display: inline;" data-placeholder="传感器">
+                        <select class="form-control select2" id="selected-network-id" style="width: 50%; display: inline;" data-placeholder="传感器">
                             <option></option>
 {#                            {% for sche_id, sche_alias in sche_job_id_dict.items %}#}
 {#                                <option value="{{ sche_id }}">{{ sche_alias }}</option>#}
 {#                            {% endfor %}#}
                             {% for item in data_obj %}
-                                <option value="{{ item.sensor_id }}">{{ item.alias }}</option>
+                                <option value="{{ item.network_id }}">{{ item.network_id__alias }}</option>
                             {% endfor %}
                         </select>
                         <button type="submit" class="btn btn-primary" style="display: inline; margin-left: 20px" id="show-thickness">确定</button>
@@ -81,28 +81,26 @@
                     text: null
                 },
                 xAxis: {
-                    type: 'linear'
-                },
+                    type: 'category',
+                   },
                 yAxis: {
-                    endOnTick: false, //对数Y轴不强制结束于标线
+                    tickInterval: 0.05,
                     title: {
                         text: '值'
                     },
-                    plotLines: [{
-                        value: 0,
-                        width: 1,
-                        color: '#808080'
-                    }]
-                },
-                tooltip: {
-                    formatter: function () {
-                        return '<b>' + this.series.name + '</b><br/>' +
-                                Highcharts.numberFormat(this.x) + '<br/>' +
-                                Highcharts.numberFormat(this.y, 2);
-                    }
                 },
                 legend: {
                     enabled: false
+                },
+                lang:{
+                   contextButtonTitle:"图表导出菜单",
+                   downloadJPEG:"下载JPEG图片",
+                   downloadPDF:"下载PDF文件",
+                   downloadPNG:"下载PNG文件",
+                   downloadSVG:"下载SVG文件",
+                   printChart:"打印图表",
+                   resetZoom:"恢复缩放",
+                   resetZoomTitle:"恢复图表",
                 },
                 exporting: {
                     enabled: true
@@ -111,34 +109,37 @@
                     {
                         name: '',
                         data: [
-
-                        ]
-                    },
+                            ]
+                    }
                 ]
             };
             $('#container').highcharts(config);
             $('#show-thickness').click(function () {
-                var sensor_id = $('#selected-sensor-id').val();
+                var network_id = $('#selected-network-id').val();
                 $.ajax({
                 url: '/gateway/thickness-json-report',
                 type:'GET',
-                data:{'sensor_id': sensor_id},
+                data:{'network_id': network_id},
                 dataType: 'JSON',
                 success:function(arg){
                     config['series'] = arg;
                     $('#container').highcharts(config);
-                    {#$('#thickness-header').text(arg[0]['name']);#}
                     if(arg[0]['data'].length===0){
                         $('#show-thickness-msg').text('当前传感器暂无数据！');
-                        setTimeout(function () {
-                            $("#show-thickness-msg").text('')
-                            }, 3000);
+                        ClearMSG('show-thickness-msg')
                     }
 
                 }
              })
 
             })
+        }
+
+        //清除提示信息
+        function ClearMSG(nid) {
+            setTimeout(function () {
+                $("#"+nid).text('')
+            }, 3000);
         }
 
     </script>

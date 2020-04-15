@@ -116,7 +116,7 @@ import threading, time
 
 import json
 
-sub_list = [("0.0.2.0", 2), ('pub', 2)]
+sub_list = [("aaa", 2), ('pub', 2)]
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code " + str(rc))
@@ -133,6 +133,7 @@ def on_message(client, userdata, msg):
     print(msg.topic)
     print(payload)
     # print(msg.topic + ":" + payload)
+    client.publish("pub", json.dumps('2收到'), 2)
 
 
 if __name__ == '__main__':
@@ -153,6 +154,11 @@ if __name__ == '__main__':
     while True:
         str = input()
         if str:
-            client.publish("0.0.2.0", json.dumps({"say": str}), 2)
+            client.publish("pub", json.dumps(str), 2)
+
+
+
+
+
 
 

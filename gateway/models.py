@@ -139,12 +139,17 @@ class Set_Time(models.Model):
     mins = models.CharField(max_length=32, null=True, blank=True)
 
 
-class URL(models.Model):
-    """发送的URL"""
-    mainURL = models.URLField(null=True, blank=True, default="http://ling.2tag.cn/api/collect_data")
-    mainHD = models.CharField(null=True, blank=True, max_length=32, default={'Content-Type': 'application/json'})
-    algURL = models.URLField(null=True, blank=True, default="http://118.24.12.152:8099/analyzer/b64")
-    algHD = models.CharField(null=True, blank=True, max_length=32, default={'Content-Type': 'application/json'})
+class Gateway(models.Model):
+    """网关信息"""
+    name = models.CharField(max_length=64, null=True, blank=True)
+    Enterprise = models.CharField(max_length=128, null=True, blank=True)
+    network_id = models.CharField(max_length=32, unique=True)
+    gw_status_choices = ((0, '离线'),
+                         (1, '在线'),
+                         )
+    gw_status = models.SmallIntegerField(choices=gw_status_choices, default=1)
+    def __str__(self):
+        return self.name
 
 
 class Post_Return(models.Model):
@@ -156,8 +161,8 @@ class Post_Return(models.Model):
 
 class GWData(models.Model):
     """网关数据"""
+    network_id = models.ForeignKey(to='Sensor_data', to_field='network_id', on_delete=models.DO_NOTHING)
     com_version = models.CharField(max_length=32)
-    sensor_id = models.CharField(max_length=32)
     time_tamp = models.CharField(max_length=32)
     temperature = models.IntegerField(null=True, blank=True)
     gain = models.IntegerField()
@@ -165,11 +170,9 @@ class GWData(models.Model):
     data_len = models.IntegerField()
     thickness = models.CharField(max_length=16, default='-999')
     data = models.TextField()
-    alias = models.CharField(max_length=64, null=True, blank=True)
-    # gateway = models.ForeignKey('GW_network_id', on_delete=models.CASCADE)
 
     def __str__(self):
-        return self.alias
+        return self.network_id
 
 
 class GW_network_id(models.Model):
@@ -185,15 +188,6 @@ class TimeStatus(models.Model):
     button_status = models.CharField(max_length=32)
 
 
-# class Sensor_online_status(models.Model):
-#     """"""
-#     sensor = models.OneToOneField('Sensor_data', on_delete=models.CASCADE)
-#     sensor_status_choices = ((1, '在线'),
-#                              (0, '掉线')
-#                              )
-#     sensor_status = models.SmallIntegerField(choices=sensor_status_choices, default=1)
-
-
 class Set_param(models.Model):
     """手动获取的id、设置参数"""
     menu_get_id = models.CharField(max_length=32)
@@ -202,9 +196,9 @@ class Set_param(models.Model):
 
 class Sensor_data(models.Model):
     """传感器详细数据信息"""
-    alias = models.CharField(max_length=64, verbose_name="别名", blank=True, null=True)
-    sensor_id = models.CharField(max_length=32)
-    network_id = models.CharField(max_length=32, null=True, blank=True)
+    alias = models.CharField(max_length=64, verbose_name="别名", unique=True)
+    sensor_id = models.CharField(max_length=32, unique=True)
+    network_id = models.CharField(max_length=32, unique=True)
     received_time_data = models.CharField(max_length=128)
     battery = models.CharField(max_length=32, default=100)
     cHz = models.CharField(max_length=32, default='2')
@@ -220,11 +214,15 @@ class Sensor_data(models.Model):
     Importance_choices = ((0, '一般'),
                           (1, '重要'),
                           )
-    sensor_status_choices = ((1, '在线'),
-                             (0, '掉线')
-                             )
-    sensor_status = models.SmallIntegerField(choices=sensor_status_choices, default=1)
     Importance = models.SmallIntegerField(choices=Importance_choices, default=0)
+    sensor_online_status_choices = ((1, '在线'),
+                             (0, '离线')
+                             )
+    sensor_online_status = models.SmallIntegerField(choices=sensor_online_status_choices, default=1)
+    sensor_run_status_choices = ((1, '开通'),
+                                 (0, '禁止')
+                                 )
+    sensor_run_status = models.SmallIntegerField(choices=sensor_run_status_choices, default=1)
     date_of_installation = models.DateField(auto_now_add=True)
     initial_thickness = models.CharField(max_length=32, null=True, blank=True)
     alarm_thickness = models.CharField(max_length=32, null=True, blank=True)
@@ -234,6 +232,7 @@ class Sensor_data(models.Model):
     location_img_path = models.TextField(verbose_name='所在位置图片路径', null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     assembly_crewman = models.CharField(max_length=32, null=True, blank=True)
+    delete_status = models.CharField(max_length=32, default=0)
 
     def __str__(self):
         return self.alias

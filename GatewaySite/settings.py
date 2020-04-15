@@ -139,6 +139,10 @@ headers_dict = {
     'remove_sensor': 'remove_sensor',
     'sync_sensors': 'sync_sensors',
     'server_status': 'server_status',
+    'heart_ping': 'heart_ping',
+    'resume_sensor': 'resume_sensor',
+    'pause_sensor': 'pause_sensor',
+    'update_gateway': 'update_gateway',
 
 }
 

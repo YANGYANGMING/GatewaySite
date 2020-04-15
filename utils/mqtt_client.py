@@ -1,5 +1,7 @@
 import paho.mqtt.client as mqtt
-from utils.handle_func import handle_recv_server_cmd
+from utils import handle_func
+from utils import handle_recv_server
+from gateway import models
 import json
 
 
@@ -11,13 +13,20 @@ class MQTT_Client(object):
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect
         self.client.on_message = self.on_message
+        self.client.on_subscribe = self.on_subscribe
+        # self.client.on_log = self.on_log
         self.client.connect(self.HOST, 1883, 30)
         self.client.loop_start()
 
+
+    # 在连接成功时的 callback，打印 result code
     def on_connect(self, client, userdata, flags, rc):
         print("Connected with result code " + str(rc))
-        # 连接成功回调
-        result, mid = client.subscribe([("0.0.1.0", 2), ('pub', 2)])
+        topic = models.Gateway.objects.values('network_id')[0]['network_id']
+        self.client.subscribe([('pub', 2), (topic, 2)])
+        header = 'connected'
+        result = {'status': True, 'mag': 'Successful connection'}
+        handle_func.send_gwdata_to_server(client, topic, result, header)
 
     # 在连接断开时的 callback，打印 result code
     def on_disconnect(self, client, userdata, rc):
@@ -26,11 +35,19 @@ class MQTT_Client(object):
     # 接收到消息的回调方法
     def on_message(self, client, userdata, msg):
         payload = json.loads(msg.payload.decode())
-        # print(msg.topic)
-        # print(payload)
+        print('msg.topic:', msg.topic)
+        print('payload:', payload)
         if payload['id'] == 'server':
             print('接收到消息的回调')
-            handle_recv_server_cmd(msg.topic, payload)
+            handle_recv_server.handle_recv_server(msg.topic, payload)
+
+    def on_subscribe(self, client, userdata, mid, granted_qos):
+        print('订阅成功.....')
+
+    # def on_log(self, client, obj, level, string):
+    #     print("Log:" + string)
+
+
 
 
 

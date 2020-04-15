@@ -269,7 +269,7 @@
                                     <tr>
                                         <th>id</th>
                                         <th>名称</th>
-                                        <th>传感器ID</th>
+                                        <th>网络号</th>
                                         <th>电量</th>
                                         <th>温度</th>
                                         <th>厚度值</th>
@@ -280,8 +280,8 @@
                                     {% for row in latest_data %}
                                         <tr>
                                             <td>{{ row.id }}</td>
-                                            <td>{{ row.alias }}</td>
-                                            <td>{{ row.sensor_id | slice:"-4:" }}</td>
+                                            <td>{{ row.network_id__alias }}</td>
+                                            <td>{{ row.network_id }}</td>
                                             <td>{{ row.battery }}</td>
                                             <td>{{ row.temperature }}</td>
                                             <td>{{ row.thickness }}</td>
@@ -416,6 +416,8 @@
 <script src="/static/plugins/highcharts/highcharts.js"></script>
 {#<script src="/static/plugins/highcharts/dark-unica.js"></script>#}
 <script src="/static/plugins/highcharts/grid.js"></script>
+<!-- 需要保存导出功能模块文件是在 highcharts.js 之后引入 -->
+<script src="/static/plugins/highcharts/modules/exporting.js"></script>
 <!-- daterangepicker -->
 <script src="/static/bower_components/moment/min/moment.min.js"></script>
 <script src="/static/bower_components/bootstrap-daterangepicker/daterangepicker.js"></script>
