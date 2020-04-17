@@ -70,7 +70,7 @@
                 chart: {
                     type: 'spline',
                     shadow: true,
-                    zoomType: 'x',
+                    zoomType: 'xy',
                     panning: true,
 			        panKey: 'shift',
                 },
@@ -78,13 +78,14 @@
                     followTouchMove: true,
                 },
                 title: {
-                    text: null
+                    text: '',
                 },
                 xAxis: {
                     type: 'category',
                    },
                 yAxis: {
-                    tickInterval: 0.05,
+                    tickInterval: 0.1,
+                    min: 0,
                     title: {
                         text: '值'
                     },
@@ -122,7 +123,9 @@
                 data:{'network_id': network_id},
                 dataType: 'JSON',
                 success:function(arg){
-                    config['series'] = arg;
+                    config['series'] = arg['datas'];
+                    config['title']['text'] = arg['alias'];
+                    config['yAxis']['max'] = arg['yAxis_max_limit'];
                     $('#container').highcharts(config);
                     if(arg[0]['data'].length===0){
                         $('#show-thickness-msg').text('当前传感器暂无数据！');

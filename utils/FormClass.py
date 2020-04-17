@@ -18,8 +18,6 @@ class ChangepwdForm(forms.Form):
 
 
 class UserProfileForm(forms.Form):
-    email = fields.CharField(label='邮箱', max_length=32,
-                             widget=wid.EmailInput(attrs={'class': 'form-control col-lg-offset-1'}))
     name = fields.CharField(label='用户名', max_length=32,
                             widget=wid.TextInput(attrs={'class': 'form-control col-lg-offset-1'}))
     role = fields.CharField(label='角色', max_length=32,
@@ -48,7 +46,6 @@ class UserEditForm(ModelForm):
             "password": wid.Input(attrs={'class': 'form-control', 'style': 'width: 50%'}),
             "last_login": wid.Input(attrs={'class': 'form-control', 'style': 'width: 50%'}),
             "name": wid.Input(attrs={'class': 'form-control', 'style': 'width: 50%'}),
-            "email": wid.Input(attrs={'class': 'form-control', 'style': 'width: 50%'}),
         }
 #labels，自定义在前端显示的名字
         # labels = {
@@ -73,5 +70,4 @@ class UserAddForm(ModelForm):
             "password": wid.Input(attrs={'class': 'form-control', 'style': 'width: 50%'}),
             "last_login": wid.Input(attrs={'class': 'form-control', 'style': 'width: 50%'}),
             "name": wid.Input(attrs={'class': 'form-control', 'style': 'width: 50%'}),
-            "email": wid.Input(attrs={'class': 'form-control', 'style': 'width: 50%'}),
         }

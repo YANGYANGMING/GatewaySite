@@ -7,16 +7,15 @@ from django.contrib.auth.models import (
 
 
 class UserProfileManager(BaseUserManager):
-    def create_user(self, email, name, password=None):
+    def create_user(self, name, password=None):
         """
         Creates and saves a User with the given email, date of
         birth and password.
         """
-        if not email:
-            raise ValueError('Users must have an email address')
+        if not name:
+            raise ValueError('Users must have a name')
 
         user = self.model(
-            email=self.normalize_email(email),
             name=name,
         )
 
@@ -30,7 +29,6 @@ class UserProfileManager(BaseUserManager):
         birth and password.
         """
         user = self.create_user(
-            email,
             password=password,
             name=name,
         )
@@ -40,34 +38,25 @@ class UserProfileManager(BaseUserManager):
 
 
 class UserProfile(AbstractBaseUser, PermissionsMixin):
-    # user = models.OneToOneField(User, on_delete=models.CASCADE)
-    email = models.EmailField(
-        verbose_name='email address',
-        max_length=255,
-        unique=True,
-
-    )
-    name = models.CharField(max_length=64, verbose_name="姓名")
+    name = models.CharField(max_length=64, verbose_name="姓名", unique=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=True)
-    # is_admin = models.BooleanField(default=False)
     role = models.ManyToManyField("Role", blank=True, null=True)
 
     objects = UserProfileManager()
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['name']
+    USERNAME_FIELD = 'name'
 
     def get_full_name(self):
         # The user is identified by their email address
-        return self.email
+        return self.name
 
     def get_short_name(self):
         # The user is identified by their email address
-        return self.email
+        return self.name
 
     def __str__(self):
-        return self.email
+        return self.name
 
     # def has_perm(self, perm, obj=None):
     #     "Does the user have a specific permission?"
@@ -94,6 +83,7 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
             ('gateway_all_sensor_data_view', '可以查看所有传感器的参数'),
             ('gateway_set_sensor_time_view', '可以查看所有传感器的设置运行时间'),
             ('gateway_user_list_view', '可以查看编辑用户列表'),
+            ('gateway_set_gateway_page_view', '可以设置网关'),
             # ('gateway_user_add_view', '可以新增用户'),
         )
 
@@ -142,7 +132,7 @@ class Set_Time(models.Model):
 class Gateway(models.Model):
     """网关信息"""
     name = models.CharField(max_length=64, null=True, blank=True)
-    Enterprise = models.CharField(max_length=128, null=True, blank=True)
+    Enterprise = models.CharField(max_length=128, unique=True)
     network_id = models.CharField(max_length=32, unique=True)
     gw_status_choices = ((0, '离线'),
                          (1, '在线'),
@@ -207,17 +197,21 @@ class Sensor_data(models.Model):
     Hz = models.CharField(max_length=32, default='2')
     Sample_depth = models.CharField(max_length=32, default='2')
     Sample_Hz = models.CharField(max_length=32, default='500')
-    sensor_type_choices = ((0, '常温'),
-                           (1, '高温'),
+    sensor_type_choices = ((0, 'ETM-100'),
                            )
     sensor_type = models.SmallIntegerField(choices=sensor_type_choices, default=0)
     Importance_choices = ((0, '一般'),
                           (1, '重要'),
                           )
+    material_choices = ((0, '未定义'),
+                        (1, '碳钢'),
+                        (2, '不锈钢'),
+                        )
+    material = models.SmallIntegerField(choices=material_choices, default=0)
     Importance = models.SmallIntegerField(choices=Importance_choices, default=0)
     sensor_online_status_choices = ((1, '在线'),
-                             (0, '离线')
-                             )
+                                    (0, '离线')
+                                    )
     sensor_online_status = models.SmallIntegerField(choices=sensor_online_status_choices, default=1)
     sensor_run_status_choices = ((1, '开通'),
                                  (0, '禁止')

@@ -25,10 +25,6 @@
                   <label style="color: red;">
                       选择模式：
                   </label>
-{#                <label>#}
-{#                  <input type="radio" id="Cycle" name="group" class="flat-red">#}
-{#                    循环模式(已禁用);#}
-{#                </label>#}
                 <label>
                   <input type="radio" id="Timing" name="group" class="flat-red">
                     定时模式
@@ -38,56 +34,6 @@
             </div>
             <!-- /.col -->
           </div>
-          <!-- /.row 循环模式-->
-{#          <div class="row">#}
-{#            <div class="col-md-2">#}
-{#              <div class="form-group">#}
-{#                <label><b style="color: #ff1c1f;">循环模式：</b>天数：</label>#}
-{#                <select class="form-control select2" name="days" id="days" style="width: 100%;" data-placeholder="天数">#}
-{#                  <option></option>#}
-{#                  {% for days_item in context.Day_interval %}#}
-{#                      <option value="{{ days_item }}">{{ days_item }}</option>#}
-{#                  {% endfor %}#}
-{#                </select>#}
-{#              </div>#}
-{#              <!-- /.form-group -->#}
-{#            </div>#}
-{#            <!-- /.col -->#}
-{#            <div class="col-md-2">#}
-{#              <div class="form-group">#}
-{#                <label><b style="color: #ff1c1f">循环模式：</b>小时数：</label>#}
-{#                  <label class="col-sm-8 control-label">循环模式：小时数</label>#}
-{#                <select class="form-control select2" name="hours" id="hours" style="width: 100%;" data-placeholder="小时数">#}
-{#                  <option></option>#}
-{#                  {% for hours_item in context.Hour_interval %}#}
-{#                      <option value="{{ hours_item }}">{{ hours_item }}</option>#}
-{#                  {% endfor %}#}
-{#                </select>#}
-{#              </div>#}
-{#              <!-- /.form-group -->#}
-{#           </div>#}
-{#            <!-- /.col -->#}
-{#            <div class="col-md-2">#}
-{#              <div class="form-group">#}
-{#                <label ><b style="color: #ff1c1f">循环模式：</b>分钟数：</label>#}
-{#                <select class="form-control select2" name="mins" id="mins" style="width: 100%;" data-placeholder="分钟数">#}
-{#                  <option></option>#}
-{#                  {% for mins_item in context.Minute_interval %}#}
-{#                      <option value="{{ mins_item }}">{{ mins_item }}</option>#}
-{#                  {% endfor %}#}
-{#                </select>#}
-{#              </div>#}
-{#              <!-- /.form-group -->#}
-{#           </div>#}
-{#            <!-- /.col -->#}
-{#          <div class="col-md-2">#}
-{#              <label></label>#}
-{#              <div class="layui-inline" style="margin-top: 8px">#}
-{#                  <span id="cycle-sub-msg" style="color: red; margin-left: 10px"></span>#}
-{#              </div>#}
-{#          </div>#}
-{#            <!-- /.col -->#}
-{#          </div>#}
           <!-- /.row 定时模式-->
           <div class="row">
             <div class="col-md-2">
@@ -165,7 +111,6 @@
             <div class="col-md-2">
               <div id="start-scheduler" class="form-group">
                   <button type="button" class="btn btn-block btn-success" onclick="SubSetting()">启动定时器</button>
-{#                  <a onclick="SubSetting()" tabindex="0" class="btn btn-block btn-success" role="button" data-toggle="popover" data-trigger="focus" data-content="先选择模式">可消失的弹出框</a>#}
               </div>
               <!-- /.form-group -->
             </div>
@@ -326,8 +271,6 @@
       //刷新页面保留上次数据
     function ShowOriginData() {
 
-        //临时设置了禁止循环模式，如需使用循环模式，注释下面3行代码即可
-        {#$('#Cycle').prop('disabled', true);#}
         $('#Timing').iCheck('check');
         OperationTiming();
 
@@ -349,26 +292,11 @@
         min = min.split(',');
         $('#min').select2("val", [min]);
 
-        //Cycle-time
-        {#var days = "{{ latest_Cycle_time.day }}";#}
-        {#days = days.split(',');#}
-        {#$('#days').select2("val", [days]);#}
-        {#var hours = "{{ latest_Cycle_time.hour }}";#}
-        {#hours = hours.split(',');#}
-        {#$('#hours').select2("val", [hours]);#}
-        {#var mins = "{{ latest_Cycle_time.mins }}";#}
-        {#mins = mins.split(',');#}
-        {#$('#mins').select2("val", [mins]);#}
-
         //time_status
         if ({{ latest_time_status.timing_status }}) {
             $('#Timing').iCheck('check');
             OperationTiming();
         }
-        {#if ({{ latest_time_status.cycle_status }}) {#}
-        {#    $('#Cycle').iCheck('check');#}
-        {#    OperationCycle();#}
-        {# }#}
 
         $('#run-status').text('{{ latest_time_status.text_status }}');
         $('#btn-status').text('{{ latest_time_status.button_status }}');
@@ -391,9 +319,6 @@
             OperationTiming();
         });
 
-        {#$('#Cycle').on('ifChecked', function(){#}
-        {#    OperationCycle();#}
-        {# });#}
         }
 
     //启动定时任务
@@ -423,31 +348,6 @@
                 }
             });
         }
-        {#else if($('#Cycle').prop('checked')){#}
-        {#    var days = $('#days').val();#}
-        {#    var hours = $('#hours').val();#}
-        {#    var mins = $('#mins').val();#}
-        {#    var CycleDateList = [days, hours, mins];#}
-        {#    console.log('CycleDateList', CycleDateList);#}
-        {#    $.ajax({#}
-        {#        url:'/gateway/set-cycle-time',#}
-        {#        type:'POST',#}
-        {#        data:{'CycleDateList': CycleDateList},#}
-        {#        traditional:true,#}
-        {#        dataType:'JSON',#}
-        {#        success:function (arg) {#}
-        {#            if(arg.status){#}
-        {#                console.log('Cycle'+arg.message);#}
-        {#                $(".icon-status").css('color', '#3E8F03');#}
-        {#                $("#run-status").text('运行中...').css('color', '#3E8F03');#}
-        {#                $('#btn-status').text('暂停').addClass('btn-warning');#}
-        {#                SaveStatus();#}
-        {#            }#}
-        {#            $('#cycle-sub-msg').text(arg.message);#}
-        {#            ClearMSG('cycle-sub-msg');#}
-        {#        }#}
-        {#    })#}
-        {# }#}
         else{
             alert('请先选择模式')
         }
@@ -457,30 +357,12 @@
     //操作定时模式输入框，则禁止循环模式输入框
       function OperationTiming() {
           console.log('Timing', $('#Timing').prop('checked'));
-        // Cycle
-        {#$('#days').prop('disabled', true);#}
-        {#$('#hours').prop('disabled', true);#}
-        {#$('#mins').prop('disabled', true);#}
         //Timing
         $('#month').prop('disabled', false);
         $('#day').prop('disabled', false);
         $('#hour').prop('disabled', false);
         $('#min').prop('disabled', false);
       }
-
-    // 操作循环模式输入框，则禁止定时模式输入框
-      {#function OperationCycle() {#}
-      {#    console.log('Cycle', $('#Cycle').prop('checked'));#}
-      {#  // Cycle#}
-      {#  $('#days').prop('disabled', false);#}
-      {#  $('#hours').prop('disabled', false);#}
-      {#  $('#mins').prop('disabled', false);#}
-      {#  //Timing#}
-      {#  $('#month').prop('disabled', true);#}
-      {#  $('#day').prop('disabled', true);#}
-      {#  $('#hour').prop('disabled', true);#}
-      {#  $('#min').prop('disabled', true);#}
-      {# }#}
 
     //重置/清除
     function ResetTime() {
@@ -500,64 +382,11 @@
                 }
             })
         }
-        {#if($('#Cycle').prop('checked')){#}
-        {#    $.ajax({#}
-        {#        url: '/gateway/reset-Cycle-time',#}
-        {#        type:'POST',#}
-        {#        dataType:'JSON',#}
-        {#        success:function (arg) {#}
-        {#            if(arg.status){#}
-        {#                $(".icon-status").css('color', '#8f8f8f');#}
-        {#                $("#run-status").text('已暂停').css('color', '#8f8f8f');#}
-        {#                $('#btn-status').text('暂停').addClass('btn-warning');#}
-        {#                window.location.reload();#}
-        {#                SaveStatus();#}
-        {#            }#}
-        {#        }#}
-        {#    })#}
-        {# }#}
     }
 
     //暂停、恢复
     function PauseTime() {
         $("#btn-status").click(function () {
-            {#if($('#Cycle').prop('checked')){#}
-            {#    //暂停循环时间#}
-            {#    var editing = $(this).hasClass('btn-warning');#}
-            {#    var ths = this;#}
-            {#    if(editing){#}
-            {#        $.ajax({#}
-            {#            url:'/gateway/pause-cycle-time',#}
-            {#            dataType:'JSON',#}
-            {#            success:function (arg) {#}
-            {#                if(arg.status){#}
-            {#                    console.log(arg.message);#}
-            {#                    $(ths).removeClass('btn-warning');#}
-            {#                    $(ths).text('恢复');#}
-            {#                    $(".icon-status").css('color', '#8f8f8f');#}
-            {#                    $("#run-status").text('已暂停').css('color', '#8f8f8f');#}
-            {#                    SaveStatus();#}
-            {#                }#}
-            {#            }#}
-            {#       });#}
-            {#    }else{#}
-            {#        //恢复循环时间#}
-            {#        $.ajax({#}
-            {#            url:'/gateway/resume-cycle-time',#}
-            {#            dataType:'JSON',#}
-            {#            success:function (arg) {#}
-            {#                if(arg.status){#}
-            {#                    console.log(arg.message);#}
-            {#                    $(ths).addClass('btn-warning');#}
-            {#                    $(ths).text('暂停');#}
-            {#                    $(".icon-status").css('color', '#3E8F03');#}
-            {#                    $("#run-status").text('运行中...').css('color', '#3E8F03');#}
-            {#                    SaveStatus();#}
-            {#                }#}
-            {#            }#}
-            {#       })#}
-            {#    }#}
-            {# }#}
             if($('#Timing').prop('checked')){
                 var editing = $(this).hasClass('btn-warning');
                 var ths = this;
@@ -623,7 +452,6 @@
 
     //保存状态
     function SaveStatus() {
-        {#var cycle_status = $('#Cycle').prop('checked');#}
         var timing_status = $('#Timing').prop('checked');
         var text_status = $('#run-status').text();
         var button_status = $('#btn-status').text();

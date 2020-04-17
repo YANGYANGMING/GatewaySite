@@ -22,20 +22,19 @@ urlpatterns = [
     re_path(r'^sensor-data-val-set$', views.sensor_data_val_set),
 
     re_path(r'^set-Timing-time$', views.set_Timing_time),
-    re_path(r'^set-cycle-time$', views.set_cycle_time),
     re_path(r'^save-status$', views.save_status),
 
     re_path(r'^pause-Timing-time$', views.pause_Timing_time),
     re_path(r'^resume-Timing-time$', views.resume_Timing_time),
-    re_path(r'^pause-cycle-time$', views.pause_cycle_time),
     re_path(r'^resume-cycle-time$', views.resume_cycle_time),
 
     re_path(r'^reset-Timing-time$', views.reset_Timing_time),
-    re_path(r'^reset-Cycle-time$', views.reset_Cycle_time),
 
 
     re_path(r'^edit-sensor-time/(\d+)$', views.edit_sensor_time),
     re_path(r'^set-gateway-json$', views.set_gateway_json),
+
+    re_path(r'^refresh-gw-status$', views.refresh_gw_status),
 
 
     # re_path(r'^receive-server-data$', views.receive_server_data),

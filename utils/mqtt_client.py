@@ -35,10 +35,10 @@ class MQTT_Client(object):
     # 接收到消息的回调方法
     def on_message(self, client, userdata, msg):
         payload = json.loads(msg.payload.decode())
-        print('msg.topic:', msg.topic)
-        print('payload:', payload)
         if payload['id'] == 'server':
             print('接收到消息的回调')
+            print('msg.topic:', msg.topic)
+            print('payload:', payload)
             handle_recv_server.handle_recv_server(msg.topic, payload)
 
     def on_subscribe(self, client, userdata, mid, granted_qos):

@@ -128,7 +128,7 @@ STATICFILES_DIRS = [
 
 LOGIN_URL = '/login/'
 
-ip_port = ('192.168.0.89', 8001)
+heart_timeout = {'minutes': 1, 'seconds': 30}
 
 headers_dict = {
     'gwntid': 'gwntid',

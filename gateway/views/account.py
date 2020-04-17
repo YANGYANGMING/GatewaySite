@@ -117,13 +117,9 @@ def user_profile(request):
     """
     obj = models.UserProfile.objects.get(id=request.user.id)
     if request.method == "GET":
-        form = UserProfileForm({'email': obj.email, 'name': obj.name, 'role': obj.role.values('name').first()['name'], 'last_login': str(obj.last_login)})
+        form = UserProfileForm({'name': obj.name, 'role': obj.role.values('name').first()['name'], 'last_login': str(obj.last_login)})
     if request.method == "POST":
         form = UserProfileForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data['email']
-            name = form.cleaned_data['name']
-            models.UserProfile.objects.filter(id=request.user.id).update(email=email, name=name)
     return render(request, 'gateway/userprofile.html', locals())
 
 @csrf_exempt

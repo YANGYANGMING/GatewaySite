@@ -58,6 +58,9 @@
       </a>
       <div class="navbar-custom-menu">
         <ul class="nav navbar-nav">
+          <li class="dropdown messages-menu" id="gw-online">
+
+          </li>
           <!-- User Account: style can be found in dropdown.less -->
           <li class="dropdown user user-menu">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
@@ -143,11 +146,6 @@
             <section class="content-header">
               <h1>
                 Dashboard
-                  {% if tcp_status.tcp_client_status %}
-                      <p style="color: green;">已连接服务器</p>
-                  {% else %}
-                      <div style="color: red;">未连接服务器</div>
-                  {% endif %}
                 <small>Control panel</small>
               </h1>
             </section>
@@ -192,7 +190,7 @@
                 <!-- ./col -->
                 <div class="col-lg-3 col-xs-6">
                   <!-- small box -->
-                  <a href="/gateway/all-sensor-data">
+                  <a href="/gateway/set-sensor-time">
                       <div class="small-box bg-yellow">
                         <div class="inner">
                           <h4>传感器详情</h4>
@@ -438,55 +436,46 @@
 <script src="/static/dist/js/demo.js"></script>
 
 {% block script %}
-    <script>
-        var chart = Highcharts.chart('container',{
-            chart: {
-                type: 'column',
-                height: 340,
-            },
-            title: {
-                text: '日报警量'
-            },
-            xAxis: {
-                categories: [
-                    '0','1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20','21','22','23'
-                ],
-                crosshair: true,
-                title: {
-                    text: '小时'
-                }
-            },
-            yAxis: {
-                endOnTick: false,
-                min: 0,
-                title: {
-                    text: '报警量'
-                }
-            },
-            legend: {
-                enabled: false
-            },
-            tooltip: {
-                // head + 每个 point + footer 拼接成完整的 table
-                headerFormat: '<span style="font-size:10px">{point.key} 时</span><table>',
-                pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}</td>' +
-                '<td style="padding:0"><b>{point.y:.0f} 个</b></td></tr>',
-                footerFormat: '</table>',
-                shared: true,
-                useHTML: true
-            },
-            plotOptions: {
-                column: {
-                    borderWidth: 0
-                }
-            },
-            series: [{
-                name: '',
-                data: [0,1,0,0,2,0,0,0,0,4,3,1,0,0,1,2,4,0,0,0,0,3,0,0]
-            }]
-});
-    </script>
+
 {% endblock %}
+
+<script>
+
+    $(function () {
+
+        RefreshGWstatus();
+        InitSetInterval();
+
+    });
+
+    function RefreshGWstatus() {
+        $.ajax({
+                url: '/gateway/refresh-gw-status',
+                type: 'GET',
+                dataType: 'JSON',
+                success: function (arg) {
+                    $('#gw-online').html(arg['message'])
+                }
+            })
+        }
+
+    function InitSetInterval() {
+        setInterval(
+            function () {
+                $.ajax({
+                url: '/gateway/refresh-gw-status',
+                type: 'GET',
+                dataType: 'JSON',
+                success: function (arg) {
+                    $('#gw-online').html(arg['message'])
+                }
+            })
+            }, 30000);
+        }
+
+
+</script>
+
 
 </body>
 </html>

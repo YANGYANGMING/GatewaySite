@@ -1,7 +1,9 @@
 import threading, time, json, re
-from GatewaySite.settings import headers_dict
+from GatewaySite.settings import headers_dict, heart_timeout
 from gateway.views import views
 from gateway import models
+
+
 
 class Handle_func(object):
     def __init__(self):
@@ -9,12 +11,19 @@ class Handle_func(object):
 
     def heart_ping(self, topic, payload):
         """
-
+        接收心跳
         :param topic:
         :param payload:
         :return:
         """
         print('心跳.......')
+        temp_trigger = views.heart_timeout_sche._create_trigger(trigger='interval', trigger_args=heart_timeout)
+        views.heart_timeout_sche.modify_job('cal_heart_timeout', trigger=temp_trigger)
+        # After updating the data, you need to resume_job()
+        views.heart_timeout_sche.resume_job('cal_heart_timeout')
+        # 接收到心跳后赋值：gw_status=1
+        models.Gateway.objects.update(gw_status=1)
+
         gwntid = models.Gateway.objects.values('network_id')[0]['network_id']
         result = {'gwntid': gwntid}
         send_gwdata_to_server(views.client, topic, result, headers_dict['heart_ping'])
@@ -339,9 +348,34 @@ def check_soft_delete(receive_data, network_id):
     return False
 
 
+def job_id_list():
+    """
+    A list of the sensor_id of a scheduled task that already exists in the scheduler
+    :return:
+    """
+    sche_job_id_list = []
+    sche_job_time_list = []
+    for job_obj in views.scheduler.get_jobs():
+        sche_job_id_list.append(job_obj.id.split(' ')[1])
+        sche_job_time_list.append(
+            {'month': str(job_obj.trigger.fields[1]), 'day': str(job_obj.trigger.fields[2]),
+             'hour': str(job_obj.trigger.fields[5]), 'mins': str(job_obj.trigger.fields[6])})
+    return sche_job_id_list, sche_job_time_list
 
 
+def cal_thickness_avg(data_list):
+    """
+    计算厚度值平均值
+    :param data_list:
+    :return:
+    """
+    thickness_total = 0
+    thickness_num = len(data_list)
+    for item in data_list:
+        thickness_total += float(item['thickness'])
+    thickness_avg = thickness_total / thickness_num
 
+    return thickness_avg
 
 
 
