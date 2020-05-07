@@ -130,6 +130,7 @@ LOGIN_URL = '/login/'
 
 heart_timeout = {'minutes': 1, 'seconds': 30}
 
+
 headers_dict = {
     'gwntid': 'gwntid',
     'get_data_manually': 'get_data_manually',

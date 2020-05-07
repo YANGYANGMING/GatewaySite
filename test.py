@@ -17,7 +17,27 @@ from gateway import models
 #     data_temp['name'] = item.pop('time_tamp')
 #     data_list.append(data_temp)
 # print(data_list)
+# import json
+# def upload(msg_path):
+#     with open(msg_path, 'rb') as f:
+#         img = f.read()
+#     print(img)
+#     string = str(img)
+#     jsons = json.dumps(string)
+#     print(jsons)
+#     name = json.loads(jsons)
+#     byte = eval(json.loads(jsons))
+#     print('name', name)
+#     with open('static/location_imgs/2.png', 'wb') as ff:
+#         ff.write(byte)
+#
+# upload('static/location_imgs/1.png')
 
+# print(os.path.exists('static/location_imgs'))
+#
+# mkdir_lambda = lambda x: os.mkdir(x) if not os.path.exists(x) else True
+#
+# print(mkdir_lambda('static/location_img1s'))
 
 
 

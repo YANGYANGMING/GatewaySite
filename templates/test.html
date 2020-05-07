@@ -1,0 +1,55 @@
+
+{% extends 'index.html' %}
+{% load staticfiles %}
+
+{% block main_content %}
+
+    <!-- Main content -->
+    <section class="content">
+
+
+    <div style="height: 100px; width: 100px;">
+        <input type="text" name="user" id="user" value="">
+{#        <img src="/static/location_imgs/1.png" alt="">#}
+{#        <input type="file" name="location-img-path" id="location-img-path" >#}
+        <button onclick="subs()">提交</button>
+    </div>
+
+
+
+    </section>
+    <!-- /.content -->
+
+
+{% endblock %}
+
+{% block script %}
+
+    <script>
+
+    function subs(){
+        {#var fd = new FormData();#}
+        var user = JSON.stringify({'aaa': 23, 'bbb': 'bb'});
+        {#var img_obj = $('#location-img-path')[0].files[0];#}
+        {#console.log(img_obj);#}
+        {#fd.append('user', user);#}
+        {#fd.append('img_obj', img_obj);#}
+        $.ajax({
+            url: '/gateway/test-json',
+            type: 'POST',
+            dataType: 'JSON',
+            data: {'user': user, 'aaa': true},
+            {#processData : false, // 使数据不做处理#}
+            {#contentType : false, // 不要设置Content-Type请求头#}
+            success: function (arg) {
+                console.log(arg)
+            }
+        })
+
+    }
+
+    </script>
+
+{% endblock %}
+
+

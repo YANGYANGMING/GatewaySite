@@ -1,0 +1,39 @@
+
+.center{
+	float: left;
+	width: 56%;
+}
+
+
+.item{
+	margin-bottom: 24px;
+	background-color: #222;
+	background-color: rgba(0,0,0,0.3);border-radius: 8px;
+}
+
+
+.centerWp{
+	width: 94%;
+	margin: 0 auto;
+}
+
+#myMap{
+	height: 480px;
+}
+#myMap .amap-info-content{
+	background: #00deff;
+	border-radius: 8px;
+	box-shadow: none;
+	border: none;
+	padding: 15px 25px 15px 15px;
+}
+#myMap .amap-info-sharp{
+	display: none;
+}
+#myMap .amap-info-close{
+	/* background: url(../images/s_ico5.png); */
+	color: #fff;
+}
+
+
+

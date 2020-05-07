@@ -83,7 +83,7 @@ class Gateway(GatewayCtrl):
         return thick_mm
 
     def sendData2Server(self, latest_job_id, tstp=0):
-        """发送数据给服务器"""
+        """获取发送给服务器的网关数据"""
         ret = Message(st=False)
         gwData = {}
         """snrdata是串口发送过来的原始数据"""
@@ -95,6 +95,7 @@ class Gateway(GatewayCtrl):
             ret.status = False
             ret.message = 'no sensor data'
         else:
+            ret.status = True
             gwData = snrdata.cvrt2gwData()
             # print(gwData)
             # r = self.postGWData(gwData, tstp)
@@ -108,12 +109,15 @@ class Gateway(GatewayCtrl):
             thickness = self.localCalThickness(svrdata=gwData)
             gwData['thickness'] = thickness
             # 转换network_id
-            gwData['network_id'] = handle_func.str_dec_hex(gwData['network_id'])
+            network_id = handle_func.str_dec_hex(gwData['network_id'])
+            gwData['network_id'] = models.Sensor_data.objects.filter(network_id=network_id)[0]
             gwData.pop('sensor_id')
             # 把网关数据写入数据库
-            # models.GWData.objects.create(**gwData)
+            models.GWData.objects.create(**gwData)
             # 检查网关数据是否超限
             self.delete_data.count_gwdata()
+            #
+            gwData['network_id'] = network_id
 
             print('gwData==', gwData)
 

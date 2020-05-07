@@ -1487,3 +1487,330 @@ time task: 2020-04-17 11:08:00
 no sensor data
 time task: 2020-04-17 15:41:09
 no sensor data
+time task: 2020-04-20 08:52:00
+no sensor data
+time task: 2020-04-20 11:08:00
+
+time task: 2020-04-20 11:32:50
+
+time task: 2020-04-20 12:43:56
+
+time task: 2020-04-20 12:44:39
+
+time task: 2020-04-20 12:44:50
+
+time task: 2020-04-20 12:53:02
+no sensor data
+time task: 2020-04-20 13:31:27
+
+time task: 2020-04-20 13:31:56
+no sensor data
+time task: 2020-04-21 13:33:13
+no sensor data
+time task: 2020-04-21 13:33:50
+
+time task: 2020-04-21 13:45:58
+
+time task: 2020-04-21 13:53:52
+no sensor data
+time task: 2020-04-21 13:54:36
+
+time task: 2020-04-21 13:58:31
+
+time task: 2020-04-21 14:01:44
+
+time task: 2020-04-21 14:05:57
+
+time task: 2020-04-21 14:09:10
+
+time task: 2020-04-21 14:10:38
+
+time task: 2020-04-21 14:12:29
+
+time task: 2020-04-21 14:13:48
+no sensor data
+time task: 2020-04-21 14:14:25
+
+time task: 2020-04-21 14:16:53
+
+time task: 2020-04-21 14:18:07
+
+time task: 2020-04-21 14:20:03
+
+time task: 2020-04-21 14:21:17
+no sensor data
+time task: 2020-04-21 14:21:51
+no sensor data
+time task: 2020-04-21 14:22:24
+no sensor data
+time task: 2020-04-21 14:26:50
+
+time task: 2020-04-21 14:27:46
+
+time task: 2020-04-21 14:28:56
+no sensor data
+time task: 2020-04-21 14:29:32
+
+time task: 2020-04-21 14:30:48
+
+time task: 2020-04-21 14:33:11
+
+time task: 2020-04-22 11:14:52
+no sensor data
+time task: 2020-04-22 11:15:13
+
+time task: 2020-04-22 11:29:18
+
+time task: 2020-04-22 12:44:36
+
+time task: 2020-04-22 12:45:56
+
+time task: 2020-04-22 12:48:40
+
+time task: 2020-04-22 12:49:21
+no sensor data
+time task: 2020-04-22 12:50:03
+
+time task: 2020-04-22 13:20:34
+
+time task: 2020-04-22 13:21:18
+
+time task: 2020-04-22 13:22:48
+
+time task: 2020-04-22 13:24:34
+
+time task: 2020-04-22 13:26:39
+
+time task: 2020-04-22 13:27:28
+no sensor data
+time task: 2020-04-22 13:28:16
+no sensor data
+time task: 2020-04-22 13:28:52
+
+time task: 2020-04-22 13:29:58
+
+time task: 2020-04-22 13:32:14
+
+time task: 2020-04-22 13:35:38
+no sensor data
+time task: 2020-04-22 13:36:53
+
+time task: 2020-04-22 13:37:38
+
+time task: 2020-04-22 14:50:02
+no sensor data
+time task: 2020-04-24 02:02:00
+
+time task: 2020-04-24 05:00:00
+
+time task: 2020-04-24 06:00:00
+
+time task: 2020-04-27 01:05:00
+
+time task: 2020-04-27 02:02:00
+
+time task: 2020-04-27 09:44:40
+
+time task: 2020-04-27 09:49:01
+
+time task: 2020-04-27 09:51:11
+
+time task: 2020-04-27 10:41:27
+
+time task: 2020-04-27 10:56:19
+
+time task: 2020-04-27 10:57:12
+
+time task: 2020-04-27 10:57:21
+
+time task: 2020-04-27 10:57:59
+
+time task: 2020-04-27 11:02:18
+
+time task: 2020-04-27 11:02:54
+
+time task: 2020-04-27 11:04:44
+
+time task: 2020-04-27 11:05:38
+
+time task: 2020-04-27 11:06:18
+
+time task: 2020-04-27 11:06:46
+
+time task: 2020-04-27 11:07:57
+
+time task: 2020-04-27 11:08:28
+
+time task: 2020-04-27 11:09:02
+
+time task: 2020-04-27 11:09:24
+
+time task: 2020-04-27 11:09:52
+
+time task: 2020-04-28 01:05:00
+
+time task: 2020-04-28 02:02:00
+
+time task: 2020-04-28 09:27:27
+
+time task: 2020-04-28 10:20:06
+
+time task: 2020-04-28 10:21:19
+
+time task: 2020-04-28 10:21:49
+
+time task: 2020-04-28 10:23:27
+
+time task: 2020-04-28 10:24:45
+
+time task: 2020-04-28 10:42:12
+
+time task: 2020-04-28 13:43:24
+
+time task: 2020-04-28 13:43:49
+
+time task: 2020-04-28 13:44:12
+
+time task: 2020-04-28 13:44:23
+
+time task: 2020-04-28 13:45:10
+
+time task: 2020-04-28 15:35:49
+
+time task: 2020-04-28 15:36:19
+
+time task: 2020-04-29 01:05:00
+
+time task: 2020-04-29 01:05:30
+
+time task: 2020-04-29 02:02:00
+
+time task: 2020-04-29 02:02:30
+
+time task: 2020-04-29 11:05:18
+
+time task: 2020-04-29 12:59:20
+
+time task: 2020-04-29 12:59:45
+
+time task: 2020-04-29 13:00:38
+
+time task: 2020-04-29 13:01:08
+
+time task: 2020-04-30 16:02:09
+
+time task: 2020-04-30 16:02:39
+
+time task: 2020-04-30 16:09:10
+
+time task: 2020-04-30 16:09:40
+
+time task: 2020-04-30 16:19:52
+
+time task: 2020-04-30 16:23:01
+
+time task: 2020-04-30 16:23:40
+
+time task: 2020-04-30 16:24:13
+
+time task: 2020-04-30 16:24:43
+
+time task: 2020-04-30 16:26:29
+
+time task: 2020-04-30 16:26:59
+
+time task: 2020-04-30 16:31:05
+
+time task: 2020-04-30 16:31:05
+
+time task: 2020-04-30 16:32:17
+
+time task: 2020-04-30 16:33:12
+
+time task: 2020-04-30 16:33:42
+
+time task: 2020-04-30 16:36:12
+
+time task: 2020-04-30 16:36:44
+
+time task: 2020-04-30 16:37:14
+
+time task: 2020-04-30 16:44:30
+
+time task: 2020-04-30 16:45:26
+
+time task: 2020-04-30 16:46:23
+
+time task: 2020-04-30 16:46:53
+
+time task: 2020-04-30 16:48:26
+
+time task: 2020-04-30 16:53:52
+
+time task: 2020-05-06 11:24:41
+
+time task: 2020-05-06 11:24:54
+
+time task: 2020-05-06 11:25:09
+
+time task: 2020-05-06 11:25:23
+
+time task: 2020-05-06 11:25:34
+
+time task: 2020-05-06 11:25:41
+
+time task: 2020-05-06 11:25:54
+
+time task: 2020-05-06 11:25:56
+
+time task: 2020-05-06 11:27:19
+
+time task: 2020-05-06 11:28:10
+
+time task: 2020-05-06 11:28:40
+
+time task: 2020-05-06 11:29:23
+
+time task: 2020-05-06 11:29:53
+
+time task: 2020-05-06 11:31:30
+
+time task: 2020-05-06 11:31:51
+
+time task: 2020-05-06 11:32:21
+
+time task: 2020-05-06 11:33:13
+
+time task: 2020-05-06 12:52:43
+
+time task: 2020-05-06 12:52:47
+
+time task: 2020-05-06 12:53:04
+
+time task: 2020-05-06 12:53:48
+
+time task: 2020-05-06 12:54:43
+
+time task: 2020-05-06 12:55:13
+
+time task: 2020-05-06 12:57:04
+
+time task: 2020-05-06 12:58:13
+
+time task: 2020-05-06 12:58:43
+
+time task: 2020-05-06 12:59:13
+
+time task: 2020-05-06 12:59:43
+
+time task: 2020-05-06 13:00:43
+
+time task: 2020-05-06 13:01:34
+
+time task: 2020-05-06 13:02:17
+
+time task: 2020-05-06 13:02:47
+
+time task: 2020-05-06 13:03:22
+
+time task: 2020-05-06 13:16:02

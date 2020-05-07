@@ -17,6 +17,12 @@ class OperateSensor(object):
         :return:
         """
         sensor_id = receive_data.pop('sensor_id')  # 删掉sensor_id以免被修改
+        alias = receive_data['alias']
+        alias_list = list(models.Sensor_data.objects.filter(delete_status=0).values('alias', 'sensor_id'))
+        for item in alias_list:
+            if alias == item['alias'] and sensor_id != item['sensor_id']:
+                response['msg'] = '此传感器名称已被使用'
+                return response
         if conform:
             # 更新sensor数据
             models.Sensor_data.objects.filter(sensor_id=sensor_id).update(**receive_data)
@@ -39,13 +45,15 @@ class OperateSensor(object):
         :return:
         """
         network_id = receive_data['network_id']
-        is_soft_delete = handle_func.check_soft_delete(receive_data, network_id)
+        alias = receive_data['alias']
+        # 判断此传感器是否是软删除的传感器
+        is_soft_delete = handle_func.check_soft_delete(network_id)
         if is_soft_delete:  # 是软删除的sensor
             print('是软删除......')
             if conform:
                 # 添加sensor数据
                 receive_data['delete_status'] = 0
-                models.Sensor_data.objects.filter(network_id=network_id).update(**receive_data)
+                models.Sensor_data.objects.filter(sensor_id=sensor_id).update(**receive_data)
                 response['status'] = True
                 response['msg'] = '添加任务成功'
                 # 添加成功，同时同步数据库和调度器
@@ -54,15 +62,21 @@ class OperateSensor(object):
                 response['msg'] = '输入时间和现有传感器时间冲突，请输入其他时间'
         else:
             network_id_list = []
-            network_ids = list(models.Sensor_data.objects.filter(delete_status=0).values('network_id'))
+            sensor_id_list = []
+            alias_list = []
+            network_ids = list(models.Sensor_data.objects.filter(delete_status=0).values('network_id', 'sensor_id', 'alias'))
             for item in network_ids:
                 network_id_list.append(item['network_id'])
+                sensor_id_list.append(item['sensor_id'])
+                alias_list.append(item['alias'])
             if sensor_id == "":
                 response['msg'] = '传感器ID不能为空！'
             elif network_id == "":
                 response['msg'] = '网络号不能为空！'
-            elif network_id in network_id_list:
+            elif network_id in network_id_list or sensor_id in sensor_id_list:
                 response['msg'] = '已有此传感器，请检查此传感器ID和传感器网络号'
+            elif alias in alias_list:
+                response['msg'] = '此传感器名称已被使用'
             elif conform:
                 # 添加sensor数据
                 print(receive_data)
@@ -95,13 +109,15 @@ class OperateSensor(object):
         print('command', command)
         # remove_sensor_response = gw0.serCtrl.getSerialresp(command)
         # print('remove_sensor_response', remove_sensor_response.strip('\n'))
-        remove_sensor_response = 'ok'
-        if remove_sensor_response.strip('\n') == 'ok':
-            # models.Sensor_data.objects.filter(sensor_id=sensor_id).delete()
+        # remove_sensor_response = 'ok'
+        print("response['receive_data']['forcedelete']", response['receive_data']['forcedelete'])
+        if response['receive_data']['forcedelete']:
+            models.Sensor_data.objects.filter(sensor_id=sensor_id).delete()
+        else:
             models.Sensor_data.objects.filter(sensor_id=sensor_id).update(delete_status=1)  # 数据库软删除
-            response['status'] = True
-            response['msg'] = '删除任务成功'
-            # 删除成功，同时同步数据库和调度器
+        response['status'] = True
+        response['msg'] = '删除任务成功'
+        # 删除成功，同时同步数据库和调度器
         views.auto_Timing_time()
 
         return response
@@ -116,7 +132,7 @@ class OperateGateway(object):
         models.Gateway.objects.all().update(**gateway_data)
         topic = gateway_data['network_id']
         header = 'update_gateway'
-        result = {'status': True, 'message': '更新网关成功', 'gateway_data': gateway_data}
+        result = {'status': True, 'msg': '更新网关成功', 'gateway_data': gateway_data}
         handle_func.send_gwdata_to_server(views.client, topic, result, header)
         return result
 
@@ -124,7 +140,7 @@ class OperateGateway(object):
         models.Gateway.objects.create(**gateway_data)
         topic = gateway_data['network_id']
         header = 'add_gateway'
-        result = {'status': True, 'message': '添加网关成功', 'gateway_data': gateway_data}
+        result = {'status': True, 'msg': '添加网关成功', 'gateway_data': gateway_data}
         handle_func.send_gwdata_to_server(views.client, topic, result, header)
         return result
 

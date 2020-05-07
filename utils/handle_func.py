@@ -1,8 +1,9 @@
-import threading, time, json, re
+import threading, time, json, re, os
 from GatewaySite.settings import headers_dict, heart_timeout
 from gateway.views import views
 from gateway import models
-
+from GatewaySite import settings
+from PIL import Image
 
 
 class Handle_func(object):
@@ -30,7 +31,7 @@ class Handle_func(object):
 
     def get_data_manually(self, topic, payload):
         """
-        手动获取数据
+        接收服务器的手动获取数据指令，并执行
         :param topic:
         :param payload:
         :return:
@@ -41,50 +42,51 @@ class Handle_func(object):
 
     def update_sensor(self, topic, payload):
         """
-        更新传感器
+        接收服务器的更新传感器指令，并执行
         :param topic:
         :param payload:
         :return:
         """
         print('更新.......')
-        response = views.receive_server_data(data=payload.get('data'))
+        response = views.receive_server_data(payload.get('data'))
+        print('response....', response)
         send_gwdata_to_server(views.client, topic, response, headers_dict['update_sensor'])
 
     def add_sensor(self, topic, payload):
         """
-        增加传感器
+        接收服务器的增加传感器指令，并执行
         :param topic:
         :param payload:
         :return:
         """
         print('添加........')
-        response = views.receive_server_data(data=payload.get('data'))
+        response = views.receive_server_data(payload.get('data'))
         send_gwdata_to_server(views.client, topic, response, headers_dict['add_sensor'])
 
     def remove_sensor(self, topic, payload):
         """
-        删除传感器
+        接收服务器的删除传感器指令，并执行
         :param topic:
         :param payload:
         :return:
         """
         print('删除........')
-        response = views.receive_server_data(data=payload.get('data'))
+        response = views.receive_server_data(payload.get('data'))
         send_gwdata_to_server(views.client, topic, response, headers_dict['remove_sensor'])
 
     def resume_sensor(self, topic, payload):
         """
-        恢复传感器
+        接收服务器的恢复传感器指令，并执行
         :param topic:
         :param payload:
         :return:
         """
-        ret = {'status': False, 'message': '开通失败'}
+        ret = {'status': False, 'msg': '开通失败'}
         try:
             jobs_id = 'cron_time ' + payload["network_id"]
             views.scheduler.resume_job(jobs_id)
             models.Sensor_data.objects.filter(network_id=payload["network_id"]).update(sensor_run_status=1)
-            ret = {'status': True, 'message': '开通成功', 'network_id': payload["network_id"]}
+            ret = {'status': True, 'msg': '开通成功', 'network_id': payload["network_id"]}
             send_gwdata_to_server(views.client, topic, ret, headers_dict['resume_sensor'])
         except Exception as e:
             send_gwdata_to_server(views.client, topic, ret, headers_dict['resume_sensor'])
@@ -92,17 +94,17 @@ class Handle_func(object):
 
     def pause_sensor(self, topic, payload):
         """
-        禁止传感器
+        接收服务器的禁止传感器指令，并执行
         :param topic:
         :param payload:
         :return:
         """
-        ret = {'status': False, 'message': '禁止失败'}
+        ret = {'status': False, 'msg': '禁止失败'}
         try:
             jobs_id = 'cron_time ' + payload["network_id"]
             views.scheduler.pause_job(jobs_id)
             models.Sensor_data.objects.filter(network_id=payload["network_id"]).update(sensor_run_status=0)
-            ret = {'status': True, 'message': '禁止成功', 'network_id': payload["network_id"]}
+            ret = {'status': True, 'msg': '禁止成功', 'network_id': payload["network_id"]}
             send_gwdata_to_server(views.client, topic, ret, headers_dict['pause_sensor'])
         except Exception as e:
             send_gwdata_to_server(views.client, topic, ret, headers_dict['pause_sensor'])
@@ -110,12 +112,125 @@ class Handle_func(object):
 
     def update_gateway(self, topic, payload):
         """
-        更新网关
+        接收服务器的更新网关指令，并执行
         :param topic:
         :param payload:
         :return:
         """
         views.operate_gateway.update_gateway(payload['gateway_data'])
+
+
+class HandleImgs(object):
+    """处理图片"""
+
+    def __init__(self):
+        pass
+
+    def get_size(self, file):
+        """获取文件大小：KB"""
+        size = os.path.getsize(file)
+        return size / 1024
+
+    def get_outfile(self, infile, outfile):
+        """拼接输出文件地址"""
+        if outfile:
+            return outfile
+        dir, suffix = os.path.splitext(infile)
+        outfile = '{}-out{}'.format(dir, suffix)
+        return outfile
+
+    def compress_image(self, infile, outfile='', mb=100, step=10, quality=80):
+        """不改变图片尺寸压缩到指定大小
+        :param infile: 压缩源文件
+        :param outfile: 压缩文件保存地址
+        :param mb: 压缩目标，KB
+        :param step: 每次调整的压缩比率
+        :param quality: 初始压缩比率
+        :return: 压缩文件地址，压缩文件大小
+        """
+        o_size = self.get_size(infile)
+        if o_size <= mb:
+            return infile
+        outfile = self.get_outfile(infile, outfile)
+        while o_size > mb:
+            im = Image.open(infile)
+            im.save(outfile, quality=quality)
+            if quality - step < 0:
+                break
+            quality -= step
+            o_size = self.get_size(outfile)
+        # 删除原文件，修改新文件名称
+        old_file_name = infile
+        os.remove(infile)
+        os.rename(outfile, old_file_name)
+
+    def resize_image(self, infile, outfile='', x_s=400):
+        """修改图片尺寸
+        :param infile: 图片源文件
+        :param outfile: 重设尺寸文件保存地址
+        :param x_s: 设置的宽度
+        :return:
+        """
+        im = Image.open(infile)
+        x, y = im.size
+        y_s = int(y * x_s / x)
+        out = im.resize((x_s, y_s), Image.ANTIALIAS)
+        outfile = self.get_outfile(infile, outfile)
+        out.save(outfile)
+        # 删除原文件，修改新文件名称
+        old_file_name = infile
+        os.remove(infile)
+        os.rename(outfile, old_file_name)
+
+
+def handle_img_and_data(request):
+    """
+    压缩剪裁图片，合并数据格式
+    :param request:
+    :return:
+    """
+    handleimgs = HandleImgs()
+    data = json.loads(request.POST.get('data'))
+    exist_img_path = data.pop('exist_img_path')
+    location_img_obj = request.FILES.get('location_img_obj')
+    # 判断是否有路径，没有就创建
+    gw_network_id = models.Gateway.objects.values('network_id')[0]['network_id']
+    Base_img_path = mkdir_path(gw_network_id=gw_network_id)
+    if location_img_obj:
+        img_name = location_img_obj.name
+        # 写图片
+        with open(Base_img_path + location_img_obj.name, 'wb') as f:
+            f.write(location_img_obj.read())
+        # 压缩图片
+        handleimgs.compress_image(Base_img_path + location_img_obj.name)
+        # 裁剪图片
+        handleimgs.resize_image(Base_img_path + location_img_obj.name)
+        # 处理数据格式
+        with open(Base_img_path + location_img_obj.name, 'rb') as ff:
+            img_bytes = ff.read()
+        img_json = json.dumps(str(img_bytes))
+        data['location_img_json'] = img_json
+        data['location_img_path'] = Base_img_path + img_name
+    else:
+        data['location_img_json'] = ''
+        if exist_img_path:
+            data['location_img_path'] = Base_img_path + exist_img_path.rsplit('/', 1)[1]
+    return data
+
+
+def mkdir_path(path=None, gw_network_id=None):
+    """
+    判断是否有路径，没有就创建
+    :return:
+    """
+    if path:  # server发送过来的path
+        if not os.path.exists(path):
+            os.mkdir(path)
+    elif gw_network_id:  # gw前端传过来的gw_network_id
+        path = 'static/location_imgs_%s/' % gw_network_id
+        if not os.path.exists(path):
+            os.mkdir(path)
+    return path
 
 
 def send_gwdata_to_server(client, topic, result, header):
@@ -139,19 +254,23 @@ def check_online_of_sensor_status():
     :param request:
     :return:
     """
-    sensor_obj_list = models.Sensor_data.objects.all()
+    sensor_obj_list = models.Sensor_data.objects.filter(delete_status=0)
     # 准备发送的命令字符串  command = "get 65 1"
     for sensor_obj in sensor_obj_list.values('network_id', 'id'):
+        resend_num = 1
         try:
             network_id = sensor_obj['network_id']
             command = "get 65 " + network_id.rsplit('.', 1)[1]
             print('command', command)
-            online_of_sensor_status_response = views.gw0.serCtrl.getSerialresp(command)
-            print('online_of_sensor_status_response', online_of_sensor_status_response.strip('\n'))
-            if online_of_sensor_status_response.strip('\n') == 'ok':
-                models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=1)
-            else:
-                models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=0)
+            while resend_num < 3:  # 未收到数据后重发
+                online_of_sensor_status_response = views.gw0.serCtrl.getSerialresp(command)
+                print('online_of_sensor_status_response', online_of_sensor_status_response.strip('\n'))
+                if online_of_sensor_status_response.strip('\n') == 'ok':
+                    models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=1)
+                    break
+                else:
+                    models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=0)
+                    resend_num += 1
 
         except Exception as e:
             print(e, '检查节点失败')
@@ -335,10 +454,10 @@ def check_gwntid(ntid_response):
     return success
 
 
-def check_soft_delete(receive_data, network_id):
+def check_soft_delete(network_id):
     """
-    添加传感器是验证此传感器是否已软删除
-    :param receive_data:
+    添加传感器时验证此传感器是否已软删除
+    :param network_id:
     :return:
     """
     all_network_id_list = models.Sensor_data.objects.filter(delete_status=1).values('network_id')

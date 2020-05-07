@@ -130,7 +130,7 @@ class SerialCtrl():
             bb = tmp[i].split("=")
             aa.append(bb)
         buff = dict(aa)
-        print('buff', buff)
+        # print('buff', buff)
         # print("buff:\r\n"+str(buff)+"\r\n")
 
         if (buff != {}):

@@ -151,7 +151,7 @@ class Post_Return(models.Model):
 
 class GWData(models.Model):
     """网关数据"""
-    network_id = models.ForeignKey(to='Sensor_data', to_field='network_id', on_delete=models.DO_NOTHING)
+    network_id = models.ForeignKey(to='Sensor_data', to_field='network_id', on_delete=models.CASCADE)
     com_version = models.CharField(max_length=32)
     time_tamp = models.CharField(max_length=32)
     temperature = models.IntegerField(null=True, blank=True)
@@ -162,12 +162,12 @@ class GWData(models.Model):
     data = models.TextField()
 
     def __str__(self):
-        return self.network_id
+        return str(self.network_id)
 
 
-class GW_network_id(models.Model):
-    """网关网络号"""
-    network_id = models.CharField(max_length=32)
+# class GW_network_id(models.Model):
+#     """网关网络号"""
+#     network_id = models.CharField(max_length=32)
 
 
 class TimeStatus(models.Model):
@@ -191,6 +191,7 @@ class Sensor_data(models.Model):
     network_id = models.CharField(max_length=32, unique=True)
     received_time_data = models.CharField(max_length=128)
     battery = models.CharField(max_length=32, default=100)
+    temperature = models.CharField(max_length=32, default=30)
     cHz = models.CharField(max_length=32, default='2')
     gain = models.CharField(max_length=32, default='60')
     avg_time = models.CharField(max_length=32, default='4')
@@ -218,9 +219,11 @@ class Sensor_data(models.Model):
                                  )
     sensor_run_status = models.SmallIntegerField(choices=sensor_run_status_choices, default=1)
     date_of_installation = models.DateField(auto_now_add=True)
-    initial_thickness = models.CharField(max_length=32, null=True, blank=True)
-    alarm_thickness = models.CharField(max_length=32, null=True, blank=True)
-    alarm_battery = models.CharField(max_length=32, null=True, blank=True)
+    initial_thickness = models.FloatField(default=10)
+    alarm_thickness = models.FloatField(default=8)
+    alarm_battery = models.FloatField(default=50)
+    alarm_temperature = models.FloatField(default=310)
+    alarm_corrosion = models.FloatField(default=0.3)
     area = models.TextField(verbose_name='所在区域', null=True, blank=True)
     location = models.TextField(verbose_name='所在位置', null=True, blank=True)
     location_img_path = models.TextField(verbose_name='所在位置图片路径', null=True, blank=True)

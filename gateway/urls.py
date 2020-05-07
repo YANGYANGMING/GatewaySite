@@ -7,12 +7,12 @@ urlpatterns = [
     re_path(r'^all-data-report$', views.all_data_report, name="all_data_report"),
     re_path(r'^thickness-report$', views.thickness_report, name="thickness_report"),
     re_path(r'^all-sensor-data$', views.all_sensor_data, name="all_sensor_data"),
-    re_path(r'^set-sensor-time$', views.set_sensor_time, name="set_sensor_time"),
+    re_path(r'^sensor-manage$', views.sensor_manage, name="sensor_manage"),
     re_path(r'^user-add$', account.user_add, name="user_add"),
     re_path(r'^user-edit/(\d+)$', account.user_edit, name="user_edit"),
     re_path(r'^user-delete/(\d+)$', account.user_delete, name="user_delete"),
     re_path(r'^user-list$', account.user_list, name="user_list"),
-    re_path(r'^add-sensor$', views.add_sensor_page),
+    re_path(r'^add-sensor/(.*)$', views.add_sensor_page),
     re_path(r'^set-gateway$', views.set_gateway_page, name="set_gateway_page"),
     re_path(r'^user-profile$', account.user_profile),
     re_path(r'^change-pwd$', account.change_pwd),
@@ -27,11 +27,11 @@ urlpatterns = [
     re_path(r'^pause-Timing-time$', views.pause_Timing_time),
     re_path(r'^resume-Timing-time$', views.resume_Timing_time),
     re_path(r'^resume-cycle-time$', views.resume_cycle_time),
-
     re_path(r'^reset-Timing-time$', views.reset_Timing_time),
 
 
     re_path(r'^edit-sensor-time/(\d+)$', views.edit_sensor_time),
+    re_path(r'^edit-sensor-alarm-msg/(\d+)$', views.edit_sensor_alarm_msg),
     re_path(r'^set-gateway-json$', views.set_gateway_json),
 
     re_path(r'^refresh-gw-status$', views.refresh_gw_status),
@@ -41,6 +41,10 @@ urlpatterns = [
     re_path(r'^receive-gw-data$', views.receive_gw_data),
 
     re_path(r'^manual-get/(.*)$', views.manual_get),
+
+
+    re_path(r'^test$', views.test),
+    re_path(r'^test-json$', views.test_json),
 
 
 

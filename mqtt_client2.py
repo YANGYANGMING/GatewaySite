@@ -133,7 +133,7 @@ def on_message(client, userdata, msg):
     print(msg.topic)
     print(payload)
     # print(msg.topic + ":" + payload)
-    client.publish("pub", json.dumps('2收到'), 2)
+    # client.publish("pub", json.dumps('2收到'), 2)
 
 
 if __name__ == '__main__':
@@ -153,8 +153,11 @@ if __name__ == '__main__':
 
     while True:
         str = input()
+        with open('static/location_imgs/1.png', 'rb') as f:
+            img = f.read()
         if str:
-            client.publish("pub", json.dumps(str), 2)
+            data = {'id': 'client', 'header': 'test', 'status': True, 'img': img}
+            client.publish("pub", data, 2)
 
 
 
