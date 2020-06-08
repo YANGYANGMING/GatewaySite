@@ -28,7 +28,9 @@
   <link rel="stylesheet" href="/static/plugins/iCheck/all.css">
   <link rel="stylesheet" href="/static/plugins/busy-load/app.min.css">
     <!-- map -->
-  <link rel="stylesheet" href="/static/plugins/map/scanboard.css">
+{#  <link rel="stylesheet" href="/static/plugins/map/scanboard.css">#}
+    <link rel="stylesheet" href="/static/plugins/FixedColumns-3.3.1/css/fixedColumns.dataTables.css">
+    <link rel="stylesheet" href="/static/plugins/FixedColumns-3.3.1/css/fixedColumns.bootstrap.min.css">
 
 
   <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -193,7 +195,7 @@
                 <!-- ./col -->
                 <div class="col-lg-3 col-xs-6">
                   <!-- small box -->
-                  <a href="/gateway/set-sensor-time">
+                  <a href="/gateway/sensor-manage">
                       <div class="small-box bg-yellow">
                         <div class="inner">
                           <h4>传感器详情</h4>
@@ -245,7 +247,7 @@
                     </div>
                       <!-- 滚动列表 -->
                     <div class="box-body">
-                        <div id="myMap" class=""></div>
+{#                        <div id="myMap" class=""></div>#}
                     </div>
                     <!-- /.box-body -->
                   </div>
@@ -267,7 +269,7 @@
                               <table id="example2" class="table table-bordered table-hover">
                                 <thead>
                                     <tr>
-                                        <th>id</th>
+                                        <th style="display: none">id</th>
                                         <th>名称</th>
                                         <th>网络号</th>
                                         <th>电量</th>
@@ -279,7 +281,7 @@
                                 <tbody>
                                     {% for row in latest_data %}
                                         <tr>
-                                            <td>{{ row.id }}</td>
+                                            <td style="display: none">{{ row.id }}</td>
                                             <td>{{ row.network_id__alias }}</td>
                                             <td>{{ row.network_id }}</td>
                                             <td>{{ row.battery }}</td>
@@ -307,7 +309,7 @@
               <!-- /.content-wrapper -->
   <footer class="main-footer">
     <div class="pull-right hidden-xs">
-      <b>Version</b> 0.0.1
+      <b>Version</b> 1.0
     </div>
     <strong>零声科技网关监测系统 <a href="http://www.orisonic.com/">ORISONIC</a>.</strong> 零声科技（苏州）有限公司
   </footer>
@@ -350,8 +352,9 @@
 <script src="/static/plugins/busy-load/app.min.js"></script>
 <script src="/static/plugins/busy-load/loading.js"></script>
 <!-- map -->
-<script src="/static/plugins/map/scanboard.js"></script>
-<script src="/static/plugins/map/map.js"></script>
+{#<script src="/static/plugins/map/scanboard.js"></script>#}
+{#<script src="/static/plugins/map/map.js"></script>#}
+<script src="/static/plugins/FixedColumns-3.3.1/js/dataTables.fixedColumns.min.js"></script>
 
 {% block script %}
 

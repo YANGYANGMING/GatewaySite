@@ -3,45 +3,39 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from gateway import permissions
 from GatewaySite import settings
-from socket import *
-import time, threading, re
-
-import apscheduler.job
 from apscheduler.schedulers.background import BackgroundScheduler
 
-import datetime
 import serial
+import platform
 
 from gateway.eelib.eelib.gateway import *
-from gateway.eelib.eelib.sensor import SerialCtrl
 from gateway.eelib.eelib.message import *
 from GatewaySite.settings import headers_dict
 from utils.mqtt_client import MQTT_Client
-from utils import handle_recv_server
 from utils import handle_func
 from utils.operate_sensor import OperateSensor, OperateGateway
 
 msg_file = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/message.txt'
 msg_printer = MessagePrinter(msg_file)
-
+print(msg_file)
 gwCtrl = GatewayCtrl()
 
-gser = serial.Serial("/dev/ttyS9", 115200, timeout=1)
+
+gser = serial.Serial("/dev/ttyS15", 115200, timeout=1)
 # gser = serial.Serial("/dev/ttyAMA0", 115200, timeout=1)
 gw0 = Gateway(gser)
 
-mqtt_client = MQTT_Client()
-client = mqtt_client.client
 operate_sensor = OperateSensor()
 operate_gateway = OperateGateway()
 
+try:
+    mqtt_client = MQTT_Client()
+    client = mqtt_client.client
+except Exception as e:
+    print(e)
 
 num = 0
-tstp_start = 1559354400  # 2019年6月1日10时0分0秒
-tstp_step = 24 * 60 * 60
-
 latest_job_id = '0000'
-latest_job1_id = '0000'
 
 # Operation flag bit
 # When acquiring data manually, only one sensor can work in the same time
@@ -52,6 +46,7 @@ auto_operation = False
 btn_polling = False
 # Running status of task id = 0000
 operation_status = None
+Suspended_job_id_list = []
 
 # Timing task start flag bit
 CycleStatus = False
@@ -62,7 +57,7 @@ tcp_client_status = False
 # Instantiate timer task
 scheduler = BackgroundScheduler()
 sche = BackgroundScheduler()
-sche_sync_sensors = BackgroundScheduler()
+# sche_sync_sensors = BackgroundScheduler()
 heart_timeout_sche = BackgroundScheduler()
 
 st = models.Set_Time.objects.filter(id=1).values('year', 'month', 'day', 'hour', 'mins')[0]
@@ -71,76 +66,6 @@ models.Set_Time.objects.filter(id=2).update(month='', day='', hour='', mins='')
 # Initialize original status infomation
 models.TimeStatus.objects.filter(id=1).update(timing_status='false', cycle_status='false', text_status='已暂停',
                                               button_status='暂停')
-
-# def auto_Timing_time():
-#     """
-#     Regular check ---- update/add
-#     :return:
-#     """
-#     try:
-#         scheduler.print_jobs()
-#         # if not manual sample or polling sample, check for updates
-#         if not btn_sample and not btn_polling:
-#             db_job_id_list = []
-#             # All task time and sensor_id in the database
-#             db_job_list = list(models.Sensor_data.objects.filter(delete_status=0).values('network_id', 'received_time_data'))
-#             # The list of sensor_id and sensor_time for scheduled tasks that already exist in the scheduler
-#             sche_job_id_list, sche_job_time_list = job_id_list()
-#             # Compare: when adding or updating tasks in the database, add or update schedluer tasks
-#             for db_job in db_job_list:
-#                 received_time_data_dict = eval(db_job['received_time_data'])
-#                 jobs_id = 'cron_time ' + db_job['network_id']
-#                 print(jobs_id)
-#                 db_job_id_list.append(db_job['network_id'])
-#                 if db_job['network_id'] in sche_job_id_list:
-#                     st_temp = {'year': '*', 'month': received_time_data_dict['month'],
-#                                'day': received_time_data_dict['day'], 'hour': received_time_data_dict['hour'],
-#                                'minute': received_time_data_dict['mins']}
-#                     temp_trigger = scheduler._create_trigger(trigger='cron', trigger_args=st_temp)
-#                     scheduler.modify_job(jobs_id, trigger=temp_trigger)
-#                     # After updating the data, you need to resume_job()
-#                     scheduler.resume_job(jobs_id)
-#                     # print('update task')
-#                 else:
-#                     # update task
-#                     scheduler.add_job(time_job, 'cron', year='*', month=received_time_data_dict['month'],
-#                                       day=received_time_data_dict['day'], hour=received_time_data_dict['hour'],
-#                                       minute=received_time_data_dict['mins'], second='00', id=jobs_id)
-#                     # print('add task')
-#
-#             # Compare: when a task is deleted in the database, the scheduler task is also deleted
-#             for sche_job_id in sche_job_id_list:
-#                 if sche_job_id != '0000':
-#                     if sche_job_id not in db_job_id_list:
-#                         temp_sche_job_id = 'cron_time ' + sche_job_id
-#                         scheduler.remove_job(temp_sche_job_id)
-#                         print('remove %s seccess' % sche_job_id)
-#             global latest_job_id  # 0000
-#             latest_job_id = scheduler.get_jobs()[0].id.split(' ')[1]
-#             # print('latest_job_id=======================================================================', latest_job_id)
-#             # print(latest_job_id)
-#             # print(scheduler.get_jobs())
-#             # print(dir(scheduler.get_jobs()[0]))
-#             # print(dir(scheduler.get_jobs()[0].trigger))
-#             # print(scheduler.get_jobs()[0].trigger.fields)
-#             # print(scheduler.get_jobs()[0].trigger.fields[5])
-#             # print(scheduler.get_jobs())
-#             # print(scheduler.get_jobs()[0].next_run_time)
-#             # print(scheduler.get_jobs()[0].id.split('')[1])
-#             # print(scheduler.get_jobs()[0].trigger)
-#             # print(scheduler.get_jobs())
-#
-#             # print(datetime.datetime.now())
-#     except Exception as e:
-#         print('auto_Timing_time:', e)
-
-def cal_heart_timeout():
-    """
-    心跳超时改变状态
-    :return:
-    """
-    print('timeout......')
-    models.Gateway.objects.update(gw_status=0)
 
 
 def auto_Timing_time(network_id=None):
@@ -151,7 +76,6 @@ def auto_Timing_time(network_id=None):
     try:
         # if not manual sample or polling sample, check for updates
         if not btn_sample and not btn_polling:
-
             if network_id:
                 # update sensor
                 received_time_data = eval(models.Sensor_data.objects.filter(network_id=network_id).values('received_time_data')[0]['received_time_data'])
@@ -161,7 +85,9 @@ def auto_Timing_time(network_id=None):
                 temp_trigger = scheduler._create_trigger(trigger='cron', trigger_args=st_temp)
                 scheduler.modify_job('cron_time ' + network_id, trigger=temp_trigger)
                 # After updating the data, you need to resume_job()
-                scheduler.resume_job('cron_time ' + network_id)
+                jobs_status = models.Sensor_data.objects.filter(network_id=network_id).values('sensor_run_status')[0]['sensor_run_status']
+                if jobs_status:  # if it is online status
+                    scheduler.resume_job('cron_time ' + network_id)
                 print('update task' + network_id)
 
             db_job_id_list = []
@@ -182,6 +108,11 @@ def auto_Timing_time(network_id=None):
                     scheduler.add_job(time_job, 'cron', year='*', month=received_time_data_dict['month'],
                                       day=received_time_data_dict['day'], hour=received_time_data_dict['hour'],
                                       minute=received_time_data_dict['mins'], second='00', id=jobs_id)
+                    cur_sensor_run_status = models.Sensor_data.objects.filter(network_id=db_job['network_id']).values('sensor_run_status')[0][
+                        'sensor_run_status']
+                    # Pause the corresponding sensor when starting or restarting
+                    if not cur_sensor_run_status:
+                        scheduler.pause_job(jobs_id)
                     print('add task')
 
             # Compare: when a task is deleted in the database, the scheduler task is also deleted
@@ -193,7 +124,7 @@ def auto_Timing_time(network_id=None):
                         print('remove %s seccess' % sche_job_id)
             global latest_job_id  # 0000
             latest_job_id = scheduler.get_jobs()[0].id.split(' ')[1]
-            # print('latest_job_id=======================================================================', latest_job_id)
+            print('latest_job_id', latest_job_id)
             # print(latest_job_id)
             # print(scheduler.get_jobs())
             # print(dir(scheduler.get_jobs()[0]))
@@ -219,6 +150,7 @@ def time_job():
     global num
     global btn_polling
     global auto_operation
+    global latest_job_id
     gwData = {}
     if latest_job_id == '0000':
         # Polling sensor
@@ -228,44 +160,57 @@ def time_job():
         btn_polling = True  # Polling collection flag bit
         pause_all_sensor()
     else:
-        # 单一传感器，手动采集数据/自动采集数据
+        # Single sensor, manual data collection / automatic data collection
         snr_num_list = [latest_job_id]
-        if btn_sample:  # 如果是手动采样
+        # If manual sampling, pause all sensors first
+        if btn_sample:
             pause_all_sensor()
         else:
-            auto_operation = True  # 自动采集标志位
-    # print('btn_polling', btn_polling)
-    # print('auto_operation', auto_operation)
-    # print('btn_sample', btn_sample)
-    # print('snr_num_list', snr_num_list)
-    for network_id in snr_num_list:
-        resend_num = 1
-        while resend_num < 3:  # 未采集到数据时,重发一次
-            time_now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
-            msg_printer.print2File("\r\ntime task: " + str(time_now) + "\r\n")
-            print("num=" + str(num) + ",  " + str(time_now) + ', ' + network_id)
-            tstp_test = tstp_start + num * tstp_step
-            num = num + 1
-            r, gwData = gw0.sendData2Server(network_id, tstp_test)
-            topic = models.Gateway.objects.values('network_id')[0]['network_id']
-            print(r.message)
-            if r.status:
-                if auto_operation or btn_polling:  # 如果是自动采集或者轮询，则发送网关数据到服务器
-                    header = 'gwdata'
-                    result = {'status': True, 'message': '获取成功', 'gwData': gwData}
-                    handle_func.send_gwdata_to_server(client, topic, result, header)
-                break
-            else:
-                resend_num += 1
-
+            # Automatic sampling flag bit
+            auto_operation = True
+    try:
+        for network_id in snr_num_list:
+            resend_num = 1
+            # If no data is collected, resend it
+            while resend_num < 3:
+                time_now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
+                msg_printer.print2File("\r\ntime task: " + str(time_now) + "\r\n")
+                print("num=" + str(num) + ",  " + str(time_now) + ', ' + network_id)
+                num = num + 1
+                r, gwData = gw0.sendData2Server(network_id)
+                topic = models.Gateway.objects.values('network_id')[0]['network_id']
+                print(r.message)
+                if r.status:
+                    # If it is automatic collection or polling, send gateway data to the server
+                    if auto_operation or btn_polling:
+                        header = 'gwdata'
+                        result = {'status': True, 'message': '获取成功', 'gwData': gwData, 'network_id': network_id}
+                        handle_func.send_gwdata_to_server(client, topic, result, header)
+                    break
+                else:
+                    resend_num += 1
+                    if resend_num == 3:
+                        models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=0)
+    except Exception as e:
+        print('取数出错！', e)
+    # Restore each status flag bit
+    if btn_polling:
+        resume_all_sensor()
     btn_polling = False
     auto_operation = False
-    resume_all_sensor()
-    # print('btn_polling2', btn_polling)
-    # print('auto_operation2', auto_operation)
-    # print('btn_sample2', btn_sample)
+    # 取数结束后获取最新的任务id
+    latest_job_id = scheduler.get_jobs()[0].id.split(' ')[1]
 
     return gwData
+
+
+def cal_heart_timeout():
+    """
+    心跳超时改变状态
+    :return:
+    """
+    print('timeout......')
+    models.Gateway.objects.update(gw_status=0)
 
 
 try:
@@ -302,23 +247,20 @@ except Exception as e:
 def pause_all_sensor():
     """轮询or手动触发开始，暂停所有传感器"""
     for job_obj in scheduler.get_jobs():
-        if job_obj.id[-4:] == "0000":
-            global operation_status     # 暂停之前先获取任务id=0000的运行状态
-            operation_status = job_obj.next_run_time
-            # print('operation_status', operation_status)
-
-        job_obj.pause()
-        # print('job_obj_pause', job_obj)
+        if job_obj.next_run_time:
+            job_obj.pause()
+        else:
+            global Suspended_job_id_list  # 暂停前找出已经暂停了的job_id
+            Suspended_job_id_list.append(job_obj.id.split(' ')[1])
+    print('Suspended_job_id_list1', Suspended_job_id_list)
 
 
 def resume_all_sensor():
     """轮询or手动触发结束，恢复所有传感器"""
+    print('Suspended_job_id_list2', Suspended_job_id_list)
     for job_obj in scheduler.get_jobs():
-        # print('operation_status', operation_status)
-        if job_obj.id[-4:] == "0000" and not operation_status:
-            # print('job_obj_resume0000', job_obj)
-            pass
-        else:
+        # 之前已经暂停的传感器不会恢复
+        if job_obj.id.split(' ')[1] not in Suspended_job_id_list:
             job_obj.resume()
             # print('job_obj_resume', job_obj)
 
@@ -346,7 +288,6 @@ def config_time(request):
     :param request:
     :return:
     """
-    time_now = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
     # form = DataForm()
     # 最新的X条数据
     latest_data = models.GWData.objects.values('id', 'network_id', 'time_tamp', 'battery', 'temperature', 'thickness', 'network_id__alias').order_by('-id')[:5]
@@ -360,14 +301,11 @@ def config_time(request):
     latest_Cycle_time = models.Set_Time.objects.filter(id=4).values('day', 'hour', 'mins').first()
     latest_time_status = models.TimeStatus.objects.filter(id=1).values('timing_status', 'cycle_status', 'text_status',
                                                                        'button_status').first()
-
-    latest_set_id = models.Set_param.objects.filter(id=1).values('menu_get_id').first()
+    latest_set_id = request.session.get('latest_set_id', '')
 
     all_sensor_list = models.Sensor_data.objects.filter(delete_status=0).values('network_id', 'alias')
 
     context = {
-        "time": time_now,
-
         "month_cron": [i for i in range(1, 13)],
         "Day_cron": [i for i in range(1, 29)],
         "Hour_cron": [i for i in range(0, 24)],
@@ -379,7 +317,6 @@ def config_time(request):
         "Hz": [Hz for Hz in range(2, 5)],
         "Sample_depth": [Sample_depth for Sample_depth in range(2, 7, 2)],
         "Sample_Hz": [200, 5000],
-
     }
 
     test = {'status': 'true'}
@@ -420,7 +357,7 @@ def thickness_report(request):
 
 @permissions.check_permission
 @login_required
-def all_sensor_data(request):
+def edit_sensor_params(request):
     """
     传感器参数详情
     :param request:
@@ -442,7 +379,7 @@ def all_sensor_data(request):
     #         if i.sensor_id == ii.id.split(' ')[1]:
     #             i.next_run_time = str(ii.next_run_time).split('+')[0]
 
-    return render(request, "gateway/all_sensor_data.html", locals())
+    return render(request, "gateway/edit_sensor_params.html", locals())
 
 
 @permissions.check_permission
@@ -462,8 +399,6 @@ def sensor_manage(request):
         for ii in sche_obj:
             if sensor_item.network_id == ii.id.split(' ')[1]:
                 sensor_item.next_run_time = str(ii.next_run_time).split('+')[0]
-                print(sche_obj)
-                print(sensor_item.next_run_time)
         received_time_data = models.Sensor_data.objects.filter(sensor_id=sensor_item.sensor_id).values('sensor_id', 'received_time_data')
         # 把年月日分别放进每个传感器对象中
         for ii in received_time_data:
@@ -639,7 +574,7 @@ def reset_Timing_time(request):
     return HttpResponse(json.dumps(ret))
 
 
-# @login_required
+@login_required
 @csrf_exempt
 def manual_get(request, network_id):
     """
@@ -647,26 +582,24 @@ def manual_get(request, network_id):
     :param request:
     :return:
     """
-    result = {'status': False, 'message': "获取失败", 'gwData': {}}
+    result = {'status': False, 'message': "获取失败", 'gwData': {}, 'network_id': network_id}
     global btn_sample
     try:
         if not btn_sample and not btn_polling and not auto_operation:
             btn_sample = True  # 手动采集标志位
             global latest_job_id
             latest_job_id = network_id
-            if models.Set_param.objects.count() == 0:
-                models.Set_param.objects.create(menu_get_id=latest_job_id, param="")
-            else:
-                models.Set_param.objects.filter(id=1).update(menu_get_id=latest_job_id)
+            request.session['latest_set_id'] = latest_job_id
             if latest_job_id == '':
                 result['message'] = "没有选择传感器"
             else:
                 gwData = time_job()
                 if gwData:
-                    result = {'status': True, 'message': "获取成功", 'gwData': gwData}
+                    result = {'status': True, 'message': "获取成功", 'gwData': gwData, 'network_id': network_id}
                 topic = models.Gateway.objects.values('network_id')[0]['network_id']
                 handle_func.send_gwdata_to_server(client, topic, result, headers_dict['gwdata'])
             btn_sample = False
+            resume_all_sensor()
             # print('btn_sample2', btn_sample)
         else:
             if btn_polling:
@@ -676,6 +609,7 @@ def manual_get(request, network_id):
     except Exception as e:
         print(e)
         btn_sample = False
+        resume_all_sensor()
     if request.method == 'POST':
         return HttpResponse(json.dumps(result))
 
@@ -783,13 +717,15 @@ def add_sensor_page(request, network_id):
         sensor_type = {'ETM-100': 0}
         Importance = {'一般': 0, '重要': 1}
         material = {'未定义': 0, '碳钢': 1, '不锈钢': 2}
+        longitude = 0.0
+        latitude = 0.0
         context = {
             "month_cron": [i for i in range(1, 13)],
             "day_cron": [i for i in range(1, 29)],
             "hour_cron": [i for i in range(0, 24)],
             "minute_cron": [i for i in range(0, 60)],
         }
-        return render(request, 'gateway/add_sensor_time.html', locals())
+        return render(request, 'gateway/add_sensor.html', locals())
     else:
         # 添加网关
         gw_status = {'在线': 1, '离线': 0}
@@ -872,35 +808,56 @@ def receive_gw_data(request):
             received_time_data = handle_func.handle_receive_data(received_time_data)
             # 验证时间
             conform = handle_func.judge_time(received_time_data, receive_data['network_id'])
-        else:  # 只更新报警信息参数
+        else:  # 只更新报警信息参数或者删除传感器
             conform = True
 
-        # 更新
-        if choice == 'update':
-            location_img_json = receive_data.pop('location_img_json')
-            response = operate_sensor.update_sensor(receive_data, conform, response)
-            if response['status']:
-                receive_data['location_img_json'] = location_img_json
-                data = {'id': 'client', 'header': 'update_sensor', 'status': True, 'times': time.time(), 'receive_data': receive_data}
-                client.publish(topic, json.dumps(data))  # 把网关更新的sensor数据发送给server
+        if conform:
+            judge_time_between_gws_conform = False
+            # 发送时间到服务器，用于检查是否和此网关所在公司的其他网关底下的传感器时间冲突
+            header = 'check_time_between_gws'
+            result = {'status': True, 'received_time_data': received_time_data, 'network_id': receive_data['network_id']}
+            handle_func.send_gwdata_to_server(client, topic, result, header)
+            judge_time_response_start_time = time.time()
+            handle_func.judge_time_between_gws_payload = {}
+            while time.time() - judge_time_response_start_time < 3:
+                if handle_func.judge_time_between_gws_payload:
+                    judge_time_between_gws_conform = handle_func.judge_time_between_gws_payload.get('conform')
+                    print("judge_time_between_gws_conform", judge_time_between_gws_conform)
+                    break
 
-        # 添加
-        elif choice == 'add':
-            location_img_json = receive_data.pop('location_img_json')
-            response = operate_sensor.add_sensor(receive_data, sensor_id, conform, response)
-            if response['status']:
-                receive_data['location_img_json'] = location_img_json
-                data = {'id': 'client', 'header': 'add_sensor', 'status': True, 'receive_data': receive_data}
-                client.publish(topic, json.dumps(data))  # 把网关增加的sensor数据发送给server
+            if judge_time_between_gws_conform:  # 如果服务器验证后，时间不冲突，进行以下操作
 
-        # 删除
-        elif choice == 'remove':
-            location_img_json = receive_data.pop('location_img_json')
-            response = operate_sensor.remove_sensor(sensor_id, response)
-            if response['status']:
-                receive_data['location_img_json'] = location_img_json
-                data = {'id': 'client', 'header': 'remove_sensor', 'status': True, 'receive_data': receive_data}
-                client.publish(topic, json.dumps(data))  # 把网关增加的sensor数据发送给server
+                # 更新
+                if choice == 'update':
+                    location_img_json = receive_data.pop('location_img_json')
+                    response = operate_sensor.update_sensor(receive_data, response)
+                    if response['status']:
+                        receive_data['location_img_json'] = location_img_json
+                        data = {'id': 'client', 'header': 'update_sensor', 'status': True, 'receive_data': receive_data}
+                        client.publish(topic, json.dumps(data))  # 把网关更新的sensor数据发送给server
+
+                # 添加
+                elif choice == 'add':
+                    location_img_json = receive_data.pop('location_img_json')
+                    response = operate_sensor.add_sensor(receive_data, sensor_id, response)
+                    if response['status']:
+                        receive_data['location_img_json'] = location_img_json
+                        data = {'id': 'client', 'header': 'add_sensor', 'status': True, 'receive_data': receive_data}
+                        client.publish(topic, json.dumps(data))  # 把网关增加的sensor数据发送给server
+
+                # 删除
+                elif choice == 'remove':
+                    location_img_json = receive_data.pop('location_img_json')
+                    response = operate_sensor.remove_sensor(sensor_id, response)
+                    if response['status']:
+                        receive_data['location_img_json'] = location_img_json
+                        data = {'id': 'client', 'header': 'remove_sensor', 'status': True, 'receive_data': receive_data}
+                        client.publish(topic, json.dumps(data))  # 把网关增加的sensor数据发送给server
+            else:
+                response['msg'] = '输入时间和本公司其他网关的现有传感器时间冲突，请输入其他时间'
+
+        else:
+            response['msg'] = '输入时间和现有传感器时间冲突，请输入其他时间'
 
         return HttpResponse(json.dumps(response))
 
@@ -908,7 +865,7 @@ def receive_gw_data(request):
 def receive_server_data(receive_data):
     """
     接收服务器的数据，用于在服务器页面操作传感器的增删改操作
-    :param receive_data:
+    :param receive_data: 收到服务器的时间是已经在服务器端验证通过的时间，可以直接使用
     :return:
     """
     response = {'status': False, 'msg': '操作失败', 'times': time.time(), 'receive_data': receive_data}
@@ -921,51 +878,55 @@ def receive_server_data(receive_data):
         received_time_data = handle_func.handle_receive_data(received_time_data)
         # 验证时间
         conform = handle_func.judge_time(received_time_data, receive_data['network_id'])
-    else:  # 只更新报警信息参数
+    else:  # 只更新报警信息参数或者删除传感器
         conform = True
 
-    # 更新
-    if choice == 'update':
-        location_img_json = receive_data.pop('location_img_json')
-        if location_img_json:
-            location_img_path_and_name = receive_data['location_img_path']
-            location_img_path = location_img_path_and_name.rsplit('/', 1)[0] + '/'
-            # 判断是是否存在路径
-            handle_func.mkdir_path(path=location_img_path)
-            location_img_bytes = eval(json.loads(location_img_json.strip('\r\n')))
-            with open(location_img_path_and_name, 'wb') as f:
-                f.write(location_img_bytes)
+    if conform:
+        # 更新
+        if choice == 'update':
+            location_img_json = receive_data.pop('location_img_json')
+            if location_img_json:
+                location_img_path_and_name = receive_data['location_img_path']
+                location_img_path = location_img_path_and_name.rsplit('/', 1)[0] + '/'
+                # 判断是是否存在路径
+                handle_func.mkdir_path(path=location_img_path)
+                location_img_bytes = eval(json.loads(location_img_json.strip('\r\n')))
+                with open(location_img_path_and_name, 'wb') as f:
+                    f.write(location_img_bytes)
 
-        response = operate_sensor.update_sensor(receive_data, conform, response)
-        # 先pop掉location_img_json,把receive_data更新给网关后,需要再给receive_data添上location_img_json,以便返回给server进行存储
-        response['receive_data']['location_img_json'] = location_img_json
+            response = operate_sensor.update_sensor(receive_data, response)
+            # 先pop掉location_img_json,把receive_data更新给网关后,需要再给receive_data添上location_img_json,以便返回给server进行存储
+            response['receive_data']['location_img_json'] = location_img_json
 
-    # 添加
-    elif choice == 'add':
-        location_img_json = receive_data.pop('location_img_json')
-        if location_img_json:
-            location_img_path_and_name = receive_data['location_img_path']
-            location_img_path = location_img_path_and_name.rsplit('/', 1)[0] + '/'
-            # 判断是是否存在路径
-            handle_func.mkdir_path(path=location_img_path)
-            location_img_bytes = eval(json.loads(location_img_json.strip('\r\n')))
-            with open(location_img_path_and_name, 'wb') as f:
-                f.write(location_img_bytes)
+        # 添加
+        elif choice == 'add':
+            location_img_json = receive_data.pop('location_img_json')
+            if location_img_json:
+                location_img_path_and_name = receive_data['location_img_path']
+                location_img_path = location_img_path_and_name.rsplit('/', 1)[0] + '/'
+                # 判断是是否存在路径
+                handle_func.mkdir_path(path=location_img_path)
+                location_img_bytes = eval(json.loads(location_img_json.strip('\r\n')))
+                with open(location_img_path_and_name, 'wb') as f:
+                    f.write(location_img_bytes)
 
-        response = operate_sensor.add_sensor(receive_data, sensor_id, conform, response)
-        # 先pop掉location_img_json,把receive_data添加给网关后,需要再给receive_data添上location_img_json,以便返回给server进行存储
-        response['receive_data']['location_img_json'] = location_img_json
+            response = operate_sensor.add_sensor(receive_data, sensor_id, response)
+            # 先pop掉location_img_json,把receive_data添加给网关后,需要再给receive_data添上location_img_json,以便返回给server进行存储
+            response['receive_data']['location_img_json'] = location_img_json
 
-    # 删除
-    elif choice == 'remove':
-        response = operate_sensor.remove_sensor(sensor_id, response)
+        # 删除
+        elif choice == 'remove':
+            response = operate_sensor.remove_sensor(sensor_id, response)
+
+    else:
+        response['msg'] = '输入时间和现有传感器时间冲突，请输入其他时间'
 
     return response
 
 
 @login_required
 @csrf_exempt
-def sensor_data_val_set(request):
+def set_sensor_params(request):
     """
     设置模态框中的传感器参数
     :param request:
@@ -1017,7 +978,7 @@ def server_manual_get(network_id):
     :param request:
     :return:
     """
-    result = {'status': False, 'msg': '获取失败', 'gwData':{}}
+    result = {'status': False, 'msg': '获取失败', 'gwData': {}, 'network_id': network_id}
     global btn_sample
     try:
         if not btn_sample and not btn_polling and not auto_operation:
@@ -1025,20 +986,17 @@ def server_manual_get(network_id):
             global latest_job_id
             latest_job_id = network_id
             print(latest_job_id)
-            if models.Set_param.objects.count() == 0:
-                models.Set_param.objects.create(menu_get_id=latest_job_id, param="")
-            else:
-                models.Set_param.objects.filter(id=1).update(menu_get_id=latest_job_id)
             if latest_job_id == '':
                 result['msg'] = "没有选择传感器"
             else:
                 # 需要返回网关数据
                 gwData = time_job()
                 if gwData == {}:
-                    result['msg'] = "未获取到数据"
+                    result['msg'] = "未获取到数据..."
                 else:
-                    result = {'status': True, 'msg': "获取成功", 'gwData': gwData}
+                    result = {'status': True, 'msg': "获取成功", 'gwData': gwData, 'network_id': network_id}
             btn_sample = False
+            resume_all_sensor()
         else:
             if btn_polling:
                 result['msg'] = "请稍等，定时轮询模式正在采集数据..."
@@ -1047,35 +1005,26 @@ def server_manual_get(network_id):
     except Exception as e:
         print(e)
         btn_sample = False
+        resume_all_sensor()
     return result
 
 
-# def init_gwntid():
-#     """
-#     首先检查是否已经自动配置了gwntid，一般没有gwntid表示网关是初次上电
-#     :return:
-#     """
-#     gw_network_id = models.GW_network_id.objects.all()
-#     if not gw_network_id:
-#         command = "get gwntid"
-#         print('command', command)
-#         # gwntid = gw0.serCtrl.getSerialresp(command)
-#         gwntid = '0.0.1.0'
-#         print('gwntid_response', gwntid.strip('\n'))
-#         if handle_func.check_gwntid(gwntid):
-#             models.GW_network_id.objects.create(network_id=gwntid)
-#     else:
-#         gwntid = gw_network_id.values('network_id')[0]['network_id']
-#
-#     return gwntid
-
-
-# 每次加载程序或者刷新页面的时候马上更新数据库和调度器中的任务一次
 auto_Timing_time()
 # handle_func.check_online_of_sensor_status()
 
 
 def test(request):
+    received_time_data = {'month': '*', 'day': '*', 'hour': '*', 'mins': '0'}
+    header = 'check_time_between_gws'
+    result = {'status': True, 'received_time_data': received_time_data, 'network_id': '0.0.1.2'}
+    handle_func.send_gwdata_to_server(client, '0.0.1.0', result, header)
+    judge_time_response_start_time = time.time()
+    handle_func.judge_time_between_gws_payload = {}
+    while time.time() - judge_time_response_start_time < 3:
+        if handle_func.judge_time_between_gws_payload:
+            judge_time_between_gws_conform = handle_func.judge_time_between_gws_payload['comform']
+            print(judge_time_between_gws_conform)
+            break
 
     return render(request, 'test.html', locals())
 

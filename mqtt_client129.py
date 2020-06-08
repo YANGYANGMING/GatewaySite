@@ -58,8 +58,8 @@
 
 
 
-import paho.mqtt.client as mqtt
-import threading, time
+# import paho.mqtt.client as mqtt
+# import threading, time
 #
 # def client_mqtt():
 #
@@ -113,10 +113,10 @@ import threading, time
 
 
 ############################################################
-
+import paho.mqtt.client as mqtt
 import json
 
-sub_list = [("aaa", 2), ('pub', 2)]
+sub_list = [("abc", 0), ('pub', 2)]
 
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code " + str(rc))
@@ -129,21 +129,35 @@ def on_connect(client, userdata, flags, rc):
 
 # 接收到消息的回调方法
 def on_message(client, userdata, msg):
-    payload = json.loads(msg.payload.decode())
+    payload = msg.payload.decode()
     print(msg.topic)
     print(payload)
     # print(msg.topic + ":" + payload)
-    client.publish("pub", json.dumps('3收到'), 2)
+    # client.publish("pub", json.dumps('2收到'), 2)
 
 
 if __name__ == '__main__':
+    import os
     client = mqtt.Client()
     client.on_connect = on_connect
     client.on_message = on_message
+    crtPath = os.path.dirname(os.path.abspath(__file__)) + r"\crt"
+    ca_certs = "%s\ca\MyRootCA.pem" % crtPath
+    certfile = "%s\client\MyClient1.pem" % crtPath
+    keyfile = "%s\client\MyClient1.key" % crtPath
+    print(ca_certs)
+    client.tls_set(ca_certs=ca_certs,
+                   certfile=certfile,
+                   keyfile=keyfile,
+                   )
+    client.tls_insecure_set(True)
+    # client.username_pw_set("yym", "yym2020")
+    # client.username_pw_set("admin", "public")
 
-    HOST = "121.36.220.210"
+    # HOST = "192.168.238.129"
+    HOST = "192.168.238.132"
+    client.connect(HOST, 8883)
 
-    client.connect(HOST, 1883, 30)
     # client.loop_forever()
 
     # user = input("请输入名称:")
@@ -154,6 +168,11 @@ if __name__ == '__main__':
     while True:
         str = input()
         if str:
-            client.publish("pub", json.dumps(str), 2)
+            client.publish("abc", str, 0)
+
+
+
+
+
 
 

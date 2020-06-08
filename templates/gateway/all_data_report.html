@@ -36,42 +36,34 @@
         </div>
             <!-- /.box-header -->
         <div class="box-body">
-          <div class="row">
-            <div class="col-xs-12" style="overflow-x: auto">
-                <table id="example1" class="table table-bordered table-striped">
-                    <thead>
+            <table id="all-data" class="table table-bordered table-striped table-hover" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>名称</th>
+                        <th style="display: none;">id</th>
+                        <th>网络号</th>
+                        <th>时间</th>
+                        <th>电量</th>
+                        <th>温度</th>
+                        <th>厚度值</th>
+                        <th>数据详情</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data_obj %}
                         <tr>
-                            <tr>
-                                <th>id</th>
-                                <th>名称</th>
-                                <th>网络号</th>
-                                <th>时间</th>
-                                <th>电量</th>
-                                <th>温度</th>
-                                <th>厚度值</th>
-                                <th>数据详情</th>
-                            </tr>
+                            <td><p style="width: 50px;">{{ row.network_id__alias }}</p></td>
+                            <td style="display: none;">{{ row.id }}</td>
+                            <td><p style="width: 70px;">{{ row.network_id }}</p></td>
+                            <td><p style="width: 75px;">{{ row.time_tamp }}</p></td>
+                            <td><p style="width: 55px;">{{ row.battery }}</p></td>
+                            <td><p style="width: 50px;">{{ row.temperature }}</p></td>
+                            <td><p style="width: 70px;">{{ row.thickness }}</p></td>
+                            <td><a href="javascript:;" style="cursor: pointer;" onclick="GetData(this);"><p style="width: 80px;"><i class="fa fa-pencil"></i> 数据详情</p></a></td>
                         </tr>
-                    </thead>
-                    <tbody>
-                            {% for row in data_obj %}
-                                <tr>
-                                    <td>{{ row.id }}</td>
-                                    <td>{{ row.network_id__alias }}</td>
-                                    <td>{{ row.network_id }}</td>
-                                    <td>{{ row.time_tamp }}</td>
-                                    <td>{{ row.battery }}</td>
-                                    <td>{{ row.temperature }}</td>
-                                    <td>{{ row.thickness }}</td>
-                                    <td><a href="javascript:;" style="cursor: pointer;" onclick="GetData(this);"><i class="fa fa-pencil"></i> 数据详情</a></td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                </table>
-            </div>
-          <!-- /.box-body -->
-          </div>
-        <!-- /.col -->
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
         <!-- /.row -->
       </div>
@@ -90,11 +82,14 @@
         $(function () {
           initChart();
 
-        //Date range picker
-        $('#reservation').daterangepicker();
+        $('#all-data').DataTable({
+            order: [[ 3, "desc" ]],  // 初始化倒序排列
+            scrollX: true,          // 固定列
+            fixedColumns: {
+                    leftColumns: 1  // 固定第1列
+                },
 
-        $('#example1').DataTable();
-
+        });
 
         });
 
@@ -200,7 +195,7 @@
                 ]
             };
             // 数据库中获取 serie
-            var nid = $(ths).parent().parent().children().eq(0).text();
+            var nid = $(ths).parent().parent().children().eq(1).text();
             $.ajax({
                 url: '/gateway/data-json-report-'+nid,
                 type:'GET',

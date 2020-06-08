@@ -27,26 +27,26 @@
 
     <script>
 
-    function subs(){
+    {#function subs(){#}
         {#var fd = new FormData();#}
-        var user = JSON.stringify({'aaa': 23, 'bbb': 'bb'});
+    {#    var user = JSON.stringify({'aaa': 23, 'bbb': 'bb'});#}
         {#var img_obj = $('#location-img-path')[0].files[0];#}
         {#console.log(img_obj);#}
         {#fd.append('user', user);#}
         {#fd.append('img_obj', img_obj);#}
-        $.ajax({
-            url: '/gateway/test-json',
-            type: 'POST',
-            dataType: 'JSON',
-            data: {'user': user, 'aaa': true},
+    {#    $.ajax({#}
+    {#        url: '/gateway/test-json',#}
+    {#        type: 'POST',#}
+    {#        dataType: 'JSON',#}
+    {#        data: {'user': user, 'aaa': true},#}
             {#processData : false, // 使数据不做处理#}
             {#contentType : false, // 不要设置Content-Type请求头#}
-            success: function (arg) {
-                console.log(arg)
-            }
-        })
-
-    }
+    {#        success: function (arg) {#}
+    {#            console.log(arg)#}
+    {#        }#}
+    {#    })#}
+    {##}
+    {# }#}
 
     </script>
 

@@ -30,16 +30,11 @@ class UserEditForm(ModelForm):
     class Meta:
         model = models.UserProfile  #对应的Model中的类
         fields = '__all__'      #字段，如果是'__all__',就是表示列出所有的字段
-        exclude = ['groups', 'password', 'last_login']          #排除的字段
+        exclude = ['password', 'last_login']          #排除的字段
         labels = None           #提示信息
         help_texts = None       #帮助提示信息
         # widgets = None          #自定义插件
         error_messages = None   #自定义错误信息
-#error_messages用法：
-        # error_messages = {
-        #     'name': {'required': "用户名不能为空",},
-        #     'age': {'required': "年龄不能为空",},
-        # }
 
 #widgets用法
         widgets = {
@@ -47,19 +42,13 @@ class UserEditForm(ModelForm):
             "last_login": wid.Input(attrs={'class': 'form-control', 'style': 'width: 50%'}),
             "name": wid.Input(attrs={'class': 'form-control', 'style': 'width: 50%'}),
         }
-#labels，自定义在前端显示的名字
-        # labels = {
-        #     "name": "用户名",
-        #     "password": "密码",
-        #
-        # }
 
 
 class UserAddForm(ModelForm):
     class Meta:
         model = models.UserProfile  #对应的Model中的类
         fields = '__all__'      #字段，如果是'__all__',就是表示列出所有的字段
-        exclude = ['groups', 'last_login']          #排除的字段
+        exclude = ['last_login']          #排除的字段
         labels = None           #提示信息
         help_texts = None       #帮助提示信息
         # widgets = None          #自定义插件

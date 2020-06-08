@@ -121,46 +121,36 @@
         </div>
             <!-- /.box-header -->
         <div class="box-body">
-          <div class="row">
-            <div class="col-xs-12" style="overflow-x: auto">
-                <table id="example1" class="table table-bordered table-striped">
-                    <thead>
+            <table id="data-param" class="table table-bordered table-striped table-hover" style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>名称</th>
+                        <th>传感器ID</th>
+                        <th>周波数</th>
+                        <th>增益</th>
+                        <th>平均次数</th>
+                        <th>Hz</th>
+                        <th>采样深度</th>
+                        <th>采样频率</th>
+                        <th>编辑参数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in sensor_obj %}
                         <tr>
-                            <th>名称</th>
-                            <th>传感器ID</th>
-{#                            <th>network_id</th>#}
-                            <th>周波数</th>
-                            <th>增益</th>
-                            <th>平均次数</th>
-                            <th>Hz</th>
-                            <th>采样深度</th>
-                            <th>采样频率</th>
-{#                            <th>下次运行时间</th>#}
-                            <th>编辑参数</th>
+                            <td><p style="width: 50px;">{{ item.alias }}</p></td>
+                            <td><p style="width: 80px;">{{ item.sensor_id }}</p></td>
+                            <td><p style="width: 70px;">{{ item.cHz }}</p></td>
+                            <td><p style="width: 50px;">{{ item.gain }}</p></td>
+                            <td><p style="width: 80px;">{{ item.avg_time }}</p></td>
+                            <td><p style="width: 50px;">{{ item.Hz }}</p></td>
+                            <td><p style="width: 80px;">{{ item.Sample_depth }}</p></td>
+                            <td><p style="width: 80px;">{{ item.Sample_Hz }}</p></td>
+                            <td><a href="#" data-toggle="modal" data-target="#modal-default" onclick="ShowModel(this);"><button type="button" class="btn btn-success"><p style="width: 80px;"><i class="fa fa-pencil fa-fw"></i>编辑</p></button></a></td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in sensor_obj %}
-                            <tr>
-                                <td>{{ item.alias }}</td>
-                                <td>{{ item.sensor_id }}</td>
-{#                                <td>{{ item.network_id }}</td>#}
-                                <td>{{ item.cHz }}</td>
-                                <td>{{ item.gain }}</td>
-                                <td>{{ item.avg_time }}</td>
-                                <td>{{ item.Hz }}</td>
-                                <td>{{ item.Sample_depth }}</td>
-                                <td>{{ item.Sample_Hz }}</td>
-{#                                <td>{{ item.next_run_time }}</td>#}
-                                <td><a href="#" data-toggle="modal" data-target="#modal-default" onclick="ShowModel(this);"><button type="button" class="btn btn-success"><i class="fa fa-pencil fa-fw"></i>编辑</button></a></td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-          <!-- /.box-body -->
-          </div>
-        <!-- /.col -->
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
         <!-- /.row -->
       </div>
@@ -178,7 +168,13 @@
 
       $(function () {
 
-        $('#example1').DataTable();
+        $('#data-param').DataTable({
+            order: [[ 2, "desc" ]],  // 初始化倒序排列
+            scrollX: true,          // 固定列
+            fixedColumns: {
+                    leftColumns: 1  // 固定第1列
+                },
+        });
 
       });
 
@@ -222,7 +218,7 @@
           $('#sensor-response-msg').text('参数设置中...');
           ClearMSG('sensor-response-msg-msg');
           $.ajax({
-               url: '/gateway/sensor-data-val-set',
+               url: '/gateway/set-sensor-params',
                type: 'POST',
                data: {'val_dict': JSON.stringify(val_dict)},
                dataType: 'JSON',

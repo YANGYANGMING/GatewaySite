@@ -6,8 +6,8 @@ class Delete_data():
     def count_gwdata(self):
         """删除超限网关数据"""
         db_count = models.GWData.objects.all().count()
-        if db_count > 512:
-            diffience_count = db_count - 512
+        if db_count > 1001:
+            diffience_count = db_count - 1001
             obj_list = list(models.GWData.objects.all()[:int(diffience_count)])
             for i in obj_list:
                 i.delete()

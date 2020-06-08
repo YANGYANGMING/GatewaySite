@@ -1,6 +1,7 @@
 import os
-
+import platform
 from ctypes import *
+
 
 ETGminiX1_file = os.path.dirname(os.path.abspath(__file__)) + '/thicknessgauge_x86_64.so'
 # ETGminiX1_file = os.path.dirname(os.path.abspath(__file__)) + '/thicknessgauge_armv7l.so'

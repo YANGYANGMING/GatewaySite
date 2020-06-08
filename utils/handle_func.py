@@ -2,11 +2,14 @@ import threading, time, json, re, os
 from GatewaySite.settings import headers_dict, heart_timeout
 from gateway.views import views
 from gateway import models
-from GatewaySite import settings
 from PIL import Image
 
 
+judge_time_between_gws_payload = {}
+
+
 class Handle_func(object):
+
     def __init__(self):
         pass
 
@@ -17,7 +20,6 @@ class Handle_func(object):
         :param payload:
         :return:
         """
-        print('心跳.......')
         temp_trigger = views.heart_timeout_sche._create_trigger(trigger='interval', trigger_args=heart_timeout)
         views.heart_timeout_sche.modify_job('cal_heart_timeout', trigger=temp_trigger)
         # After updating the data, you need to resume_job()
@@ -74,6 +76,19 @@ class Handle_func(object):
         response = views.receive_server_data(payload.get('data'))
         send_gwdata_to_server(views.client, topic, response, headers_dict['remove_sensor'])
 
+    def check_time_between_gws(self, topic, payload):
+        """
+        接收服务器判断时间状态的结果
+        :param topic:
+        :param payload:
+        :return:
+        """
+        print('判断时间状态.......')
+        conform = payload.get('data')
+        print('conform....', conform)
+        global judge_time_between_gws_payload
+        judge_time_between_gws_payload = {'conform': conform}
+
     def resume_sensor(self, topic, payload):
         """
         接收服务器的恢复传感器指令，并执行
@@ -85,6 +100,7 @@ class Handle_func(object):
         try:
             jobs_id = 'cron_time ' + payload["network_id"]
             views.scheduler.resume_job(jobs_id)
+            views.scheduler.print_jobs()
             models.Sensor_data.objects.filter(network_id=payload["network_id"]).update(sensor_run_status=1)
             ret = {'status': True, 'msg': '开通成功', 'network_id': payload["network_id"]}
             send_gwdata_to_server(views.client, topic, ret, headers_dict['resume_sensor'])
@@ -103,6 +119,7 @@ class Handle_func(object):
         try:
             jobs_id = 'cron_time ' + payload["network_id"]
             views.scheduler.pause_job(jobs_id)
+            views.scheduler.print_jobs()
             models.Sensor_data.objects.filter(network_id=payload["network_id"]).update(sensor_run_status=0)
             ret = {'status': True, 'msg': '禁止成功', 'network_id': payload["network_id"]}
             send_gwdata_to_server(views.client, topic, ret, headers_dict['pause_sensor'])
@@ -247,7 +264,6 @@ def send_gwdata_to_server(client, topic, result, header):
     client.publish(topic, json.dumps(result))  # 网关给服务器返回数据
 
 
-
 def check_online_of_sensor_status():
     """
     上电检查节点在线状态
@@ -275,16 +291,16 @@ def check_online_of_sensor_status():
         except Exception as e:
             print(e, '检查节点失败')
     # 上电检查完所有节点后，发送sensor数据给server
-    send_all_sensor(headers_dict)
+    send_all_sensor()
 
 
-def send_all_sensor(headers_dict):
+def send_all_sensor():
     """
     发送所有传感器数据到server
     :param headers_dict:
     :return:
     """
-    topic = models.GW_network_id.objects.values('network_id')[0]['network_id']  # gwntid
+    topic = models.Gateway.objects.values('network_id')[0]['network_id']  # gwntid
     sync_sensors = list(models.Sensor_data.objects.all().values())
     for item in sync_sensors:
         item['date_of_installation'] = str(item['date_of_installation'])
@@ -385,8 +401,9 @@ def handle_receive_data(time_data):
     :param time_data:
     :return:
     """
+    print('time_data', time_data)
     for k, v in time_data.items():
-        if v == []:
+        if not v:
             time_data[k] = '*'
         else:
             v_temp = ''
@@ -441,17 +458,6 @@ def judge_time(received_time_data_dict, network_id):
                             break
     print('conform', conform)
     return conform
-
-
-def check_gwntid(ntid_response):
-    """
-    检查gwntid合法性
-    :param ntid_response:
-    :return:
-    """
-    success = True
-
-    return success
 
 
 def check_soft_delete(network_id):

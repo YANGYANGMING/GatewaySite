@@ -33,7 +33,7 @@ class SensorData(EMATData):
                 gwData["com_version"] = com_version
                 gwData["sensor_id"] = str(self.sensorID)
                 gwData["network_id"] = str(self.networkID)
-                gwData["times_tamp"] = time.time()
+                gwData["time_tamp"] = time.time()
                 gwData["temperature"] = self.res1
                 gwData["gain"] = self.gain
                 gwData["battery"] = self.Battery
@@ -76,9 +76,11 @@ class SerialCtrl():
 
     def atCMD(self, data):
         cmd = str(data) + "\r\n"
+        if self.serialPort.isOpen == False:
+            self.serialPort.open()
         self.serialPort.write(cmd.encode('ascii'))
 
-    def getSerialData(self, latest_job_id, timeout_s=30):
+    def getSerialData(self, latest_job_id, timeout_s=28):
         """发送命令并读取串口数据"""
         serdata = ''
         time_start = time.time()
@@ -87,15 +89,16 @@ class SerialCtrl():
         print('cmd', command)
         self.atCMD(command)
         try:
-
             # 先清空串口缓存（暂时未处理缓存）
-
+            # self.serialPort.flushInput("/dev/ttyS3")
             while ((time.time() - time_start) < timeout_s):
                 serdata = self.serialPort.readline().decode('ascii')
                 # if time.time() - time_start < 3:
                 #     # 处理接收ok缓存问题
                 #     serdata = ''
                 if (serdata != ''):
+                    self.serialPort.flushInput()  # 清空串口缓存
+                    time.sleep(0.1)
                     break
                     # # 处理重复gwdata缓存问题
                     # get_sensor_id = serdata.split(';')[0].split('=')[1]
@@ -118,7 +121,6 @@ class SerialCtrl():
             if (response != ''):
                 break
         return response
-
 
     def ser2snrData(self, serdata):
         """串口数据转换成传感器数据"""

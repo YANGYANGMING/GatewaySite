@@ -80,21 +80,12 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
             ('gateway_config_time_operate_view', '可以操作配置时间页面'),
             ('gateway_all_data_report_view', '可以查看所有数据信息'),
             ('gateway_thickness_report_view', '可以查看所有传感器的厚度曲线'),
-            ('gateway_all_sensor_data_view', '可以查看所有传感器的参数'),
+            ('gateway_edit_sensor_params_view', '可以查看所有传感器的参数'),
             ('gateway_set_sensor_time_view', '可以查看所有传感器的设置运行时间'),
             ('gateway_user_list_view', '可以查看编辑用户列表'),
             ('gateway_set_gateway_page_view', '可以设置网关'),
             # ('gateway_user_add_view', '可以新增用户'),
         )
-
-# class UserProfile(models.Model):
-#     """用户信息表"""
-#     user = models.OneToOneField(User, on_delete=models.CASCADE)
-#     name = models.CharField(max_length=64, verbose_name='姓名')
-#     role = models.ManyToManyField("Role", blank=True, null=True)
-#
-#     def __str__(self):
-#         return self.name
 
 
 class Role(models.Model):
@@ -104,6 +95,7 @@ class Role(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class Menus(models.Model):
     """动态菜单"""
@@ -191,7 +183,6 @@ class Sensor_data(models.Model):
     network_id = models.CharField(max_length=32, unique=True)
     received_time_data = models.CharField(max_length=128)
     battery = models.CharField(max_length=32, default=100)
-    temperature = models.CharField(max_length=32, default=30)
     cHz = models.CharField(max_length=32, default='2')
     gain = models.CharField(max_length=32, default='60')
     avg_time = models.CharField(max_length=32, default='4')
@@ -224,6 +215,8 @@ class Sensor_data(models.Model):
     alarm_battery = models.FloatField(default=50)
     alarm_temperature = models.FloatField(default=310)
     alarm_corrosion = models.FloatField(default=0.3)
+    longitude = models.FloatField(default=0, null=True, blank=True)
+    latitude = models.FloatField(default=0, null=True, blank=True)
     area = models.TextField(verbose_name='所在区域', null=True, blank=True)
     location = models.TextField(verbose_name='所在位置', null=True, blank=True)
     location_img_path = models.TextField(verbose_name='所在位置图片路径', null=True, blank=True)

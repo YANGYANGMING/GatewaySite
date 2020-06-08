@@ -130,7 +130,6 @@ LOGIN_URL = '/login/'
 
 heart_timeout = {'minutes': 1, 'seconds': 30}
 
-
 headers_dict = {
     'gwntid': 'gwntid',
     'get_data_manually': 'get_data_manually',
@@ -144,6 +143,17 @@ headers_dict = {
     'resume_sensor': 'resume_sensor',
     'pause_sensor': 'pause_sensor',
     'update_gateway': 'update_gateway',
+    'check_time_between_gws': 'check_time_between_gws',
 
 }
+
+
+# EMQ X SETTINGS
+MQTT_USERNAME = "ORISONIC"
+MQTT_PASSWORD = "ORISONIC2020"
+MQTT_HOST = "121.36.220.210"
+crtPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + r"/crt"
+ca_certs = "%s/ca/MyRootCA.pem" % crtPath
+certfile = "%s/client/MyClient1.pem" % crtPath
+keyfile = "%s/client/MyClient1.key" % crtPath
 

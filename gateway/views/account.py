@@ -22,7 +22,7 @@ def acc_login(request):
             print("passed authentication")
             login(request, user)  # 把user封装到request.session中
             if rmb:
-                request.session.set_expiry(60 * 60 * 24 * 30)
+                request.session.set_expiry(60 * 60 * 24 * 15)
                 print('rmb')
             return redirect('/gateway/index')  # 登录后跳转至next指定的页面，否则到首页
         else:
@@ -30,16 +30,17 @@ def acc_login(request):
 
     return render(request, 'login.html', locals())
 
+
 def acc_logout(request):
     """退出"""
     # request.session.clear()
     logout(request)
     return redirect('/login/')
 
+
 def page_404(request):
     """404页面"""
     return render(request, '404.html')
-
 
 
 # @permissions.check_permission
@@ -59,6 +60,10 @@ def user_add(request):
             temp = form_obj.save(commit=False)  # 暂时获取一个数据库对象，对其他字段进行赋值
             temp.password = make_password(form_obj.cleaned_data['password'])
             temp.save()  # 真正插入数据库
+            name = form_obj.cleaned_data.get('name')
+            role_obj = form_obj.cleaned_data.get('role')[0]
+            cur_user_obj = models.UserProfile.objects.get(name=name)
+            cur_user_obj.role.add(role_obj)  # 给用户添加角色
             return redirect('/gateway/user-list')
 
 
@@ -111,15 +116,13 @@ def user_list(request):
 @login_required
 def user_profile(request):
     """
-    查看修改个人信息
+    查看个人信息
     :param request:
     :return:
     """
     obj = models.UserProfile.objects.get(id=request.user.id)
     if request.method == "GET":
         form = UserProfileForm({'name': obj.name, 'role': obj.role.values('name').first()['name'], 'last_login': str(obj.last_login)})
-    if request.method == "POST":
-        form = UserProfileForm(request.POST)
     return render(request, 'gateway/userprofile.html', locals())
 
 @csrf_exempt

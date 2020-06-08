@@ -119,7 +119,7 @@ import json
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code " + str(rc))
     # 连接成功回调
-    result, mid = client.subscribe([("0.0.1.0", 2), ('pub', 2)])
+    result, mid = client.subscribe([("abc", 0), ('pub', 2)])
     # print('result:', result)
     # print('mid:', mid)
     # client.publish("chat", json.dumps({"say": "Hello,anyone!"}))
@@ -127,15 +127,15 @@ def on_connect(client, userdata, flags, rc):
 
 # 接收到消息的回调方法
 def on_message(client, userdata, msg):
-    payload = json.loads(msg.payload.decode())
+    payload = msg.payload.decode()
     print(msg.topic)
     print(payload)
     # print(msg.topic + ":" + payload)
 
+
 # 在连接断开时的 callback，打印 result code
 def on_disconnect(client, userdata, rc):
     print("Disconnection returned result:"+ str(rc))
-
 
 
 if __name__ == '__main__':
@@ -143,10 +143,23 @@ if __name__ == '__main__':
     client.on_connect = on_connect
     client.on_disconnect = on_disconnect
     client.on_message = on_message
+    # client.username_pw_set("ORISONIC", "ORISONIC2020")
+    # import os
+    # crtPath = os.path.dirname(os.path.abspath(__file__)) + r"\crt"
+    # ca_certs = "%s\ca\MyRootCA.pem" % crtPath
+    # certfile = "%s\client\MyClient1.pem" % crtPath
+    # keyfile = "%s\client\MyClient1.key" % crtPath
+    # print(ca_certs)
+    # client.tls_set(ca_certs=ca_certs,
+    #                certfile=certfile,
+    #                keyfile=keyfile,
+    #                )
+    # client.tls_insecure_set(True)
 
-    HOST = "121.36.220.210"
+    # HOST = "121.36.220.210"
+    HOST = "192.168.238.132"
 
-    client.connect(HOST, 1883, 30)
+    client.connect(HOST, 8883, 30)
     # client.loop_forever()
 
     # user = input("请输入名称:")
@@ -157,7 +170,7 @@ if __name__ == '__main__':
     while True:
         str = input()
         if str:
-            client.publish("0.0.1.0", json.dumps(str), 2)
+            client.publish("abc", str, 0)
 
 
 
