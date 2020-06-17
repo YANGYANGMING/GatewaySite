@@ -120,20 +120,6 @@
                           <li class="active">
                               <a href="{% if menu.url_type == 0 %}{{ menu.url_name }}{% else %}{% url menu.url_name %}{% endif %}"><span>{{ menu.name }}</span></a>
                           </li>
-{#                      {% elif request.path == "/gateway/user-list" %}#}
-{#                          <li class="active treeview">#}
-{#                              <a href="#">#}
-{#                                <i class="fa fa-dashboard"></i> <span>用户管理</span>#}
-{#                                <span class="pull-right-container">#}
-{#                                  <i class="fa fa-angle-left pull-right"></i>#}
-{#                                </span>#}
-{#                              </a>#}
-{#                              <ul class="treeview-menu">#}
-{#                                <li class="active"><a href="#"><i class="fa fa-circle-o"></i> 用户列表</a></li>#}
-{#                                <li><a href="#"><i class="fa fa-circle-o"></i> 个人中心</a></li>#}
-{#                                <li><a href="#"><i class="fa fa-circle-o"></i> 修改密码</a></li>#}
-{#                              </ul>#}
-{#                          </li>#}
                       {% else %}
                           <li>
                               <a href="{% if menu.url_type == 0 %}{{ menu.url_name }}{% else %}{% url menu.url_name %}{% endif %}"><span>{{ menu.name }}</span></a>

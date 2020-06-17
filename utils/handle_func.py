@@ -1,11 +1,9 @@
 import threading, time, json, re, os
+from functools import reduce
 from GatewaySite.settings import headers_dict, heart_timeout
 from gateway.views import views
 from gateway import models
 from PIL import Image
-
-
-judge_time_between_gws_payload = {}
 
 
 class Handle_func(object):
@@ -31,15 +29,16 @@ class Handle_func(object):
         result = {'gwntid': gwntid}
         send_gwdata_to_server(views.client, topic, result, headers_dict['heart_ping'])
 
-    def get_data_manually(self, topic, payload):
+    def get_data(self, topic, payload):
         """
-        接收服务器的手动获取数据指令，并执行
+        接收服务器的获取数据指令，并执行
         :param topic:
         :param payload:
         :return:
         """
         print('取数.......')
-        result = views.server_manual_get(payload.get('data'))
+        result = views.server_get_data(payload.get('data'))
+        views.log.log(result['status'], result['msg'], result.get('network_id'))
         send_gwdata_to_server(views.client, topic, result, headers_dict['gwdata'])
 
     def update_sensor(self, topic, payload):
@@ -51,6 +50,7 @@ class Handle_func(object):
         """
         print('更新.......')
         response = views.receive_server_data(payload.get('data'))
+        views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'), payload.get('user'))
         print('response....', response)
         send_gwdata_to_server(views.client, topic, response, headers_dict['update_sensor'])
 
@@ -63,6 +63,7 @@ class Handle_func(object):
         """
         print('添加........')
         response = views.receive_server_data(payload.get('data'))
+        views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'), payload.get('user'))
         send_gwdata_to_server(views.client, topic, response, headers_dict['add_sensor'])
 
     def remove_sensor(self, topic, payload):
@@ -74,20 +75,8 @@ class Handle_func(object):
         """
         print('删除........')
         response = views.receive_server_data(payload.get('data'))
+        views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'), payload.get('user'))
         send_gwdata_to_server(views.client, topic, response, headers_dict['remove_sensor'])
-
-    def check_time_between_gws(self, topic, payload):
-        """
-        接收服务器判断时间状态的结果
-        :param topic:
-        :param payload:
-        :return:
-        """
-        print('判断时间状态.......')
-        conform = payload.get('data')
-        print('conform....', conform)
-        global judge_time_between_gws_payload
-        judge_time_between_gws_payload = {'conform': conform}
 
     def resume_sensor(self, topic, payload):
         """
@@ -107,6 +96,7 @@ class Handle_func(object):
         except Exception as e:
             send_gwdata_to_server(views.client, topic, ret, headers_dict['resume_sensor'])
             print(e)
+        views.log.log(ret['status'], ret['msg'], payload.get('network_id'), payload.get('user'))
 
     def pause_sensor(self, topic, payload):
         """
@@ -126,6 +116,7 @@ class Handle_func(object):
         except Exception as e:
             send_gwdata_to_server(views.client, topic, ret, headers_dict['pause_sensor'])
             print(e)
+        views.log.log(ret['status'], ret['msg'], payload.get('network_id'), payload.get('user'))
 
     def update_gateway(self, topic, payload):
         """
@@ -134,7 +125,8 @@ class Handle_func(object):
         :param payload:
         :return:
         """
-        views.operate_gateway.update_gateway(payload['gateway_data'])
+        ret = views.operate_gateway.update_gateway(payload['gateway_data'])
+        views.log.log(ret['status'], ret['msg'], topic, payload.get('user'))
 
 
 class HandleImgs(object):
@@ -413,53 +405,6 @@ def handle_receive_data(time_data):
     return time_data
 
 
-def judge_time(received_time_data_dict, network_id):
-    """
-    判断时间是否冲突，判断方法：先对比mins，如果mins有重复时间或者有'*'，以对比mins的方法对比hour的值，
-    如果hour有重复时间，对比month和day，一旦发现有重复时间，conform = False，并且跳出循环
-    :param received_time_data_dict: 接收到的时间字典：{'month': '2', 'day': '*', 'hour': '6', 'mins': '0,30'}
-    :param sche_job_time_list: 任务调度器中的任务时间：
-                        [{'year': '*', 'month': '2,5', 'day': '*', 'mins': '0', 'hour': '6'},
-                        {'year': '*', 'month': '1,5', 'day': '*', 'mins': '29', 'hour': '18'},
-                        {'year': '*', 'month': '1', 'day': '*', 'mins': '29', 'hour': '18'},
-                        {'year': '*', 'month': '*', 'day': '*', 'mins': '*', 'hour': '*'}]
-    :return:
-    """
-    sche_job_time_list = []
-    # 不验证正在修改的传感器的时间
-    for job_obj in views.scheduler.get_jobs():
-        if job_obj.id.split(' ')[1] != network_id:
-            sche_job_time_list.append({'year': str(job_obj.trigger.fields[0]),
-                                       'month': str(job_obj.trigger.fields[1]),
-                                       'day': str(job_obj.trigger.fields[2]),
-                                       'hour': str(job_obj.trigger.fields[5]),
-                                       'mins': str(job_obj.trigger.fields[6])})
-    conform = True
-    print('sche_job_time_list', sche_job_time_list)
-    for sche_item in sche_job_time_list:
-        # check mins
-        if [ii for ii in received_time_data_dict['mins'].split(',') if ii in sche_item['mins'].split(',')] != [] \
-                or sche_item['mins'] == '*' or received_time_data_dict['mins'] == '*':
-            # check hour
-            if [ii for ii in received_time_data_dict['hour'].split(',') if ii in sche_item['hour'].split(',')] != [] \
-                    or sche_item['hour'] == '*' or received_time_data_dict['hour'] == '*':
-                # check day
-                if [ii for ii in received_time_data_dict['day'].split(',') if
-                    ii in sche_item['day'].split(',')] != [] \
-                        or sche_item['day'] == '*' or received_time_data_dict['day'] == '*':
-                    # check month
-                    if [ii for ii in received_time_data_dict['month'].split(',') if
-                        ii in sche_item['month'].split(',')] != [] \
-                            or sche_item['month'] == '*' or received_time_data_dict['month'] == '*':
-                        # check year
-                        if [ii for ii in ['*'] if ii in sche_item['year'].split(',')] != [] or sche_item[
-                            'year'] == '*':
-                            conform = False
-                            break
-    print('conform', conform)
-    return conform
-
-
 def check_soft_delete(network_id):
     """
     添加传感器时验证此传感器是否已软删除
@@ -485,6 +430,7 @@ def job_id_list():
         sche_job_time_list.append(
             {'month': str(job_obj.trigger.fields[1]), 'day': str(job_obj.trigger.fields[2]),
              'hour': str(job_obj.trigger.fields[5]), 'mins': str(job_obj.trigger.fields[6])})
+
     return sche_job_id_list, sche_job_time_list
 
 
@@ -501,6 +447,70 @@ def cal_thickness_avg(data_list):
     thickness_avg = thickness_total / thickness_num
 
     return thickness_avg
+
+
+def show_selected_permissions(request, Group, nid):
+    """
+    在编辑用户页面显示选中的用户权限
+    :return:
+    """
+    # 当前登录用户所拥有的角色权限和被手动分配的权限
+    cur_user_role_permissions_list = list(
+        Group.objects.values('permissions__id', 'permissions__name').filter(user=request.user.id))
+    cur_user_manual_assign_permissions_list = models.UserProfile.objects.get(
+        id=request.user.id).user_permissions.values('id', 'name').all()
+    # 当前被选中要修改的用户所拥有的角色权限和被手动分配的权限
+    selected_user_role_permissions_list = list(Group.objects.values('permissions__id').filter(user=nid))
+    selected_user_manual_assign_permissions_list = models.UserProfile.objects.get(id=nid).user_permissions.values(
+        'id').all()
+    # 变换key保持一致
+    cur_user_all_permissions_list = []
+    for item in cur_user_manual_assign_permissions_list:
+        item_temp = {}
+        item_temp['permissions__id'] = item['id']
+        item_temp['permissions__name'] = item['name']
+        cur_user_all_permissions_list.append(item_temp)
+    # 当前登录用户所拥有的角色权限和被手动分配的权限的总和
+    cur_user_all_permissions_list += cur_user_role_permissions_list
+    cur_user_all_permissions_list = list_dict_duplicate_removal(cur_user_all_permissions_list)
+    # 当前被选中要修改的用户所拥有的角色权限和被手动分配的权限的总和
+    selected_user_permissions_list = [item['permissions__id'] for item in selected_user_role_permissions_list] + \
+                                     [item['id'] for item in selected_user_manual_assign_permissions_list]
+    selected_user_permissions_list = list_dict_duplicate_removal(selected_user_permissions_list)
+    return cur_user_all_permissions_list, selected_user_permissions_list
+
+
+def list_dict_duplicate_removal(distinct_list):
+    """
+    给列表中的字典去重
+    :param distinct_list:
+    :return:
+    """
+    run_function = lambda x, y: x if y in x else x + [y]
+    return reduce(run_function, [[], ] + distinct_list)
+
+
+##########################################################
+handle_func = Handle_func()
+
+
+def handle_recv_server(topic, payload):
+
+    def handle_recv_threading():
+        # 反射
+        header = payload['header']  # get_data    update_sensor
+        getattr(handle_func, header)(topic, payload)
+
+    if payload['id'] == 'server':  # 开线程防止IO阻塞
+        single_threading = threading.Thread(target=handle_recv_threading)
+        single_threading.start()
+
+##########################################################
+
+
+
+
+
 
 
 

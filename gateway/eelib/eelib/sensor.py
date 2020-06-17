@@ -1,7 +1,6 @@
 
 import time
 from gateway import models
-from ..count_db import Delete_data
 from .message import *
 
 
@@ -80,12 +79,12 @@ class SerialCtrl():
             self.serialPort.open()
         self.serialPort.write(cmd.encode('ascii'))
 
-    def getSerialData(self, latest_job_id, timeout_s=28):
+    def getSerialData(self, network_id, timeout_s=28):
         """发送命令并读取串口数据"""
         serdata = ''
         time_start = time.time()
-        print('latest_job_id:', latest_job_id)
-        command = 'get 83 ' + latest_job_id.rsplit('.', 1)[1]
+        print('network_id:', network_id)
+        command = 'get 83 ' + network_id.rsplit('.', 1)[1]
         print('cmd', command)
         self.atCMD(command)
         try:
@@ -155,12 +154,12 @@ class SerialCtrl():
                     snrdata.data.append(int(cc[i]))
         return snrdata
 
-    def getSensorData(self, latest_job_id):
+    def getSensorData(self, network_id):
         """获取传感器数据"""
         snrdata = SensorData()
 
         """获取串口数据"""
-        serdata = self.getSerialData(latest_job_id)
+        serdata = self.getSerialData(network_id)
         # print('serdata:', serdata)
         if(serdata!=''):
             snrdata = self.ser2snrData(serdata)

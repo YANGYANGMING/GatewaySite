@@ -77,14 +77,24 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     class Meta:
         permissions = (
             ('gateway_config_time_view', '可以访问配置时间页面'),
-            ('gateway_config_time_operate_view', '可以操作配置时间页面'),
+            ('gateway_manual_config_get_data_view', '可以手动取数'),
             ('gateway_all_data_report_view', '可以查看所有数据信息'),
             ('gateway_thickness_report_view', '可以查看所有传感器的厚度曲线'),
             ('gateway_edit_sensor_params_view', '可以查看所有传感器的参数'),
-            ('gateway_set_sensor_time_view', '可以查看所有传感器的设置运行时间'),
+            ('gateway_set_sensor_params_view', '可以设置传感器的参数'),
+            ('gateway_sensor_manage_view', '可以查看传感器管理页面'),
+            ('gateway_edit_sensor_view', '可以查看传感器编辑页面'),
+            ('gateway_add_sensor_page_view', '可以查看传感器增加页面'),
+            ('gateway_receive_gw_data_view', '可以保存对传感器进行增删改操作'),
+            ('gateway_set_gateway_page_view', '可以可查看设置网关页面'),
+            ('gateway_set_gateway_json_view', '可以保存设置网关操作'),
             ('gateway_user_list_view', '可以查看编辑用户列表'),
-            ('gateway_set_gateway_page_view', '可以设置网关'),
-            # ('gateway_user_add_view', '可以新增用户'),
+            ('gateway_user_add_view', '可以查看增加用户页面'),
+            ('gateway_user_add_save', '可以保存增加用户操作'),
+            ('gateway_user_edit_view', '可以查看编辑用户页面'),
+            ('gateway_user_edit_save', '可以保存编辑用户操作'),
+            ('gateway_user_delete_view', '可以查看删除用户页面'),
+            ('gateway_user_delete_conform', '可以保存删除用户操作'),
         )
 
 
@@ -134,12 +144,6 @@ class Gateway(models.Model):
         return self.name
 
 
-class Post_Return(models.Model):
-    """接收的信息"""
-    """{'result': {}, 'statusCode': 200, 'message': {'msgType': 'tsuccess', 'msg': 'success'}, 'elapsedTime': 6}
-    """
-    result_all_data = models.CharField(max_length=128, null=True)
-
 
 class GWData(models.Model):
     """网关数据"""
@@ -157,11 +161,6 @@ class GWData(models.Model):
         return str(self.network_id)
 
 
-# class GW_network_id(models.Model):
-#     """网关网络号"""
-#     network_id = models.CharField(max_length=32)
-
-
 class TimeStatus(models.Model):
     """运行状态表"""
     timing_status = models.CharField(max_length=32)
@@ -174,6 +173,13 @@ class Set_param(models.Model):
     """手动获取的id、设置参数"""
     menu_get_id = models.CharField(max_length=32)
     param = models.CharField(max_length=64)
+
+
+class Material(models.Model):
+    """材料"""
+    name = models.CharField(max_length=64, unique=True)
+    sound_V = models.IntegerField()
+    temperature_co = models.FloatField()
 
 
 class Sensor_data(models.Model):
@@ -195,11 +201,11 @@ class Sensor_data(models.Model):
     Importance_choices = ((0, '一般'),
                           (1, '重要'),
                           )
-    material_choices = ((0, '未定义'),
-                        (1, '碳钢'),
-                        (2, '不锈钢'),
-                        )
-    material = models.SmallIntegerField(choices=material_choices, default=0)
+    # material_choices = ((0, '未定义'),
+    #                     (1, '碳钢'),
+    #                     (2, '不锈钢'),
+    #                     )
+    material = models.SmallIntegerField(default=1)
     Importance = models.SmallIntegerField(choices=Importance_choices, default=0)
     sensor_online_status_choices = ((1, '在线'),
                                     (0, '离线')

@@ -24,9 +24,9 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-4 control-label">传感器ID：</label>
+                        <label class="col-sm-4 control-label">网络号：</label>
                         <div class="col-sm-5">
-                            <input type="text" class="form-control" id="modal-sensor-id"  value="" disabled>
+                            <input type="text" class="form-control" id="modal-network-id"  value="" disabled>
                         </div>
                     </div>
                   <label class="col-sm-4 control-label">周波数：&nbsp;&nbsp;</label>
@@ -125,7 +125,7 @@
                 <thead>
                     <tr>
                         <th>名称</th>
-                        <th>传感器ID</th>
+                        <th>网络号</th>
                         <th>周波数</th>
                         <th>增益</th>
                         <th>平均次数</th>
@@ -139,7 +139,7 @@
                     {% for item in sensor_obj %}
                         <tr>
                             <td><p style="width: 50px;">{{ item.alias }}</p></td>
-                            <td><p style="width: 80px;">{{ item.sensor_id }}</p></td>
+                            <td><p style="width: 80px;">{{ item.network_id }}</p></td>
                             <td><p style="width: 70px;">{{ item.cHz }}</p></td>
                             <td><p style="width: 50px;">{{ item.gain }}</p></td>
                             <td><p style="width: 80px;">{{ item.avg_time }}</p></td>
@@ -182,7 +182,7 @@
       function ShowModel(ths) {
           var $cur_tr = $(ths).parent().parent();
           var alias = $cur_tr.children().eq(0).text();
-          var sensor_id = $cur_tr.children().eq(1).text();
+          var network_id = $cur_tr.children().eq(1).text();
           var cHz = $cur_tr.children().eq(2).text();
           var gain = $cur_tr.children().eq(3).text();
           var avg_time = $cur_tr.children().eq(4).text();
@@ -192,7 +192,7 @@
 
           $(".modal-title").html(alias + "详细信息");
           $("#modal-alias").val(alias);
-          $("#modal-sensor-id").val(sensor_id);
+          $("#modal-network-id").val(network_id);
           $("#modal-chz").val(cHz);
           $("#modal-gain").val(gain);
           $("#modal-avg-time").val(avg_time);
@@ -207,7 +207,7 @@
           $('#save-param').click(function () {
               var val_dict = {
                   'alias': $("#modal-alias").val(),
-                  'sensor_id': $("#modal-sensor-id").val(),
+                  'network_id': $("#modal-network-id").val(),
                   'cHz': $("#modal-chz").val(),
                   'gain': $("#modal-gain").val(),
                   'avg_time': $("#modal-avg-time").val(),
@@ -224,12 +224,11 @@
                dataType: 'JSON',
                success: function (arg) {
                    if(arg['status'] === true){
-                       $('#sensor-response-msg').text(arg.message);
+                       $('#sensor-response-msg').text(arg.msg);
                         ClearMSG('sensor-response-msg-msg');
-                        {#sleep(3000);#}
                        window.location.reload();
                    }else{
-                       $('#sensor-response-msg').text(arg.message);
+                       $('#sensor-response-msg').text(arg.msg);
                         ClearMSG('sensor-response-msg-msg');
                    }
                }
@@ -243,17 +242,6 @@
                 $("#"+nid).text('')
             }, 3000);
         }
-
-        //睡眠时间
-        function sleep(numberMillis) {
-            var now = new Date();
-            var exitTime = now.getTime() + numberMillis;
-            while (true) {
-                now = new Date();
-                if (now.getTime() > exitTime)
-                return;
-                }
-            }
 
 
 

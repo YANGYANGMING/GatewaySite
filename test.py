@@ -1,4 +1,4 @@
-import os
+import os, time
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "GatewaySite.settings")
 django.setup()
@@ -47,5 +47,36 @@ from gateway import models
 #     data_list.append(eval('0x' + item))
 # print(data_list)
 # print(list(enumerate(data_list)))
-import platform
-print(platform.system())
+
+# from queue import PriorityQueue, Queue
+# import collections
+# p = Queue()
+# pq = PriorityQueue()
+# p.put('0.0.3.1')
+# p.put('0.0.2.1')
+# p.put('0.0.1.1')
+# p.put('0.0.4.1')
+# pq.put((2, '0.0.1.3'))
+# pq.put((2, '0.0.1.4'))
+# pq.put((2, '0.0.1.1'))
+# pq.put((2, '0.0.1.2'))
+#
+# # pq.put((2, 'b'))
+# # pq.put((2, 'd'))
+# # pq.put((2, 'a'))
+# # pq.put((1, 'c'))
+#
+# print(p.queue)
+# print(pq.queue)
+# pq.put((1, '0.0.1.6'))
+# print(pq.queue)
+# while True:
+#     print(p.get())
+#     # print(pq.get(block=True, timeout=3))
+#     time.sleep(1)
+#     print(p.empty())
+#     p.task_done()
+
+
+
+

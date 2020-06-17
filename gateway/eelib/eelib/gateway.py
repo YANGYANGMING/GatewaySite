@@ -8,6 +8,7 @@ from .alg.emat.emat import *
 from .message import *
 
 from gateway import models
+from ..count_db import Delete_data
 from utils import handle_func
 
 
@@ -32,18 +33,18 @@ class Gateway(GatewayCtrl):
         self.serCtrl = SerialCtrl(gser)
         self.delete_data = Delete_data()
 
-    def localCalThickness(self, svrdata={}):
+    def localCalThickness(self, svrdata, vel_mps):
         thick_mm = -19
         if(svrdata["data_len"] == 2048):
-            thick_mm = calThickness(data=svrdata['data'], gain_db=svrdata['gain'])
+            thick_mm = calThickness(data=svrdata['data'], gain_db=svrdata['gain'], vel_mps=vel_mps)
         return thick_mm
 
-    def sendData2Server(self, latest_job_id):
+    def sendData2Server(self, network_id):
         """获取发送给服务器的网关数据"""
         ret = Message(st=False)
         gwData = {}
         """snrdata是串口发送过来的原始数据"""
-        snrdata = self.serCtrl.getSensorData(latest_job_id)  # snrdata对象
+        snrdata = self.serCtrl.getSensorData(network_id)  # snrdata对象
         # print(snrdata.sensorID)
         # print(snrdata.data)
 
@@ -59,11 +60,14 @@ class Gateway(GatewayCtrl):
             strTime = time.strftime("%Y-%m-%d %H:%M:%S", localTime)
             gwData['time_tamp'] = strTime
 
-            #把厚度写入网关数据中
-            thickness = self.localCalThickness(svrdata=gwData)
-            gwData['thickness'] = thickness
             # 转换network_id
             network_id = handle_func.str_dec_hex(gwData['network_id'])
+            material_id = models.Sensor_data.objects.values('id').get(network_id=network_id)['id']
+            # 取出该材料的声速
+            sound_V = models.Material.objects.values('sound_V').get(id=material_id)['sound_V']
+            # 计算厚度值，并把厚度写入网关数据中
+            thickness = self.localCalThickness(svrdata=gwData, vel_mps=sound_V)
+            gwData['thickness'] = thickness
             sensor_data_obj = models.Sensor_data.objects.filter(network_id=network_id)
             gwData['network_id'] = sensor_data_obj[0]
             gwData.pop('sensor_id')

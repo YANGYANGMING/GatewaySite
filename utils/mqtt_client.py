@@ -1,8 +1,8 @@
 import paho.mqtt.client as mqtt
 from utils import handle_func
-from utils import handle_recv_server
 from gateway import models
 from GatewaySite import settings
+from lib.log import Logger
 import json
 
 
@@ -22,12 +22,13 @@ class MQTT_Client(object):
                             )
         self.client.tls_insecure_set(True)
         self.client.connect(settings.MQTT_HOST, 8883, 30)
+        # self.client.connect(settings.MQTT_HOST, 1883, 30)
         self.client.loop_start()
-
 
     # 在连接成功时的 callback，打印 result code
     def on_connect(self, client, userdata, flags, rc):
         print("Connected with result code " + str(rc))
+        Logger().log(True, 'Connection Successful')
         topic = models.Gateway.objects.values('network_id')[0]['network_id']
         self.client.subscribe([('pub', 2), (topic, 2)])
         header = 'connect_status'
@@ -37,6 +38,7 @@ class MQTT_Client(object):
     # 在连接断开时的 callback，打印 result code
     def on_disconnect(self, client, userdata, rc):
         print("Disconnection returned result:" + str(rc))
+        Logger().log(False, 'Connection Disconnected!')
 
     # 接收到消息的回调方法
     def on_message(self, client, userdata, msg):
@@ -44,7 +46,7 @@ class MQTT_Client(object):
         if payload['id'] == 'server':
             print('msg.topic:', msg.topic)
             print('payload:', payload)
-            handle_recv_server.handle_recv_server(msg.topic, payload)
+            handle_func.handle_recv_server(msg.topic, payload)
 
     def on_subscribe(self, client, userdata, mid, granted_qos):
         print('订阅成功.....')

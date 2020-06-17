@@ -147,10 +147,10 @@
                 dataType:'JSON',
                 success:function (arg) {
                     if(arg.status){
-                        $('#update-gateway').text(arg.message);
+                        $('#update-gateway').html(arg.msg);
                         ClearMSG('update-gateway');
                     }else {
-                        $('#update-gateway').text(arg.message);
+                        $('#update-gateway').html(arg.msg);
                         ClearMSG('update-gateway');
                     }
                 }

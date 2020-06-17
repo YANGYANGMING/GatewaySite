@@ -27,7 +27,7 @@ class OperateSensor(object):
         # 更新sensor数据
         models.Sensor_data.objects.filter(sensor_id=sensor_id).update(**receive_data)
         response['status'] = True
-        response['msg'] = '更新任务成功'
+        response['msg'] = '更新传感器成功'
         # 更新成功，同时同步数据库和调度器
         views.auto_Timing_time(network_id=receive_data['network_id'])
 
@@ -35,7 +35,7 @@ class OperateSensor(object):
 
     def add_sensor(self, receive_data, sensor_id, response):
         """
-        增加传感器，先判断此传感器是否是软删除的传感器，如果是，则执行对应的更新任务，否则执行添加任务
+        增加传感器，先判断此传感器是否是软删除的传感器，如果是，则执行对应的更新传感器，否则执行添加传感器
         :param receive_data:
         :param sensor_id:
         :param response:
@@ -43,11 +43,11 @@ class OperateSensor(object):
         """
         network_id = receive_data['network_id']
         alias = receive_data['alias']
-        # 判断network_id是否符合此网关格式
-        gw_network_id = models.Gateway.objects.values('network_id').first()['network_id']
-        if gw_network_id.rsplit('.', 1)[0] != network_id.rsplit('.', 1)[0]:
-            response['msg'] = '网络号格式不正确，网络号应该是【%s.x】' % gw_network_id.rsplit('.', 1)[0]
-            return response
+        # # 判断network_id是否符合此网关格式
+        # gw_network_id = models.Gateway.objects.values('network_id').first()['network_id']
+        # if gw_network_id.rsplit('.', 1)[0] != network_id.rsplit('.', 1)[0]:
+        #     response['msg'] = '网络号格式不正确，网络号应该是【%s.x】' % gw_network_id.rsplit('.', 1)[0]
+        #     return response
         # 判断此传感器是否是软删除的传感器
         is_soft_delete = handle_func.check_soft_delete(network_id)
         if is_soft_delete:  # 是软删除的sensor
@@ -56,9 +56,7 @@ class OperateSensor(object):
             receive_data['delete_status'] = 0
             models.Sensor_data.objects.filter(network_id=network_id).update(**receive_data)
             response['status'] = True
-            response['msg'] = '添加任务成功'
-            # 添加成功，同时同步数据库和调度器
-            views.auto_Timing_time()
+            response['msg'] = '添加传感器成功'
         else:
             network_id_list = []
             sensor_id_list = []
@@ -90,8 +88,12 @@ class OperateSensor(object):
             if add_sensor_response.strip('\n') == 'ok':
                 models.Sensor_data.objects.create(**receive_data)
                 response['status'] = True
-                response['msg'] = '添加任务成功'
-            views.auto_Timing_time()
+                response['msg'] = '添加传感器成功'
+            else:
+                response['msg'] = '添加传感器失败，传感器未响应'
+
+        # 添加成功，同时同步数据库和调度器
+        views.auto_Timing_time()
 
         return response
 
@@ -102,6 +104,7 @@ class OperateSensor(object):
         :param response:
         :return:
         """
+        response['msg'] = '删除传感器失败'
         command = "set 74 " + sensor_id + " 0"
         print('command', command)
         print("response['receive_data']['forcedelete']", response['receive_data']['forcedelete'])
@@ -110,7 +113,7 @@ class OperateSensor(object):
         else:
             models.Sensor_data.objects.filter(sensor_id=sensor_id).update(delete_status=1)  # 数据库软删除
         response['status'] = True
-        response['msg'] = '删除任务成功'
+        response['msg'] = '删除传感器成功'
         # 删除成功，同时同步数据库和调度器
         views.auto_Timing_time()
 
@@ -123,11 +126,15 @@ class OperateGateway(object):
         pass
 
     def update_gateway(self, gateway_data):
-        models.Gateway.objects.all().update(**gateway_data)
-        topic = gateway_data['network_id']
-        header = headers_dict['update_gateway']
-        result = {'status': True, 'msg': '更新网关成功', 'gateway_data': gateway_data}
-        handle_func.send_gwdata_to_server(views.client, topic, result, header)
+        result = {'status': False, 'msg': '更新网关失败'}
+        try:
+            models.Gateway.objects.all().update(**gateway_data)
+            topic = gateway_data['network_id']
+            header = headers_dict['update_gateway']
+            result = {'status': True, 'msg': '更新网关成功', 'gateway_data': gateway_data}
+            handle_func.send_gwdata_to_server(views.client, topic, result, header)
+        except Exception as e:
+            print(e)
         return result
 
     def add_gateway(self, gateway_data):

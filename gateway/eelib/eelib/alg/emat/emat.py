@@ -14,8 +14,10 @@ class WaveData(Structure):
         ("data", c_int32*maxSize),
     ]
 
+
 def calThickness(data, gain_db, pluse_num=2, nSize=2048, vel_mps=3240, freq_Hz=40e6):
     thick_mm = -19
+    print('vel_mps', vel_mps)
 
     if (nSize<=maxSize):
         wdata = WaveData()
