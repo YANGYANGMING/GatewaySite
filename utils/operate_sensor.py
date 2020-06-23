@@ -43,11 +43,6 @@ class OperateSensor(object):
         """
         network_id = receive_data['network_id']
         alias = receive_data['alias']
-        # # 判断network_id是否符合此网关格式
-        # gw_network_id = models.Gateway.objects.values('network_id').first()['network_id']
-        # if gw_network_id.rsplit('.', 1)[0] != network_id.rsplit('.', 1)[0]:
-        #     response['msg'] = '网络号格式不正确，网络号应该是【%s.x】' % gw_network_id.rsplit('.', 1)[0]
-        #     return response
         # 判断此传感器是否是软删除的传感器
         is_soft_delete = handle_func.check_soft_delete(network_id)
         if is_soft_delete:  # 是软删除的sensor
@@ -125,23 +120,23 @@ class OperateGateway(object):
     def __init__(self):
         pass
 
-    def update_gateway(self, gateway_data):
+    def update_gateway(self, gateway_data, user):
         result = {'status': False, 'msg': '更新网关失败'}
         try:
             models.Gateway.objects.all().update(**gateway_data)
             topic = gateway_data['network_id']
             header = headers_dict['update_gateway']
-            result = {'status': True, 'msg': '更新网关成功', 'gateway_data': gateway_data}
+            result = {'status': True, 'msg': '更新网关成功', 'gateway_data': gateway_data, 'user': user}
             handle_func.send_gwdata_to_server(views.client, topic, result, header)
         except Exception as e:
             print(e)
         return result
 
-    def add_gateway(self, gateway_data):
+    def add_gateway(self, gateway_data, user):
         models.Gateway.objects.create(**gateway_data)
         topic = gateway_data['network_id']
         header = headers_dict['add_gateway']
-        result = {'status': True, 'msg': '添加网关成功', 'gateway_data': gateway_data}
+        result = {'status': True, 'msg': '添加网关成功', 'gateway_data': gateway_data, 'user': user}
         handle_func.send_gwdata_to_server(views.client, topic, result, header)
         return result
 

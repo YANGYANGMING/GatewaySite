@@ -52,6 +52,7 @@ class Handle_func(object):
         response = views.receive_server_data(payload.get('data'))
         views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'), payload.get('user'))
         print('response....', response)
+        response['user'] = payload.get('user')
         send_gwdata_to_server(views.client, topic, response, headers_dict['update_sensor'])
 
     def add_sensor(self, topic, payload):
@@ -64,6 +65,7 @@ class Handle_func(object):
         print('添加........')
         response = views.receive_server_data(payload.get('data'))
         views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'), payload.get('user'))
+        response['user'] = payload.get('user')
         send_gwdata_to_server(views.client, topic, response, headers_dict['add_sensor'])
 
     def remove_sensor(self, topic, payload):
@@ -76,6 +78,7 @@ class Handle_func(object):
         print('删除........')
         response = views.receive_server_data(payload.get('data'))
         views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'), payload.get('user'))
+        response['user'] = payload.get('user')
         send_gwdata_to_server(views.client, topic, response, headers_dict['remove_sensor'])
 
     def resume_sensor(self, topic, payload):
@@ -92,8 +95,10 @@ class Handle_func(object):
             views.scheduler.print_jobs()
             models.Sensor_data.objects.filter(network_id=payload["network_id"]).update(sensor_run_status=1)
             ret = {'status': True, 'msg': '开通成功', 'network_id': payload["network_id"]}
+            ret['user'] = payload.get('user')
             send_gwdata_to_server(views.client, topic, ret, headers_dict['resume_sensor'])
         except Exception as e:
+            ret['user'] = payload.get('user')
             send_gwdata_to_server(views.client, topic, ret, headers_dict['resume_sensor'])
             print(e)
         views.log.log(ret['status'], ret['msg'], payload.get('network_id'), payload.get('user'))
@@ -112,11 +117,46 @@ class Handle_func(object):
             views.scheduler.print_jobs()
             models.Sensor_data.objects.filter(network_id=payload["network_id"]).update(sensor_run_status=0)
             ret = {'status': True, 'msg': '禁止成功', 'network_id': payload["network_id"]}
+            ret['user'] = payload.get('user')
             send_gwdata_to_server(views.client, topic, ret, headers_dict['pause_sensor'])
         except Exception as e:
+            ret['user'] = payload.get('user')
             send_gwdata_to_server(views.client, topic, ret, headers_dict['pause_sensor'])
             print(e)
         views.log.log(ret['status'], ret['msg'], payload.get('network_id'), payload.get('user'))
+
+    def set_sensor_params(self, topic, payload):
+        """
+        接收服务器的设置传感器参数（增益）指令，并执行
+        :param topic:
+        :param payload:
+        :return:
+        """
+        try:
+            val_dict = payload['val_dict']
+            network_id = payload['network_id']
+            # 准备发送的命令字符串  cmd_str = "set 0001 2 60 4 2 2 500"
+            cmd_str = str(" " + val_dict['cHz'] + " " + val_dict['gain'] + " " + val_dict[
+                'avg_time'] + " " + val_dict['Hz'] + " " + val_dict['Sample_depth'] + " " + val_dict['Sample_Hz'])
+            command = "set 71 " + network_id.rsplit('.', 1)[1] + cmd_str
+            print('command', command)
+            set_val_response = views.gw0.serCtrl.getSerialresp(command)
+            print('set_val_response', set_val_response.strip('\n'))
+            # set_val_response = 'ok'
+            header = 'set_sensor_params'
+            topic = network_id.rsplit('.', 1)[0] + '.0'
+            if set_val_response.strip('\n') == 'ok':
+                update_sensor_data(val_dict)
+                models.Sensor_data.objects.filter(network_id=network_id).update(**val_dict)
+                result = {'status': True, 'network_id': network_id, 'msg': '设置参数成功', 'params_dict': val_dict}
+            else:
+                result = {'status': False, 'network_id': network_id, 'msg': '设置参数失败', 'params_dict': val_dict}
+
+            send_gwdata_to_server(views.client, topic, result, header)
+            views.log.log(result['status'], result['msg'], network_id, payload['user'])
+        except Exception as e:
+            print(e, '设置参数失败')
+
 
     def update_gateway(self, topic, payload):
         """
@@ -125,7 +165,7 @@ class Handle_func(object):
         :param payload:
         :return:
         """
-        ret = views.operate_gateway.update_gateway(payload['gateway_data'])
+        ret = views.operate_gateway.update_gateway(payload['gateway_data'], payload.get('user'))
         views.log.log(ret['status'], ret['msg'], topic, payload.get('user'))
 
 
@@ -271,6 +311,7 @@ def check_online_of_sensor_status():
             command = "get 65 " + network_id.rsplit('.', 1)[1]
             print('command', command)
             while resend_num < 3:  # 未收到数据后重发
+                print(time.time())
                 online_of_sensor_status_response = views.gw0.serCtrl.getSerialresp(command)
                 print('online_of_sensor_status_response', online_of_sensor_status_response.strip('\n'))
                 if online_of_sensor_status_response.strip('\n') == 'ok':
@@ -298,7 +339,7 @@ def send_all_sensor():
         item['date_of_installation'] = str(item['date_of_installation'])
         item['gateway'] = topic
         item.pop('id')
-    result = {'sync_sensors': sync_sensors}
+    result = {'status': True, 'sync_sensors': sync_sensors, 'msg': "同步传感器数据成功"}
     send_gwdata_to_server(views.client, topic, result, headers_dict['sync_sensors'])
 
 

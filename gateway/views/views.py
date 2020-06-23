@@ -102,14 +102,7 @@ def auto_Timing_time(network_id=None):
         db_job_list = list(models.Sensor_data.objects.filter(delete_status=0).values('network_id', 'received_time_data'))
         print(db_job_list)
         # The list of sensor_id and sensor_time for scheduled tasks that already exist in the scheduler
-
-
-
         sche_job_id_list, sche_job_time_list = handle_func.job_id_list()
-        # sche_job_id_list, sche_job_time_list = func_lib.job_id_list()
-        # sche_job_id_list, sche_job_time_list = job_id_list()
-
-
 
         # Compare: when adding or updating tasks in the database, add or update schedluer tasks
         for db_job in db_job_list:
@@ -154,22 +147,6 @@ def auto_Timing_time(network_id=None):
         # print(datetime.datetime.now())
     except Exception as e:
         print('auto_Timing_time:', e)
-
-
-def job_id_list():
-    """
-    A list of the sensor_id of a scheduled task that already exists in the scheduler
-    :return:
-    """
-    sche_job_id_list = []
-    sche_job_time_list = []
-    for job_obj in scheduler.get_jobs():
-        sche_job_id_list.append(job_obj.id.split(' ')[1])
-        sche_job_time_list.append(
-            {'month': str(job_obj.trigger.fields[1]), 'day': str(job_obj.trigger.fields[2]),
-             'hour': str(job_obj.trigger.fields[5]), 'mins': str(job_obj.trigger.fields[6])})
-
-    return sche_job_id_list, sche_job_time_list
 
 
 def time_job(network_id):
@@ -711,10 +688,10 @@ def set_gateway_json(request):
     print(gateway_data)  # {'Enterprise': '中石油', 'name': '中石油1号网关', 'network_id': '0.0.1.0', 'gw_status': '1'}
     if gateway_obj:
         # update gateway
-        result = operate_gateway.update_gateway(gateway_data)
+        result = operate_gateway.update_gateway(gateway_data, user=request.user)
     else:
         # add_gateway
-        result = operate_gateway.add_gateway(gateway_data)
+        result = operate_gateway.add_gateway(gateway_data, user=request.user)
 
     log.log(result['status'], result['msg'], gateway_data['network_id'], str(request.user))
 
@@ -785,7 +762,8 @@ def receive_gw_data(request):
             log.log(response['status'], response['msg'], receive_data.get('network_id'), request.user)
             if response['status']:
                 receive_data['location_img_json'] = location_img_json
-                data = {'id': 'client', 'header': 'update_sensor', 'status': True, 'receive_data': receive_data}
+                data = {'id': 'client', 'header': 'update_sensor', 'status': response['status'], 'msg': response['msg'],
+                        'user': str(request.user), 'receive_data': receive_data}
                 client.publish(topic, json.dumps(data))  # 把网关更新的sensor数据发送给server
 
         # 添加
@@ -795,7 +773,8 @@ def receive_gw_data(request):
             log.log(response['status'], response['msg'], receive_data.get('network_id'), request.user)
             if response['status']:
                 receive_data['location_img_json'] = location_img_json
-                data = {'id': 'client', 'header': 'add_sensor', 'status': True, 'receive_data': receive_data}
+                data = {'id': 'client', 'header': 'add_sensor', 'status': response['status'], 'msg': response['msg'],
+                        'user': str(request.user), 'receive_data': receive_data}
                 client.publish(topic, json.dumps(data))  # 把网关增加的sensor数据发送给server
 
         # 删除
@@ -805,8 +784,9 @@ def receive_gw_data(request):
             log.log(response['status'], response['msg'], receive_data.get('network_id'), request.user)
             if response['status']:
                 receive_data['location_img_json'] = location_img_json
-                data = {'id': 'client', 'header': 'remove_sensor', 'status': True, 'receive_data': receive_data}
-                client.publish(topic, json.dumps(data))  # 把网关增加的sensor数据发送给server
+                data = {'id': 'client', 'header': 'remove_sensor', 'status': response['status'], 'msg': response['msg'],
+                        'user': str(request.user), 'receive_data': receive_data}
+                client.publish(topic, json.dumps(data))  # 把网关删除的sensor数据发送给server
 
         return HttpResponse(json.dumps(response))
 
@@ -892,10 +872,15 @@ def set_sensor_params(request):
         set_val_response = gw0.serCtrl.getSerialresp(command)
         print('set_val_response', set_val_response.strip('\n'))
         # set_val_response = 'ok'
+        header = 'set_sensor_params'
+        topic = network_id.rsplit('.', 1)[0] + '.0'
         if set_val_response.strip('\n') == 'ok':
             handle_func.update_sensor_data(val_dict)
             models.Sensor_data.objects.filter(network_id=network_id).update(**val_dict)
-            result = {'status': True, 'msg': '设置参数成功'}
+            result = {'status': True, 'network_id': network_id, 'msg': '设置参数成功', 'params_dict': val_dict, 'user': str(request.user)}
+        else:
+            result = {'status': False, 'network_id': network_id, 'msg': '设置参数失败', 'params_dict': val_dict, 'user': str(request.user)}
+        handle_func.send_gwdata_to_server(client, topic, result, header)
     except Exception as e:
         print(e, '设置参数失败')
 
@@ -929,7 +914,7 @@ def server_get_data(network_id):
     :param network_id:
     :return:
     """
-    result = {'status': False, 'msg': '获取失败', 'gwData': {}, 'network_id': network_id}
+    result = {'status': False, 'msg': '[%s]获取失败，传感器未响应' % network_id, 'gwData': {}, 'network_id': network_id}
 
     try:
         if network_id == '':
@@ -938,7 +923,7 @@ def server_get_data(network_id):
             # 需要返回网关数据
             gwData = time_job(network_id)
             if gwData != {}:
-                result = {'status': True, 'msg': "获取成功", 'gwData': gwData, 'network_id': network_id}
+                result = {'status': True, 'msg': "[%s]获取成功" % network_id, 'gwData': gwData, 'network_id': network_id}
     except Exception as e:
         print(e)
 

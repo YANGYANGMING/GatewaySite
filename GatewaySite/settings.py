@@ -151,8 +151,8 @@ headers_dict = {
 # EMQ X SETTINGS
 MQTT_USERNAME = "ORISONIC"
 MQTT_PASSWORD = "ORISONIC2020"
-MQTT_HOST = "121.36.220.210"
-# MQTT_HOST = "192.168.0.41"
+# MQTT_HOST = "121.36.220.210"
+MQTT_HOST = "192.168.0.41"
 crtPath = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + r"/crt"
 ca_certs = "%s/ca/MyRootCA.pem" % crtPath
 certfile = "%s/client/MyClient1.pem" % crtPath

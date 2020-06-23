@@ -62,7 +62,7 @@ class Gateway(GatewayCtrl):
 
             # 转换network_id
             network_id = handle_func.str_dec_hex(gwData['network_id'])
-            material_id = models.Sensor_data.objects.values('id').get(network_id=network_id)['id']
+            material_id = models.Sensor_data.objects.values('material').get(network_id=network_id)['material']
             # 取出该材料的声速
             sound_V = models.Material.objects.values('sound_V').get(id=material_id)['sound_V']
             # 计算厚度值，并把厚度写入网关数据中

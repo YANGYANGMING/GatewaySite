@@ -115,6 +115,7 @@ class SerialCtrl():
         response = ''
         time_start = time.time()
         self.atCMD(command)
+        self.serialPort.flushInput("/dev/ttyS3")
         while ((time.time() - time_start) < timeout_s):
             response = self.serialPort.readline().decode('ascii')
             if (response != ''):

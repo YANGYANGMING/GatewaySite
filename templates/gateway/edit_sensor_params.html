@@ -200,6 +200,7 @@
           $("#modal-Sample-depth").val(Sample_depth);
           $("#modal-Sample-hz").val(Sample_hz);
 
+          $('#sensor-response-msg').text('');
           SaveModalParam();
       }
 
@@ -215,8 +216,9 @@
                   'Sample_depth': $("#modal-Sample-depth").val(),
                   'Sample_Hz': $("#modal-Sample-hz").val()
                 };
+
           $('#sensor-response-msg').text('参数设置中...');
-          ClearMSG('sensor-response-msg-msg');
+
           $.ajax({
                url: '/gateway/set-sensor-params',
                type: 'POST',
@@ -225,16 +227,16 @@
                success: function (arg) {
                    if(arg['status'] === true){
                        $('#sensor-response-msg').text(arg.msg);
-                        ClearMSG('sensor-response-msg-msg');
+                        ClearMSG('sensor-response-msg');
                        window.location.reload();
                    }else{
                        $('#sensor-response-msg').text(arg.msg);
-                        ClearMSG('sensor-response-msg-msg');
                    }
                }
             });
           })
       }
+
 
       //清除提示信息
         function ClearMSG(nid) {
