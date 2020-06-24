@@ -27,7 +27,7 @@ class Handle_func(object):
 
         gwntid = models.Gateway.objects.values('network_id')[0]['network_id']
         result = {'gwntid': gwntid}
-        send_gwdata_to_server(views.client, topic, result, headers_dict['heart_ping'])
+        send_gwdata_to_server(views.client, 'pub', result, headers_dict['heart_ping'])
 
     def get_data(self, topic, payload):
         """
@@ -39,7 +39,7 @@ class Handle_func(object):
         print('取数.......')
         result = views.server_get_data(payload.get('data'))
         views.log.log(result['status'], result['msg'], result.get('network_id'))
-        send_gwdata_to_server(views.client, topic, result, headers_dict['gwdata'])
+        send_gwdata_to_server(views.client, 'pub', result, headers_dict['gwdata'])
 
     def update_sensor(self, topic, payload):
         """
@@ -53,7 +53,7 @@ class Handle_func(object):
         views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'), payload.get('user'))
         print('response....', response)
         response['user'] = payload.get('user')
-        send_gwdata_to_server(views.client, topic, response, headers_dict['update_sensor'])
+        send_gwdata_to_server(views.client, 'pub', response, headers_dict['update_sensor'])
 
     def add_sensor(self, topic, payload):
         """
@@ -66,7 +66,7 @@ class Handle_func(object):
         response = views.receive_server_data(payload.get('data'))
         views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'), payload.get('user'))
         response['user'] = payload.get('user')
-        send_gwdata_to_server(views.client, topic, response, headers_dict['add_sensor'])
+        send_gwdata_to_server(views.client, 'pub', response, headers_dict['add_sensor'])
 
     def remove_sensor(self, topic, payload):
         """
@@ -79,7 +79,7 @@ class Handle_func(object):
         response = views.receive_server_data(payload.get('data'))
         views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'), payload.get('user'))
         response['user'] = payload.get('user')
-        send_gwdata_to_server(views.client, topic, response, headers_dict['remove_sensor'])
+        send_gwdata_to_server(views.client, 'pub', response, headers_dict['remove_sensor'])
 
     def resume_sensor(self, topic, payload):
         """
@@ -96,10 +96,10 @@ class Handle_func(object):
             models.Sensor_data.objects.filter(network_id=payload["network_id"]).update(sensor_run_status=1)
             ret = {'status': True, 'msg': '开通成功', 'network_id': payload["network_id"]}
             ret['user'] = payload.get('user')
-            send_gwdata_to_server(views.client, topic, ret, headers_dict['resume_sensor'])
+            send_gwdata_to_server(views.client, 'pub', ret, headers_dict['resume_sensor'])
         except Exception as e:
             ret['user'] = payload.get('user')
-            send_gwdata_to_server(views.client, topic, ret, headers_dict['resume_sensor'])
+            send_gwdata_to_server(views.client, 'pub', ret, headers_dict['resume_sensor'])
             print(e)
         views.log.log(ret['status'], ret['msg'], payload.get('network_id'), payload.get('user'))
 
@@ -118,10 +118,10 @@ class Handle_func(object):
             models.Sensor_data.objects.filter(network_id=payload["network_id"]).update(sensor_run_status=0)
             ret = {'status': True, 'msg': '禁止成功', 'network_id': payload["network_id"]}
             ret['user'] = payload.get('user')
-            send_gwdata_to_server(views.client, topic, ret, headers_dict['pause_sensor'])
+            send_gwdata_to_server(views.client, 'pub', ret, headers_dict['pause_sensor'])
         except Exception as e:
             ret['user'] = payload.get('user')
-            send_gwdata_to_server(views.client, topic, ret, headers_dict['pause_sensor'])
+            send_gwdata_to_server(views.client, 'pub', ret, headers_dict['pause_sensor'])
             print(e)
         views.log.log(ret['status'], ret['msg'], payload.get('network_id'), payload.get('user'))
 
@@ -152,7 +152,7 @@ class Handle_func(object):
             else:
                 result = {'status': False, 'network_id': network_id, 'msg': '设置参数失败', 'params_dict': val_dict}
 
-            send_gwdata_to_server(views.client, topic, result, header)
+            send_gwdata_to_server(views.client, 'pub', result, header)
             views.log.log(result['status'], result['msg'], network_id, payload['user'])
         except Exception as e:
             print(e, '设置参数失败')
@@ -286,7 +286,7 @@ def send_gwdata_to_server(client, topic, result, header):
     """
     网关给服务器返回数据
     :param client:
-    :param topic: 主题（gwntid）
+    :param topic: 主题（'pub'）
     :param result: 返回结果
     :param header: 到服务端匹配的头信息
     :return:
@@ -340,7 +340,7 @@ def send_all_sensor():
         item['gateway'] = topic
         item.pop('id')
     result = {'status': True, 'sync_sensors': sync_sensors, 'msg': "同步传感器数据成功"}
-    send_gwdata_to_server(views.client, topic, result, headers_dict['sync_sensors'])
+    send_gwdata_to_server(views.client, 'pub', result, headers_dict['sync_sensors'])
 
 
 def str_hex_dec(network_id):

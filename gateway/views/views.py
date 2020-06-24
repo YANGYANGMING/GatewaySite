@@ -74,7 +74,7 @@ def send_network_id_to_server_queue(network_id, level=3):
     Enterprise = models.Gateway.objects.values('Enterprise').get(network_id=topic)['Enterprise']
     header = 'send_network_id_to_queue'
     result = {'status': True, 'network_id_list': network_id_list, 'Enterprise': Enterprise, 'level': level}
-    handle_func.send_gwdata_to_server(client, topic, result, header)
+    handle_func.send_gwdata_to_server(client, 'pub', result, header)
 
 
 def auto_Timing_time(network_id=None):
@@ -758,7 +758,7 @@ def receive_gw_data(request):
                 receive_data['location_img_json'] = location_img_json
                 data = {'id': 'client', 'header': 'update_sensor', 'status': response['status'], 'msg': response['msg'],
                         'user': str(request.user), 'receive_data': receive_data}
-                client.publish(topic, json.dumps(data))  # 把网关更新的sensor数据发送给server
+                client.publish('pub', json.dumps(data))  # 把网关更新的sensor数据发送给server
 
         # 添加
         elif choice == 'add':
@@ -769,7 +769,7 @@ def receive_gw_data(request):
                 receive_data['location_img_json'] = location_img_json
                 data = {'id': 'client', 'header': 'add_sensor', 'status': response['status'], 'msg': response['msg'],
                         'user': str(request.user), 'receive_data': receive_data}
-                client.publish(topic, json.dumps(data))  # 把网关增加的sensor数据发送给server
+                client.publish('pub', json.dumps(data))  # 把网关增加的sensor数据发送给server
 
         # 删除
         elif choice == 'remove':
@@ -780,7 +780,7 @@ def receive_gw_data(request):
                 receive_data['location_img_json'] = location_img_json
                 data = {'id': 'client', 'header': 'remove_sensor', 'status': response['status'], 'msg': response['msg'],
                         'user': str(request.user), 'receive_data': receive_data}
-                client.publish(topic, json.dumps(data))  # 把网关删除的sensor数据发送给server
+                client.publish('pub', json.dumps(data))  # 把网关删除的sensor数据发送给server
 
         return HttpResponse(json.dumps(response))
 
@@ -874,7 +874,7 @@ def set_sensor_params(request):
             result = {'status': True, 'network_id': network_id, 'msg': '设置参数成功', 'params_dict': val_dict, 'user': str(request.user)}
         else:
             result = {'status': False, 'network_id': network_id, 'msg': '设置参数失败', 'params_dict': val_dict, 'user': str(request.user)}
-        handle_func.send_gwdata_to_server(client, topic, result, header)
+        handle_func.send_gwdata_to_server(client, 'pub', result, header)
     except Exception as e:
         print(e, '设置参数失败')
 

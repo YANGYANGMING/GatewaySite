@@ -127,7 +127,7 @@ class OperateGateway(object):
             topic = gateway_data['network_id']
             header = headers_dict['update_gateway']
             result = {'status': True, 'msg': '更新网关成功', 'gateway_data': gateway_data, 'user': user}
-            handle_func.send_gwdata_to_server(views.client, topic, result, header)
+            handle_func.send_gwdata_to_server(views.client, 'pub', result, header)
         except Exception as e:
             print(e)
         return result
@@ -137,6 +137,6 @@ class OperateGateway(object):
         topic = gateway_data['network_id']
         header = headers_dict['add_gateway']
         result = {'status': True, 'msg': '添加网关成功', 'gateway_data': gateway_data, 'user': user}
-        handle_func.send_gwdata_to_server(views.client, topic, result, header)
+        handle_func.send_gwdata_to_server(views.client, 'pub', result, header)
         return result
 
