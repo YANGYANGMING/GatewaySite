@@ -284,12 +284,6 @@ def config_time(request):
         "Hour_cron": [i for i in range(0, 24)],
         "Minute_cron": [i for i in range(0, 60)],
 
-        "cHz": [cHz for cHz in range(1, 4)],
-        "gain": [gain for gain in range(60, 101)],
-        "avg_time": [avg_time for avg_time in range(0, 11)],
-        "Hz": [Hz for Hz in range(2, 5)],
-        "Sample_depth": [Sample_depth for Sample_depth in range(2, 7, 2)],
-        "Sample_Hz": [200, 5000],
     }
 
     test = {'status': 'true'}

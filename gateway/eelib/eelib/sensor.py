@@ -75,7 +75,7 @@ class SerialCtrl():
 
     def atCMD(self, data):
         cmd = str(data) + "\r\n"
-        if self.serialPort.isOpen == False:
+        if not self.serialPort.isOpen():
             self.serialPort.open()
         self.serialPort.write(cmd.encode('ascii'))
 
@@ -83,31 +83,20 @@ class SerialCtrl():
         """发送命令并读取串口数据"""
         serdata = ''
         time_start = time.time()
-        print('network_id:', network_id)
         command = 'get 83 ' + network_id.rsplit('.', 1)[1]
         print('cmd', command)
         self.atCMD(command)
         try:
-            # 先清空串口缓存（暂时未处理缓存）
-            # self.serialPort.flushInput("/dev/ttyS3")
+            # 先清空串口缓存
+            self.serialPort.flushInput()
             while ((time.time() - time_start) < timeout_s):
                 serdata = self.serialPort.readline().decode('ascii')
-                # if time.time() - time_start < 3:
-                #     # 处理接收ok缓存问题
-                #     serdata = ''
                 if (serdata != ''):
-                    self.serialPort.flushInput()  # 清空串口缓存
                     time.sleep(0.1)
                     break
-                    # # 处理重复gwdata缓存问题
-                    # get_sensor_id = serdata.split(';')[0].split('=')[1]
-                    # latest_sensor_id = models.Sensor_data.objects.values('sensor_id').filter(network_id=latest_job_id)[0]['sensor_id']
-                    # if get_sensor_id == latest_sensor_id and (time.time() - time_start) > 5:
-                    #     break
-                    # else:
-                    #     serdata = ''
         except Exception as e:
             print(e)
+            self.serialPort.close()
         return serdata
 
     def getSerialresp(self, command, timeout_s=6):
@@ -115,11 +104,15 @@ class SerialCtrl():
         response = ''
         time_start = time.time()
         self.atCMD(command)
-        self.serialPort.flushInput("/dev/ttyS3")
-        while ((time.time() - time_start) < timeout_s):
-            response = self.serialPort.readline().decode('ascii')
-            if (response != ''):
-                break
+        try:
+            self.serialPort.flushInput()
+            while ((time.time() - time_start) < timeout_s):
+                response = self.serialPort.readline().decode('ascii')
+                if (response != ''):
+                    break
+        except Exception as e:
+            print(e)
+            self.serialPort.close()
         return response
 
     def ser2snrData(self, serdata):
