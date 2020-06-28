@@ -33,7 +33,8 @@ class MQTT_Client(object):
         self.client.subscribe([('pub', 2), (topic, 2)])
         header = 'connect_status'
         result = {'status': True, 'gw_nework_id': topic, 'msg': 'Connection Successful'}
-        handle_func.send_gwdata_to_server(client, topic, result, header)
+        handle_func.send_gwdata_to_server(client, 'pub', result, header)
+
 
     # 在连接断开时的 callback，打印 result code
     def on_disconnect(self, client, userdata, rc):
