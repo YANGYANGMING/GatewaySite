@@ -48,8 +48,8 @@ heart_timeout_sche = BackgroundScheduler()
 # Gateway power on status is 0
 if models.Gateway.objects.filter(id=1).exists():
     models.Gateway.objects.filter(id=1).update(gw_status=0)
-else:
-    models.Gateway.objects.create(gw_status=0)
+# else:
+#     models.Gateway.objects.create(gw_status=0)
 
 # Initialize original status infomation
 if models.TimeStatus.objects.filter(id=1).exists():
@@ -581,9 +581,9 @@ def add_sensor_page(request, network_id):
     :param network_id: 如果network_id=='new',说明是新增传感器,否则是恢复被软删除的network_id的传感器
     :return:
     """
-    gateway_obj = models.Gateway.objects.all()
-    if gateway_obj[0]:
-        gwntid = gateway_obj.values('network_id')[0]['network_id']
+    gateway_obj = models.Gateway.objects.exists()
+    if gateway_obj:
+        gwntid = models.Gateway.objects.values('network_id')[0]['network_id']
         gwntid_prefix = gwntid.rsplit('.', 1)[0]
         sensor_type = {'ETM-100': 0}
         Importance = {'一般': 0, '重要': 1}
@@ -629,15 +629,13 @@ def set_gateway_json(request):
     print(gateway_data)  # {'Enterprise': '中石油', 'name': '中石油1号网关', 'network_id': '0.0.1.0', 'gw_status': '1'}
     if gateway_obj:
         # update gateway
-        result = operate_gateway.update_gateway(gateway_data, user=request.user)
+        result = operate_gateway.update_gateway(gateway_data, user=str(request.user))
     else:
         # add_gateway
-        result = operate_gateway.add_gateway(gateway_data, user=request.user)
-
+        result = operate_gateway.add_gateway(gateway_data, user=str(request.user))
     log.log(result['status'], result['msg'], gateway_data['network_id'], str(request.user))
 
     return HttpResponse(json.dumps(result))
-
 
 @csrf_exempt
 def show_soundV_json(request):

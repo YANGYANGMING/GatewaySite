@@ -16,20 +16,26 @@ class OperateSensor(object):
         :param response:
         :return:
         """
-        sensor_id = receive_data.pop('sensor_id')  # 删掉sensor_id以免被修改
+        receive_data.pop('sensor_id')  # 删掉sensor_id以免被修改
+        network_id = receive_data['network_id']
+        # 判断填写的network_id是否合法
+        gwntid = models.Gateway.objects.values('network_id')[0]['network_id']
+        if network_id.rsplit('.', 1)[0] + '.0' != gwntid:
+            response['msg'] = '传感器网络号有误，需填写%s.x格式' % network_id.rsplit('.', 1)[0]
+
         alias = receive_data['alias']
         alias_list = list(models.Sensor_data.objects.filter(delete_status=0).values('alias', 'sensor_id'))
         for item in alias_list:
-            if alias == item['alias'] and sensor_id != item['sensor_id']:
+            if alias == item['alias'] and network_id != item['network_id']:
                 response['msg'] = '此传感器名称已被使用'
                 return response
 
         # 更新sensor数据
-        models.Sensor_data.objects.filter(sensor_id=sensor_id).update(**receive_data)
+        models.Sensor_data.objects.filter(network_id=network_id).update(**receive_data)
         response['status'] = True
         response['msg'] = '更新传感器成功'
         # 更新成功，同时同步数据库和调度器
-        views.auto_Timing_time(network_id=receive_data['network_id'])
+        views.auto_Timing_time(network_id=network_id)
 
         return response
 
@@ -43,6 +49,12 @@ class OperateSensor(object):
         """
         network_id = receive_data['network_id']
         alias = receive_data['alias']
+        # 判断填写的network_id是否合法
+        gwntid = models.Gateway.objects.values('network_id')[0]['network_id']
+        if network_id.rsplit('.', 1)[0] + '.0' != gwntid:
+            response['msg'] = '传感器网络号有误，需填写%s.x格式' % network_id.rsplit('.', 1)[0]
+            return response
+
         # 判断此传感器是否是软删除的传感器
         is_soft_delete = handle_func.check_soft_delete(network_id)
         if is_soft_delete:  # 是软删除的sensor
@@ -134,8 +146,7 @@ class OperateGateway(object):
 
     def add_gateway(self, gateway_data, user):
         models.Gateway.objects.create(**gateway_data)
-        topic = gateway_data['network_id']
-        header = headers_dict['add_gateway']
+        header = 'add_gateway'
         result = {'status': True, 'msg': '添加网关成功', 'gateway_data': gateway_data, 'user': user}
         handle_func.send_gwdata_to_server(views.client, 'pub', result, header)
         return result

@@ -105,6 +105,6 @@ from gateway import models
 #         scheduler.print_jobs()
 #
 # test()
-
-
+gateway_obj = models.Gateway.objects.first()
+print(gateway_obj[0])
 

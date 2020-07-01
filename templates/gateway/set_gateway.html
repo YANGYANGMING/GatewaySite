@@ -139,22 +139,27 @@
             var gw_status = $('#gw_status').val();
             var gateway_data = JSON.stringify({'Enterprise': Enterprise, 'name': name,
                 'network_id': network_id, 'gw_status': gw_status});
-            $.ajax({
-                url: '/gateway/set-gateway-json',
-                type:'POST',
-                data: {'gateway_data': gateway_data},
-                traditional: true,
-                dataType:'JSON',
-                success:function (arg) {
-                    if(arg.status){
-                        $('#update-gateway').html(arg.msg);
-                        ClearMSG('update-gateway');
-                    }else {
-                        $('#update-gateway').html(arg.msg);
-                        ClearMSG('update-gateway');
+            if (Enterprise === '' || name === '' || network_id === '' || gw_status === null) {
+                $('#update-gateway').html('信息不全！');
+                ClearMSG('update-gateway');
+            }else{
+                $.ajax({
+                    url: '/gateway/set-gateway-json',
+                    type:'POST',
+                    data: {'gateway_data': gateway_data},
+                    traditional: true,
+                    dataType:'JSON',
+                    success:function (arg) {
+                        if(arg.status){
+                            $('#update-gateway').html(arg.msg);
+                            ClearMSG('update-gateway');
+                        }else {
+                            $('#update-gateway').html(arg.msg);
+                            ClearMSG('update-gateway');
+                        }
                     }
-                }
-            })
+                })
+            }
         }
 
 
