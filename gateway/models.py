@@ -23,7 +23,7 @@ class UserProfileManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, name, password):
+    def create_superuser(self, name, password):
         """
         Creates and saves a superuser with the given email, date of
         birth and password.
@@ -58,21 +58,6 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.name
 
-    # def has_perm(self, perm, obj=None):
-    #     "Does the user have a specific permission?"
-    #     # Simplest possible answer: Yes, always
-    #     return True
-    #
-    # def has_module_perms(self, app_label):
-    #     "Does the user have permissions to view the app `app_label`?"
-    #     # Simplest possible answer: Yes, always
-    #     return True
-
-    # @property
-    # def is_staff(self):
-    #     "Is the user a member of staff?"
-    #     # Simplest possible answer: All admins are staff
-    #     return self.is_admin
 
     class Meta:
         permissions = (
@@ -84,6 +69,7 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
             ('gateway_set_sensor_params_view', '可以设置传感器的参数'),
             ('gateway_sensor_manage_view', '可以查看传感器管理页面'),
             ('gateway_edit_sensor_view', '可以查看传感器编辑页面'),
+            ('gateway_edit_sensor_alarm_msg_view', '可以查看传感器编辑报警信息页面'),
             ('gateway_add_sensor_page_view', '可以查看传感器增加页面'),
             ('gateway_receive_gw_data_view', '可以保存对传感器进行增删改操作'),
             ('gateway_set_gateway_page_view', '可以可查看设置网关页面'),
@@ -123,17 +109,14 @@ class Menus(models.Model):
 
 class Set_Time(models.Model):
     """设置时间"""
-    year = models.CharField(max_length=32, null=True, blank=True)
-    month = models.CharField(max_length=32, null=True, blank=True)
-    # day_of_week = models.CharField(max_length=32, null=True, blank=True)
-    day = models.CharField(max_length=32, null=True, blank=True)
-    hour = models.CharField(max_length=32, null=True, blank=True)
-    mins = models.CharField(max_length=32, null=True, blank=True)
+    days = models.CharField(max_length=32, null=True, blank=True)
+    hours = models.CharField(max_length=32, null=True, blank=True)
+    minutes = models.CharField(max_length=32, null=True, blank=True)
 
 
 class Gateway(models.Model):
     """网关信息"""
-    name = models.CharField(max_length=64, null=True, blank=True)
+    name = models.CharField(max_length=64, unique=True)
     Enterprise = models.CharField(max_length=128, unique=True)
     network_id = models.CharField(max_length=32, unique=True)
     gw_status_choices = ((0, '离线'),
@@ -164,15 +147,9 @@ class GWData(models.Model):
 class TimeStatus(models.Model):
     """运行状态表"""
     timing_status = models.CharField(max_length=32)
-    cycle_status = models.CharField(max_length=32)
+    # cycle_status = models.CharField(max_length=32)
     text_status = models.CharField(max_length=32)
     button_status = models.CharField(max_length=32)
-
-
-class Set_param(models.Model):
-    """手动获取的id、设置参数"""
-    menu_get_id = models.CharField(max_length=32)
-    param = models.CharField(max_length=64)
 
 
 class Material(models.Model):

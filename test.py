@@ -77,6 +77,34 @@ from gateway import models
 #     print(p.empty())
 #     p.task_done()
 
+#
+# from apscheduler.schedulers.background import BackgroundScheduler
+# # from apscheduler.schedulers.blocking import BlockingScheduler
+#
+# scheduler = BackgroundScheduler()
+#
+# def job_func():
+#      print("当前时间：", time.time())
+#
+# scheduler .add_job(job_func, 'interval', seconds=5, id='interval000')
+#
+# scheduler.start()
+# scheduler.print_jobs()
+# # ---------------------------------------------------
+# def test():
+#     time.sleep(6)
+#     st_temp = {'seconds': 1}
+#     temp_trigger = scheduler._create_trigger(trigger='interval', trigger_args=st_temp)
+#     scheduler.modify_job('interval000', trigger=temp_trigger)
+#
+#     scheduler.resume_job('interval000')
+#
+#     scheduler.get_job('interval000')
+#
+#     while True:
+#         scheduler.print_jobs()
+#
+# test()
 
 
 

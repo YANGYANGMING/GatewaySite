@@ -29,7 +29,7 @@
 {#                                <option value="{{ sche_id }}">{{ sche_alias }}</option>#}
 {#                            {% endfor %}#}
                             {% for item in data_obj %}
-                                <option value="{{ item.network_id }}">{{ item.network_id__alias }}</option>
+                                <option value="{{ item.network_id }}">{{ item.alias }}</option>
                             {% endfor %}
                         </select>
                         <button type="submit" class="btn btn-primary" style="display: inline; margin-left: 20px" id="show-thickness">确定</button>
@@ -127,7 +127,7 @@
                     config['title']['text'] = arg['alias'];
                     config['yAxis']['max'] = arg['yAxis_max_limit'];
                     $('#container').highcharts(config);
-                    if(arg[0]['data'].length===0){
+                    if(arg.length===0){
                         $('#show-thickness-msg').text('当前传感器暂无数据！');
                         ClearMSG('show-thickness-msg')
                     }

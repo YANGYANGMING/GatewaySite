@@ -10,7 +10,9 @@ from gateway.eelib.eelib.message import *
 from utils.mqtt_client import MQTT_Client
 from utils import handle_func
 from utils.operate_sensor import OperateSensor, OperateGateway
+from queue import Queue
 import serial
+import threading
 
 
 msg_file = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) + '/message.txt'
@@ -32,26 +34,34 @@ except Exception as e:
     print(e)
 
 num = 0
-Suspended_job_id_list = []
+
+gw_queue = Queue()
 
 # Timing task start flag bit
-CycleStatus = False
 TimingStatus = False
 
 # Instantiate timer task
 scheduler = BackgroundScheduler()
-sche = BackgroundScheduler()
 # sche_sync_sensors = BackgroundScheduler()
 heart_timeout_sche = BackgroundScheduler()
 
-models.Gateway.objects.update(gw_status=0)
+# Gateway power on status is 0
+if models.Gateway.objects.filter(id=1).exists():
+    models.Gateway.objects.filter(id=1).update(gw_status=0)
+else:
+    models.Gateway.objects.create(gw_status=0)
 
-st = models.Set_Time.objects.filter(id=1).values('year', 'month', 'day', 'hour', 'mins')[0]
-# Initialize timing data after program restart
-models.Set_Time.objects.filter(id=2).update(month='', day='', hour='', mins='')
 # Initialize original status infomation
-models.TimeStatus.objects.filter(id=1).update(timing_status='false', cycle_status='false', text_status='已暂停',
-                                              button_status='暂停')
+if models.TimeStatus.objects.filter(id=1).exists():
+    models.TimeStatus.objects.filter(id=1).update(timing_status='false', text_status='已暂停', button_status='暂停')
+else:
+    models.TimeStatus.objects.create(timing_status='false', text_status='已暂停', button_status='暂停')
+
+# Initialize timing data after program restart
+if models.Set_Time.objects.filter(id=1).exists():
+    models.Set_Time.objects.filter(id=1).update(days=1, hours=0, minutes=0)
+else:
+    models.Set_Time.objects.create(days=1, hours=0, minutes=0)
 
 
 def send_network_id_to_server_queue(network_id, level=3):
@@ -68,55 +78,59 @@ def send_network_id_to_server_queue(network_id, level=3):
     else:
         # Single sensor, manual data collection / automatic data collection
         network_id_list = [network_id]
-
-    topic = network_id_list[0].rsplit('.', 1)[0] + '.0'
     print('network_id_list', network_id_list)
-    Enterprise = models.Gateway.objects.values('Enterprise').get(network_id=topic)['Enterprise']
-    header = 'send_network_id_to_queue'
-    result = {'status': True, 'network_id_list': network_id_list, 'Enterprise': Enterprise, 'level': level}
-    handle_func.send_gwdata_to_server(client, 'pub', result, header)
+
+    gateway_obj = models.Gateway.objects.values('Enterprise', 'gw_status').first()
+    gw_status = gateway_obj['gw_status']
+    enterprise = gateway_obj['Enterprise']
+    if gw_status:  # 如果连接服务器成功，把network_id_list发送到服务器队列
+        header = 'send_network_id_to_queue'
+        result = {'status': True, 'network_id_list': network_id_list, 'Enterprise': enterprise, 'level': level}
+        handle_func.send_gwdata_to_server(client, 'pub', result, header)
+    else:  # 如果连接服务器失败，把network_id_list发送到网关队列
+        for network_id_item in network_id_list:
+            gw_queue.put(network_id_item)
 
 
 def auto_Timing_time(network_id=None):
     """
     Regular check ---- update/add
+    Timed mode task: interval
     :return:
     """
     try:
         if network_id:
             # update sensor
-            received_time_data = eval(models.Sensor_data.objects.filter(network_id=network_id).values('received_time_data')[0]['received_time_data'])
-            st_temp = {'year': '*', 'month': received_time_data['month'],
-                       'day': received_time_data['day'], 'hour': received_time_data['hour'],
-                       'minute': received_time_data['mins']}
-            temp_trigger = scheduler._create_trigger(trigger='cron', trigger_args=st_temp)
-            scheduler.modify_job('cron_time ' + network_id, trigger=temp_trigger)
+            received_time_data = eval(models.Sensor_data.objects.filter(network_id=network_id).
+                                      values('received_time_data')[0]['received_time_data'])
+            st_temp = {'days': int(received_time_data['days']), 'hours': int(received_time_data['hours']),
+                       'minutes': int(received_time_data['minutes'])}
+            temp_trigger = scheduler._create_trigger(trigger='interval', trigger_args=st_temp)
+            scheduler.modify_job('interval_time ' + network_id, trigger=temp_trigger)
             # After updating the data, you need to resume_job()
             jobs_status = models.Sensor_data.objects.filter(network_id=network_id).values('sensor_run_status')[0]['sensor_run_status']
             if jobs_status:  # if it is online status
-                scheduler.resume_job('cron_time ' + network_id)
+                scheduler.resume_job('interval_time ' + network_id)
             print('update task' + network_id)
 
         db_job_id_list = []
         # All task time and sensor_id in the database
         db_job_list = list(models.Sensor_data.objects.filter(delete_status=0).values('network_id', 'received_time_data'))
-        print(db_job_list)
         # The list of sensor_id and sensor_time for scheduled tasks that already exist in the scheduler
-        sche_job_id_list, sche_job_time_list = handle_func.job_id_list()
+        sche_job_id_list = handle_func.job_id_list()
 
         # Compare: when adding or updating tasks in the database, add or update schedluer tasks
         for db_job in db_job_list:
             received_time_data_dict = eval(db_job['received_time_data'])
-            jobs_id = 'cron_time ' + db_job['network_id']
+            jobs_id = 'interval_time ' + db_job['network_id']
             print(jobs_id)
             db_job_id_list.append(db_job['network_id'])
             # add sensor
             if db_job['network_id'] not in sche_job_id_list:
-                scheduler.add_job(send_network_id_to_server_queue, 'cron', year='*', month=received_time_data_dict['month'],
-                                  day=received_time_data_dict['day'], hour=received_time_data_dict['hour'],
-                                  minute=received_time_data_dict['mins'], second='00', id=jobs_id, args=[db_job['network_id']])
-                cur_sensor_run_status = models.Sensor_data.objects.filter(network_id=db_job['network_id']).values('sensor_run_status')[0][
-                    'sensor_run_status']
+                scheduler.add_job(send_network_id_to_server_queue, 'interval', days=int(received_time_data_dict['days']),
+                                  hours=int(received_time_data_dict['hours']), minutes=int(received_time_data_dict['minutes']),
+                                  id=jobs_id, args=[db_job['network_id']])
+                cur_sensor_run_status = models.Sensor_data.objects.filter(network_id=db_job['network_id']).values('sensor_run_status')[0]['sensor_run_status']
                 # Pause the corresponding sensor when starting or restarting
                 if not cur_sensor_run_status:
                     scheduler.pause_job(jobs_id)
@@ -126,32 +140,17 @@ def auto_Timing_time(network_id=None):
         for sche_job_id in sche_job_id_list:
             if sche_job_id != '0.0.0.0':
                 if sche_job_id not in db_job_id_list:
-                    temp_sche_job_id = 'cron_time ' + sche_job_id
+                    temp_sche_job_id = 'interval_time ' + sche_job_id
                     scheduler.remove_job(temp_sche_job_id)
                     print('remove %s seccess' % sche_job_id)
-        # global latest_job_id  # 0.0.0.0
-        # latest_job_id = scheduler.get_jobs()[0].id.split(' ')[1]
-        # print('latest_job_id', latest_job_id)
-        # print(latest_job_id)
-        # print(scheduler.get_jobs())
-        # print(dir(scheduler.get_jobs()[0]))
-        # print(dir(scheduler.get_jobs()[0].trigger))
-        # print(scheduler.get_jobs()[0].trigger.fields)
-        # print(scheduler.get_jobs()[0].trigger.fields[5])
-        # print(scheduler.get_jobs())
-        # print(scheduler.get_jobs()[0].next_run_time)
-        # print(scheduler.get_jobs()[0].id.split('')[1])
-        # print(scheduler.get_jobs()[0].trigger)
-        # print(scheduler.get_jobs())
         scheduler.print_jobs()
-        # print(datetime.datetime.now())
     except Exception as e:
         print('auto_Timing_time:', e)
 
 
 def time_job(network_id):
     """
-    Timed mode task: cron
+    Perform sampling tasks
     :return:
     """
     global num
@@ -191,12 +190,13 @@ def cal_heart_timeout():
 
 try:
     """定时初始化"""
-    scheduler.add_job(send_network_id_to_server_queue, 'cron', year=st['year'], month=st['month'], day=st['day'],
-                            hour=st['hour'], minute=st['mins'], second='00', id='cron_time 0.0.0.0', args=["0.0.0.0"])
+    scheduler.add_job(send_network_id_to_server_queue, 'interval', days=settings.initial_time['days'],
+                      hours=settings.initial_time['hours'], minutes=settings.initial_time['minutes'],
+                      id='interval_time 0.0.0.0', args=["0.0.0.0"])
     scheduler.start()
     # 加载程序时暂停定时器
-    scheduler.pause_job('cron_time 0.0.0.0')
-    print(scheduler.get_job('cron_time 0.0.0.0'))
+    scheduler.pause_job('interval_time 0.0.0.0')
+    print(scheduler.get_job('interval_time 0.0.0.0'))
 except Exception as e:
     print('err:', e)
     scheduler.shutdown()
@@ -211,34 +211,25 @@ except Exception as e:
     heart_timeout_sche.shutdown()
 
 
-# 每分钟执行一次更新/添加
-# try:
-#     sche.add_job(auto_Timing_time, 'interval', minutes=0, seconds=10, id='auto_Timing_time')
-#     sche.start()
-# except Exception as e:
-#     print(e)
-#     sche.shutdown()
-
-
-def pause_all_sensor():
-    """轮询or手动触发开始，暂停所有传感器"""
-    for job_obj in scheduler.get_jobs():
-        if job_obj.next_run_time:
-            job_obj.pause()
-        else:
-            global Suspended_job_id_list  # 暂停前找出已经暂停了的job_id
-            Suspended_job_id_list.append(job_obj.id.split(' ')[1])
-    print('Suspended_job_id_list1', Suspended_job_id_list)
-
-
-def resume_all_sensor():
-    """轮询or手动触发结束，恢复所有传感器"""
-    print('Suspended_job_id_list2', Suspended_job_id_list)
-    for job_obj in scheduler.get_jobs():
-        # 之前已经暂停的传感器不会恢复
-        if job_obj.id.split(' ')[1] not in Suspended_job_id_list:
-            job_obj.resume()
-            # print('job_obj_resume', job_obj)
+# def pause_all_sensor():
+#     """轮询or手动触发开始，暂停所有传感器"""
+#     for job_obj in scheduler.get_jobs():
+#         if job_obj.next_run_time:
+#             job_obj.pause()
+#         else:
+#             global Suspended_job_id_list  # 暂停前找出已经暂停了的job_id
+#             Suspended_job_id_list.append(job_obj.id.split(' ')[1])
+#     print('Suspended_job_id_list1', Suspended_job_id_list)
+#
+#
+# def resume_all_sensor():
+#     """轮询or手动触发结束，恢复所有传感器"""
+#     print('Suspended_job_id_list2', Suspended_job_id_list)
+#     for job_obj in scheduler.get_jobs():
+#         # 之前已经暂停的传感器不会恢复
+#         if job_obj.id.split(' ')[1] not in Suspended_job_id_list:
+#             job_obj.resume()
+#             # print('job_obj_resume', job_obj)
 
 
 @login_required
@@ -263,34 +254,22 @@ def config_time(request):
     :param request:
     :return:
     """
-    # form = DataForm()
     # 最新的X条数据
     latest_data = models.GWData.objects.values('id', 'network_id', 'time_tamp', 'battery', 'temperature', 'thickness', 'network_id__alias').order_by('-id')[:5]
-    # 最新的定时时间/循环时间/时间状态/手动设置id/设置参数，用于刷新页面时保留输入信息
-    latest_Timing_time = models.Set_Time.objects.filter(id=2).values('month', 'day', 'hour', 'mins').first()
-    for k, v in latest_Timing_time.items():
-        if v == "*":
-            latest_Timing_time[k] = ''
-    latest_Cycle_time = models.Set_Time.objects.filter(id=4).values('day', 'hour', 'mins').first()
-    latest_time_status = models.TimeStatus.objects.filter(id=1).values('timing_status', 'cycle_status', 'text_status',
-                                                                       'button_status').first()
+    # 最新的定时时间/时间状态/手动设置id，用于刷新页面时保留输入信息
+    latest_Timing_time = models.Set_Time.objects.filter(id=1).values('days', 'hours', 'minutes').first()
+    latest_time_status = models.TimeStatus.objects.filter(id=1).values('timing_status', 'text_status', 'button_status').first()
     latest_set_id = request.session.get('latest_set_id', '')
-
     all_sensor_list = models.Sensor_data.objects.filter(delete_status=0).values('network_id', 'alias')
 
     context = {
-        "month_cron": [i for i in range(1, 13)],
-        "Day_cron": [i for i in range(1, 29)],
-        "Hour_cron": [i for i in range(0, 24)],
-        "Minute_cron": [i for i in range(0, 60)],
-
+        "Day_interval": [i for i in range(0, 32)],
+        "Hour_interval": [i for i in range(0, 24)],
+        "Minute_interval": [i for i in range(0, 60)],
     }
-
-    test = {'status': 'true'}
 
     ret = {'status': False, 'message': '提交失败'}
     if request.method == "GET":
-        # form = DataForm()
         return render(request, 'gateway/config_time.html', locals())
 
 
@@ -317,7 +296,8 @@ def thickness_report(request):
     :return:
     """
     # db中存在的数据
-    data_obj = models.GWData.objects.filter().values('network_id', 'network_id__alias').distinct()
+    # data_obj = models.GWData.objects.filter().values('network_id', 'network_id__alias').distinct()
+    data_obj = models.Sensor_data.objects.filter(delete_status=0).values('network_id', 'alias').distinct()
     print(data_obj)
     return render(request, 'gateway/thickness_report.html', locals())
 
@@ -335,7 +315,7 @@ def edit_sensor_params(request):
         "gain": [gain for gain in range(60, 101)],
         "avg_time": [avg_time for avg_time in range(0, 11)],
         "Hz": [Hz for Hz in range(2, 5)],
-        "Sample_depth": [Sample_depth for Sample_depth in range(2, 7, 2)],
+        "Sample_depth": [Sample_depth for Sample_depth in range(0, 3)],
         "Sample_Hz": [200, 5000],
     }
     sensor_obj = models.Sensor_data.objects.filter(delete_status=0).order_by('-id')
@@ -356,25 +336,20 @@ def sensor_manage(request):
     sensor_run_status = {'开通': 1, '禁止': 0}
     sche_obj = scheduler.get_jobs()
     for sensor_item in sensor_obj:
-        # 把next_run_time放进每个传感器对象中
+        # 把start_date放进每个传感器对象中
         for ii in sche_obj:
             if sensor_item.network_id == ii.id.split(' ')[1]:
-                sensor_item.next_run_time = str(ii.next_run_time).split('+')[0]
-        received_time_data = models.Sensor_data.objects.filter(sensor_id=sensor_item.sensor_id).values('sensor_id', 'received_time_data')
-        # 把年月日分别放进每个传感器对象中
-        for ii in received_time_data:
-            if sensor_item.sensor_id == ii['sensor_id']:
-                sensor_item.month = eval(ii['received_time_data'])['month']
-                sensor_item.day = eval(ii['received_time_data'])['day']
-                sensor_item.hour = eval(ii['received_time_data'])['hour']
-                sensor_item.mins = eval(ii['received_time_data'])['mins']
+                sensor_item.start_date = str(ii.trigger.start_date).split('.')[0]
+                print(str(ii.trigger.start_date).split('.')[0])
+        received_time_data = models.Sensor_data.objects.filter(sensor_id=sensor_item.sensor_id).\
+            values('sensor_id', 'received_time_data')
 
     return render(request, "gateway/sensor-manage.html", locals())
 
 
 @csrf_exempt
 @login_required
-def set_Timing_time(request):
+def set_timing_time(request):
     """
     设置轮询定时时间
     :param request:
@@ -383,23 +358,18 @@ def set_Timing_time(request):
     ret = {'status': False, 'message': '定时时间设置失败'}
     try:
         # if request.method == 'POST' and not btn_sample and not auto_operation:
-            arr = request.POST.getlist('TimingDateList')
-            time_list = handle_func.handle_data(arr)  # 处理数据
-            print('time_list', time_list)
-            if time_list != []:
-                for item in time_list:
-                    models.Set_Time.objects.filter(id=2).update(**item)
-                start_Timing_time(2)
-                auto_Timing_time()
-                ret = {'status': True, 'message': '定时时间设置成功'}
-                global TimingStatus
-                TimingStatus = True
-                # else:
-                #     ret['message'] = '设置时间冲突,请选择其他时间'
-            else:
-                ret['message'] = '时间不能为空！'
-        # else:
-        #     ret['message'] = '其他节点正在采集数据，请稍等...'
+        arr = request.POST.getlist('TimingDateList')
+        if any(list(map(int, arr))):
+            time_dict = handle_func.handle_data(arr)  # 处理数据
+            print('time_dict', time_dict)
+            models.Set_Time.objects.filter(id=1).update(**time_dict)
+            start_Timing_time()
+            auto_Timing_time()
+            ret = {'status': True, 'message': '定时时间设置成功'}
+            global TimingStatus
+            TimingStatus = True
+        else:
+            ret['message'] = '时间不合法！'
     except Exception as e:
         print('set_Timing_time', e)
         return HttpResponse(json.dumps(ret))
@@ -427,27 +397,26 @@ def save_status(request):
     return HttpResponse(json.dumps(ret))
 
 
-def start_Timing_time(nid, reset=False):
+def start_Timing_time(reset=False):
     """
     设置/更新定时时间
-    :param nid: 设定时间的id
     :param reset: 重置按钮标志位，如果为true，把定时模式暂停
     :return:
     """
-    global st
-    st = models.Set_Time.objects.filter(id=nid).values('year', 'month', 'day', 'hour', 'mins').first()
-    print('st:', st)
-    st_temp = {'year': st['year'], 'month': st['month'], 'day': st['day'], 'hour': st['hour'],
-               'minute': st['mins']}
+    st_temp = models.Set_Time.objects.filter(id=1).values('days', 'hours', 'minutes')[0]
+    for k, v in st_temp.items():
+        st_temp[k] = int(v)
+    print('st_temp', st_temp)
     try:
-        temp_trigger = scheduler._create_trigger(trigger='cron', trigger_args=st_temp)
-        scheduler.modify_job('cron_time 0.0.0.0', trigger=temp_trigger)
+        temp_trigger = scheduler._create_trigger(trigger='interval', trigger_args=st_temp)
+        scheduler.modify_job('interval_time 0.0.0.0', trigger=temp_trigger)
         if reset:
-            scheduler.pause_job('cron_time 0.0.0.0')
+            scheduler.pause_job('interval_time 0.0.0.0')
         else:
-            scheduler.resume_job('cron_time 0.0.0.0')
+            scheduler.resume_job('interval_time 0.0.0.0')
+            print('resume_job........')
 
-        scheduler.get_job('cron_time 0.0.0.0')
+        scheduler.get_job('interval_time 0.0.0.0')
     except Exception as e:
         print('start_Timing_time:', e)
         scheduler.shutdown()
@@ -456,15 +425,15 @@ def start_Timing_time(nid, reset=False):
 @login_required
 def pause_Timing_time(request):
     """
-    暂停定时时间
+    暂停轮询定时时间
     :param request:
     :return:
     """
     ret = {'status': False, 'message': None}
     try:
         if TimingStatus:
-            scheduler.pause_job('cron_time 0.0.0.0')
-            scheduler.get_job('cron_time 0.0.0.0')
+            scheduler.pause_job('interval_time 0.0.0.0')
+            scheduler.get_job('interval_time 0.0.0.0')
             ret = {'status': True, 'message': 'success'}
         print(TimingStatus)
     except Exception as e:
@@ -475,36 +444,18 @@ def pause_Timing_time(request):
 @login_required
 def resume_Timing_time(request):
     """
-    恢复定时时间
+    恢复轮询定时时间
     :param request:
     :return:
     """
     ret = {'status': False, 'message': None}
     try:
         if TimingStatus:
-            scheduler.resume_job('cron_time 0.0.0.0')
-            scheduler.pause_job('cron_time 0.0.0.0')
-            scheduler.get_job('cron_time 0.0.0.0')
+            scheduler.resume_job('interval_time 0.0.0.0')
+            # scheduler.pause_job('interval_time 0.0.0.0')
+            scheduler.get_job('interval_time 0.0.0.0')
             ret = {'status': True, 'message': 'success'}
         print(TimingStatus)
-    except Exception as e:
-        print(e)
-    return HttpResponse(json.dumps(ret))
-
-
-@login_required
-def resume_cycle_time(request):
-    """
-    恢复循环时间
-    :param request:
-    :return:
-    """
-    ret = {'status': False, 'message': None}
-    try:
-        if CycleStatus:
-            scheduler.pause_job('cron_time 0.0.0.0')
-            scheduler.get_job('cron_time 0.0.0.0')
-            ret = {'status': True, 'message': 'success'}
     except Exception as e:
         print(e)
     return HttpResponse(json.dumps(ret))
@@ -520,9 +471,9 @@ def reset_Timing_time(request):
     """
     ret = {'status': False, 'message': None}
     try:
-        models.Set_Time.objects.filter(id=2).update(year='*', month='1', day='1', hour='0', mins='0')
-        start_Timing_time(2, reset=True)
-        scheduler.pause_job('cron_time 0.0.0.0')
+        models.Set_Time.objects.filter(id=1).update(days='1', hours='0', minutes='0')
+        start_Timing_time(reset=True)
+        scheduler.pause_job('interval_time 0.0.0.0')
         ret['status'] = True
         ret['message'] = 'success'
         global TimingStatus
@@ -596,19 +547,16 @@ def edit_sensor(request, sensor_id):
     received_time_data = eval(models.Sensor_data.objects.filter(sensor_id=sensor_id).values('received_time_data')[0]['received_time_data'])
     sensor_obj = models.Sensor_data.objects.get(sensor_id=sensor_id)
     date_of_installation = str(sensor_obj.date_of_installation)
-    # sensor_type = sensor_obj._meta.get_field('sensor_type')
-    # Importance = sensor_obj._meta.get_field('Importance')·
     sensor_type = {'ETM-100': 0}
     Importance = {'重要': 1, '一般': 0}
     material = models.Material.objects.values('id', 'name').all().order_by('id')
     context = {
-        "month_cron": [i for i in range(1, 13)],
-        "day_cron": [i for i in range(1, 29)],
-        "hour_cron": [i for i in range(0, 24)],
-        "minute_cron": [i for i in range(0, 60)],
+        "day_interval": [i for i in range(0, 32)],
+        "hour_interval": [i for i in range(0, 24)],
+        "minute_interval": [i for i in range(0, 60)],
     }
 
-    return render(request, "gateway/edit_sensor_time.html", locals())\
+    return render(request, "gateway/edit_sensor_time.html", locals())
 
 
 @login_required
@@ -634,19 +582,18 @@ def add_sensor_page(request, network_id):
     :return:
     """
     gateway_obj = models.Gateway.objects.all()
-    gwntid = gateway_obj.values('network_id')[0]['network_id']
-    gwntid_prefix = gwntid.rsplit('.', 1)[0]
     if gateway_obj[0]:
+        gwntid = gateway_obj.values('network_id')[0]['network_id']
+        gwntid_prefix = gwntid.rsplit('.', 1)[0]
         sensor_type = {'ETM-100': 0}
         Importance = {'一般': 0, '重要': 1}
         material = models.Material.objects.values('id', 'name').all().order_by('id')
         longitude = 0.0
         latitude = 0.0
         context = {
-            "month_cron": [i for i in range(1, 13)],
-            "day_cron": [i for i in range(1, 29)],
-            "hour_cron": [i for i in range(0, 24)],
-            "minute_cron": [i for i in range(0, 60)],
+            "day_interval": [i for i in range(0, 32)],
+            "hour_interval": [i for i in range(0, 24)],
+            "minute_interval": [i for i in range(0, 60)],
         }
         return render(request, 'gateway/add_sensor.html', locals())
     else:
@@ -742,16 +689,12 @@ def receive_gw_data(request):
         response = {'status': False, 'msg': '操作失败', 'receive_data': receive_data}
         print('receive_data', receive_data)  # {"received_time_data":{"month":[],"day":[],"hour":["1"],"mins":["1"]},"sensor_id":"536876188","alias":"1号传感器","network_id":"0.0.0.1","choice":"update"}
 
-        topic = models.Gateway.objects.values('network_id')[0]['network_id']
         sensor_id = receive_data['sensor_id']
         choice = receive_data.pop('choice')
-        received_time_data = receive_data.get('received_time_data')
-        if received_time_data:
-            receive_data['received_time_data'] = handle_func.handle_receive_data(received_time_data)
+        location_img_json = receive_data.pop('location_img_json')
 
         # 更新
         if choice == 'update':
-            location_img_json = receive_data.pop('location_img_json')
             response = operate_sensor.update_sensor(receive_data, response)
             log.log(response['status'], response['msg'], receive_data.get('network_id'), request.user)
             if response['status']:
@@ -762,7 +705,6 @@ def receive_gw_data(request):
 
         # 添加
         elif choice == 'add':
-            location_img_json = receive_data.pop('location_img_json')
             response = operate_sensor.add_sensor(receive_data, sensor_id, response)
             log.log(response['status'], response['msg'], receive_data.get('network_id'), request.user)
             if response['status']:
@@ -773,7 +715,6 @@ def receive_gw_data(request):
 
         # 删除
         elif choice == 'remove':
-            location_img_json = receive_data.pop('location_img_json')
             response = operate_sensor.remove_sensor(sensor_id, response)
             log.log(response['status'], response['msg'], receive_data.get('network_id'), request.user)
             if response['status']:
@@ -796,13 +737,16 @@ def receive_server_data(receive_data):
 
     sensor_id = receive_data['sensor_id']
     choice = receive_data.pop('choice')
+    location_img_json = receive_data.pop('location_img_json')
+
     received_time_data = receive_data.get('received_time_data')
-    if received_time_data:
-        receive_data['received_time_data'] = handle_func.handle_receive_data(received_time_data)
+    if received_time_data:  # 如果是更新报警信息
+        if received_time_data['days'] == received_time_data['hours'] == received_time_data['minutes'] == '0':
+            response['msg'] = '时间不合法！'
+            return HttpResponse(json.dumps(response))
 
     # 更新
     if choice == 'update':
-        location_img_json = receive_data.pop('location_img_json')
         if location_img_json:
             location_img_path_and_name = receive_data['location_img_path']
             location_img_path = location_img_path_and_name.rsplit('/', 1)[0] + '/'
@@ -818,7 +762,6 @@ def receive_server_data(receive_data):
 
     # 添加
     elif choice == 'add':
-        location_img_json = receive_data.pop('location_img_json')
         if location_img_json:
             location_img_path_and_name = receive_data['location_img_path']
             location_img_path = location_img_path_and_name.rsplit('/', 1)[0] + '/'
@@ -867,7 +810,6 @@ def set_sensor_params(request):
         print('set_val_response', set_val_response.strip('\n'))
         # set_val_response = 'ok'
         header = 'set_sensor_params'
-        topic = network_id.rsplit('.', 1)[0] + '.0'
         if set_val_response.strip('\n') == 'ok':
             handle_func.update_sensor_data(val_dict)
             models.Sensor_data.objects.filter(network_id=network_id).update(**val_dict)
@@ -922,6 +864,20 @@ def server_get_data(network_id):
         print(e)
 
     return result
+
+
+def gw_get_data_func():
+    """
+    网关未连接服务器时，从网关自己队列中获取network_id进行取数
+    :return:
+    """
+    while True:
+        network_id = gw_queue.get()
+        time_job(network_id)
+
+
+# 网关取数队列线程
+threading.Thread(target=gw_get_data_func).start()
 
 
 auto_Timing_time()

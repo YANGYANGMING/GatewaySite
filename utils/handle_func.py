@@ -90,7 +90,7 @@ class Handle_func(object):
         """
         ret = {'status': False, 'msg': '开通失败'}
         try:
-            jobs_id = 'cron_time ' + payload["network_id"]
+            jobs_id = 'interval_time ' + payload["network_id"]
             views.scheduler.resume_job(jobs_id)
             views.scheduler.print_jobs()
             models.Sensor_data.objects.filter(network_id=payload["network_id"]).update(sensor_run_status=1)
@@ -112,7 +112,7 @@ class Handle_func(object):
         """
         ret = {'status': False, 'msg': '禁止失败'}
         try:
-            jobs_id = 'cron_time ' + payload["network_id"]
+            jobs_id = 'interval_time ' + payload["network_id"]
             views.scheduler.pause_job(jobs_id)
             views.scheduler.print_jobs()
             models.Sensor_data.objects.filter(network_id=payload["network_id"]).update(sensor_run_status=0)
@@ -396,54 +396,37 @@ def update_sensor_data(all_vals):
 def handle_data(arr):
     """
     处理定时模式发过来的数据
-    :param arr: [{'month': temp_list[0]}, {'day': temp_list[1]}, {'hour': temp_list[2]}, {'mins': temp_list[3]}]
+    :param arr: [{'days': temp_list[1]}, {'hours': temp_list[2]}, {'minutes': temp_list[3]}]
     :return:
     """
-    # ['', '', '', '1,4,8']
+    # ['', '', '1,4,8']
     temp_list = []
-    if len(arr) == 4:
-        if arr[0] == arr[1] == arr[2] == arr[3] == '':
-            return temp_list
+    for item in arr:
+        if item:
+            temp_list.append(item)
         else:
-            for item in arr:
-                if item:
-                    temp_list.append(item)
-                else:
-                    temp_list.append('*')
-            time_list = [{'month': temp_list[0]}, {'day': temp_list[1]}, {'hour': temp_list[2]},
-                         {'mins': temp_list[3]}]
-        return time_list
-    if len(arr) == 3:
-        if arr[0] == arr[1] == arr[2] == '' or arr[0] == arr[1] == arr[2] == 0:
-            return temp_list
-        else:
-            for item in arr:
-                if item:
-                    temp_list.append(item)
-                else:
-                    temp_list.append('0')
-            time_list = [{'day': temp_list[0]}, {'hour': temp_list[1]},
-                         {'mins': temp_list[2]}]
+            temp_list.append('0')
+    time_dict = {'days': temp_list[0], 'hours': temp_list[1], 'minutes': temp_list[2]}
 
-        return time_list
+    return time_dict
 
 
-def handle_receive_data(time_data):
-    """
-    处理接收的用于增加/修改的时间
-    :param time_data:
-    :return:
-    """
-    print('time_data', time_data)
-    for k, v in time_data.items():
-        if not v:
-            time_data[k] = '*'
-        else:
-            v_temp = ''
-            for i in v:
-                v_temp += i + ','
-                time_data[k] = v_temp[: -1]
-    return time_data
+# def handle_receive_data(time_data):
+#     """
+#     处理接收的用于增加/修改的时间
+#     :param time_data:
+#     :return:
+#     """
+#     for k, v in time_data.items():
+#         if not v:
+#             time_data[k] = '*'
+#         else:
+#             v_temp = ''
+#             for i in v:
+#                 v_temp += i + ','
+#                 time_data[k] = v_temp[: -1]
+#     print('time_data2', time_data)
+#     return time_data
 
 
 def check_soft_delete(network_id):
@@ -465,14 +448,10 @@ def job_id_list():
     :return:
     """
     sche_job_id_list = []
-    sche_job_time_list = []
     for job_obj in views.scheduler.get_jobs():
         sche_job_id_list.append(job_obj.id.split(' ')[1])
-        sche_job_time_list.append(
-            {'month': str(job_obj.trigger.fields[1]), 'day': str(job_obj.trigger.fields[2]),
-             'hour': str(job_obj.trigger.fields[5]), 'mins': str(job_obj.trigger.fields[6])})
 
-    return sche_job_id_list, sche_job_time_list
+    return sche_job_id_list
 
 
 def cal_thickness_avg(data_list):

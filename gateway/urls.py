@@ -21,12 +21,12 @@ urlpatterns = [
     re_path(r'^thickness-json-report$', views.thickness_json_report),
     re_path(r'^set-sensor-params$', views.set_sensor_params, name="set_sensor_params"),
 
-    re_path(r'^set-Timing-time$', views.set_Timing_time),
+    re_path(r'^set-Timing-time$', views.set_timing_time),
     re_path(r'^save-status$', views.save_status),
 
     re_path(r'^pause-Timing-time$', views.pause_Timing_time),
     re_path(r'^resume-Timing-time$', views.resume_Timing_time),
-    re_path(r'^resume-cycle-time$', views.resume_cycle_time),
+    # re_path(r'^resume-cycle-time$', views.resume_cycle_time),
     re_path(r'^reset-Timing-time$', views.reset_Timing_time),
 
     re_path(r'^edit-sensor/(\d+)$', views.edit_sensor, name="edit_sensor"),

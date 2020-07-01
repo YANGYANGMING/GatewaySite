@@ -20,7 +20,7 @@
         <div class="box-body">
           <!--/.row 模式选择 redio-->
           <div class="row">
-            <div class="col-md-6 col-sm-8">
+            <div class="col-md-6 col-sm-8" style="display: none">
               <div class="form-group">
                   <label style="color: red;">
                       选择模式：
@@ -36,25 +36,24 @@
           </div>
           <!-- /.row 轮询模式-->
           <div class="row">
-            <div class="col-md-2">
-              <div class="form-group">
-                <label><b style="color: #ff1c1f">轮询模式：</b>月份：</label>
-                <select class="form-control select2" multiple="multiple" data-placeholder="月份"
-                       name="month" id="month" style="width: 100%;">
-                  {% for item in context.month_cron %}
-                      <option value="{{ item }}">{{ item }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <!-- /.form-group -->
-            </div>
+{#            <div class="col-md-2">#}
+{#              <div class="form-group">#}
+{#                <label><b style="color: #ff1c1f">轮询模式：</b>月份：</label>#}
+{#                <select class="form-control select2" multiple="multiple" data-placeholder="月份"#}
+{#                       name="month" id="month" style="width: 100%;">#}
+{#                  {% for item in context.month_cron %}#}
+{#                      <option value="{{ item }}">{{ item }}</option>#}
+{#                  {% endfor %}#}
+{#                </select>#}
+{#              </div>#}
+{#              <!-- /.form-group -->#}
+{#            </div>#}
             <!-- /.col -->
             <div class="col-md-2">
               <div class="form-group">
                 <label><b style="color: #ff1c1f">轮询模式：</b>天：</label>
-                <select class="form-control select2" multiple="multiple" data-placeholder="天"
-                       name="day" id="day" style="width: 100%;">
-                  {% for day_item in context.Day_cron %}
+                <select class="form-control select2" data-placeholder="天" name="days" id="days" style="width: 100%;">
+                  {% for day_item in context.Day_interval %}
                       <option value="{{ day_item }}">{{ day_item }}</option>
                   {% endfor %}
                 </select>
@@ -65,9 +64,8 @@
             <div class="col-md-2">
               <div class="form-group">
                 <label><b style="color: #ff1c1f">轮询模式：</b>小时：</label>
-                <select class="form-control select2" multiple="multiple" data-placeholder="小时"
-                       name="hour" id="hour" style="width: 100%;">
-                  {% for hour_item in context.Hour_cron %}
+                <select class="form-control select2" data-placeholder="小时" name="hours" id="hours" style="width: 100%;">
+                  {% for hour_item in context.Hour_interval %}
                       <option value="{{ hour_item }}">{{ hour_item }}</option>
                   {% endfor %}
                 </select>
@@ -78,10 +76,9 @@
             <div class="col-md-2">
               <div class="form-group">
                 <label><b style="color: #ff1c1f">轮询模式：</b>分钟：</label>
-                <select class="form-control select2" multiple="multiple" data-placeholder="分钟"
-                       name="min" id="min" style="width: 100%;">
-                  {% for min_item in context.Minute_cron %}
-                      <option value="{{ min_item }}">{{ min_item }}</option>
+                <select class="form-control select2" data-placeholder="分钟" name="minutes" id="minutes" style="width: 100%;">
+                  {% for minutes_item in context.Minute_interval %}
+                      <option value="{{ minutes_item }}">{{ minutes_item }}</option>
                   {% endfor %}
                 </select>
               </div>
@@ -293,18 +290,12 @@
         $('#selected-network-id').val([menu_id]).trigger("change");
 
         //Timing-time
-        var month = "{{ latest_Timing_time.month }}";
-        month = month.split(',');
-        $('#month').val(month).trigger("change");
-        var day = "{{ latest_Timing_time.day }}";
-        day = day.split(',');
-        $('#day').select2("val", [day]);
-        var hour = "{{ latest_Timing_time.hour }}";
-        hour = hour.split(',');
-        $('#hour').select2("val", [hour]);
-        var min = "{{ latest_Timing_time.mins }}";
-        min = min.split(',');
-        $('#min').select2("val", [min]);
+        var days = "{{ latest_Timing_time.days }}";
+        $('#days').select2("val", days);
+        var hours = "{{ latest_Timing_time.hours }}";
+        $('#hours').select2("val", hours);
+        var minutes = "{{ latest_Timing_time.minutes }}";
+        $('#minutes').select2("val", minutes);
 
         //time_status
         if ({{ latest_time_status.timing_status }}) {
@@ -338,11 +329,10 @@
     //启动定时任务
     function SubSetting() {
         if($('#Timing').prop('checked')){
-            var month = $('#month').val();
-            var day = $('#day').val();
-            var hour = $('#hour').val();
-            var min = $('#min').val();
-            var TimingDateList = [month, day, hour, min];
+            var days = $('#days').val();
+            var hours = $('#hours').val();
+            var minutes = $('#minutes').val();
+            var TimingDateList = [days, hours, minutes];
             $.ajax({
                 url:'/gateway/set-Timing-time',
                 type:'POST',
@@ -372,7 +362,6 @@
       function OperationTiming() {
           console.log('Timing', $('#Timing').prop('checked'));
         //Timing
-        $('#month').prop('disabled', false);
         $('#day').prop('disabled', false);
         $('#hour').prop('disabled', false);
         $('#min').prop('disabled', false);
