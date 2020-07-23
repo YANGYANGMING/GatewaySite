@@ -126,6 +126,7 @@ def user_edit(request, nid):
         is_active = False if not request.POST.get('is_active') else True
         cur_gateway = models.Gateway.objects.values('id').all()
         gateway = [item['id'] for item in cur_gateway]
+
         # update user
         try:
             user_obj.update(name=name, is_active=is_active)
