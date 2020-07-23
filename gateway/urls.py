@@ -32,6 +32,7 @@ urlpatterns = [
     re_path(r'^edit-sensor/(\d+)$', views.edit_sensor, name="edit_sensor"),
     re_path(r'^edit-sensor-alarm-msg/(\d+)$', views.edit_sensor_alarm_msg, name="edit_sensor_alarm_msg"),
     re_path(r'^set-gateway-json$', views.set_gateway_json, name="set_gateway_json"),
+    re_path(r'^judge-username-exist-json$', views.judge_username_exist_json),
 
     re_path(r'^show-soundV-json$', views.show_soundV_json),
 

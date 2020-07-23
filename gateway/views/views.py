@@ -339,8 +339,7 @@ def sensor_manage(request):
         # 把start_date放进每个传感器对象中
         for ii in sche_obj:
             if sensor_item.network_id == ii.id.split(' ')[1]:
-                sensor_item.start_date = str(ii.trigger.start_date).split('.')[0]
-                print(str(ii.trigger.start_date).split('.')[0])
+                sensor_item.start_date = str(ii.next_run_time).split('.')[0]
         received_time_data = models.Sensor_data.objects.filter(sensor_id=sensor_item.sensor_id).\
             values('sensor_id', 'received_time_data')
 
@@ -636,6 +635,29 @@ def set_gateway_json(request):
     log.log(result['status'], result['msg'], gateway_data['network_id'], str(request.user))
 
     return HttpResponse(json.dumps(result))
+
+
+@login_required
+@csrf_exempt
+def judge_username_exist_json(request):
+    """
+    判断是否存在用户名
+    :param request:
+    :return:
+    """
+    response = {'status': False, 'msg': ''}
+    name = request.POST.get('name')
+    previous_name = request.POST.get('previouse_name')
+    if name == previous_name:
+        user_is_exist = None
+    else:
+        user_is_exist = models.UserProfile.objects.filter(name=name).exists()
+
+    if user_is_exist:
+        response = {'status': True, 'msg': '此用户已存在！'}
+
+    return HttpResponse(json.dumps(response))
+
 
 @csrf_exempt
 def show_soundV_json(request):

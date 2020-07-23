@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
-    <data-source source="LOCAL" name="db3" uuid="3c01cf10-2e1e-4b58-a574-65513a5f5f3c">
+    <data-source source="LOCAL" name="db1haoGW" uuid="ddef67e8-fd7f-4f3e-a511-21f38912e2d9">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:G:\YYY\Gateway_Project\版本\GatewaySite--MQTT版本--2号网关\GatewaySite\db3.sqlite3</jdbc-url>
+      <jdbc-url>jdbc:sqlite:G:\YYY\Gateway_Project\版本\GatewaySite--MQTT版本--2号网关\GatewaySite\db1haoGW.sqlite3</jdbc-url>
       <driver-properties>
         <property name="enable_load_extension" value="true" />
       </driver-properties>
@@ -30,11 +30,11 @@
         </library>
       </libraries>
     </data-source>
-    <data-source source="LOCAL" name="db" uuid="0ce58d7e-8f7d-4b41-9e87-2caa38290dbd">
+    <data-source source="LOCAL" name="db2haoGW" uuid="3680ed5d-f06d-450a-b46c-8d63446d21bb">
       <driver-ref>sqlite.xerial</driver-ref>
       <synchronize>true</synchronize>
       <jdbc-driver>org.sqlite.JDBC</jdbc-driver>
-      <jdbc-url>jdbc:sqlite:G:\YYY\Gateway_Project\版本\GatewaySite--MQTT版本--2号网关\GatewaySite\db.sqlite3</jdbc-url>
+      <jdbc-url>jdbc:sqlite:G:\YYY\Gateway_Project\版本\GatewaySite--MQTT版本--2号网关\GatewaySite\db2haoGW.sqlite3</jdbc-url>
       <driver-properties>
         <property name="enable_load_extension" value="true" />
       </driver-properties>

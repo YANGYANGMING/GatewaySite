@@ -163,7 +163,7 @@ def user_list(request):
     :param request:
     :return:
     """
-    user_list = models.UserProfile.objects.all()
+    user_list = models.UserProfile.objects.all().values('id', 'name', 'role__name', 'last_login', 'is_active')
 
     return render(request, "gateway/user_list.html", locals())
 

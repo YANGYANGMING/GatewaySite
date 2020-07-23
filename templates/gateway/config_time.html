@@ -258,17 +258,8 @@
                 },
         });
 
-        //Flat red color scheme for iCheck
-        $('input[type="checkbox"].flat-red, input[type="radio"].flat-red').iCheck({
-          checkboxClass: 'icheckbox_flat-green',
-          radioClass   : 'iradio_flat-green'
-        });
-
         //刷新页面后显示原来的值
         ShowOriginData();
-
-        //禁止定时/循环时间输入
-        ForbidInput();
 
         //暂停、恢复时间
         PauseTime();
@@ -282,9 +273,6 @@
       //刷新页面保留上次数据
     function ShowOriginData() {
 
-        $('#Timing').iCheck('check');
-        OperationTiming();
-
         //手动获取的id
         var menu_id = "{{ latest_set_id }}";
         $('#selected-network-id').val([menu_id]).trigger("change");
@@ -296,12 +284,6 @@
         $('#hours').select2("val", hours);
         var minutes = "{{ latest_Timing_time.minutes }}";
         $('#minutes').select2("val", minutes);
-
-        //time_status
-        if ({{ latest_time_status.timing_status }}) {
-            $('#Timing').iCheck('check');
-            OperationTiming();
-        }
 
         $('#run-status').text('{{ latest_time_status.text_status }}');
         $('#btn-status').text('{{ latest_time_status.button_status }}');
@@ -318,113 +300,86 @@
          }
     }
 
-     //禁止定时/循环时间输入
-    function ForbidInput() {
-        $('#Timing').on('ifChecked', function(){
-            OperationTiming();
-        });
-
-        }
-
     //启动定时任务
     function SubSetting() {
-        if($('#Timing').prop('checked')){
-            var days = $('#days').val();
-            var hours = $('#hours').val();
-            var minutes = $('#minutes').val();
-            var TimingDateList = [days, hours, minutes];
-            $.ajax({
-                url:'/gateway/set-Timing-time',
-                type:'POST',
-                data:{'TimingDateList': TimingDateList},
-                traditional:true,
-                dataType:'JSON',
-                success:function (arg) {
-                    if(arg.status){
-                        console.log('Timing'+arg.message);
-                        $(".icon-status").css('color', '#3E8F03');
-                        $("#run-status").text('运行中...').css('color', '#3E8F03');
-                        $('#btn-status').text('暂停').addClass('btn-warning');
-                        SaveStatus();
-                    }
-                    $('#timing-sub-msg').text(arg.message);
-                    ClearMSG('timing-sub-msg');
+        var days = $('#days').val();
+        var hours = $('#hours').val();
+        var minutes = $('#minutes').val();
+        var TimingDateList = [days, hours, minutes];
+        $.ajax({
+            url:'/gateway/set-Timing-time',
+            type:'POST',
+            data:{'TimingDateList': TimingDateList},
+            traditional:true,
+            dataType:'JSON',
+            success:function (arg) {
+                if(arg.status){
+                    console.log('Timing'+arg.message);
+                    $(".icon-status").css('color', '#3E8F03');
+                    $("#run-status").text('运行中...').css('color', '#3E8F03');
+                    $('#btn-status').text('暂停').addClass('btn-warning');
+                    SaveStatus();
                 }
-            });
-        }
-        else{
-            alert('请先选择模式')
-        }
+                $('#timing-sub-msg').text(arg.message);
+                ClearMSG('timing-sub-msg');
+            }
+        });
     }
-
-
-    //操作轮询模式输入框，则禁止循环模式输入框
-      function OperationTiming() {
-          console.log('Timing', $('#Timing').prop('checked'));
-        //Timing
-        $('#day').prop('disabled', false);
-        $('#hour').prop('disabled', false);
-        $('#min').prop('disabled', false);
-      }
 
     //重置/清除
     function ResetTime() {
-        if($('#Timing').prop('checked')){
-            $.ajax({
-                url: '/gateway/reset-Timing-time',
-                type:'POST',
-                dataType:'JSON',
-                success:function (arg) {
-                    if(arg.status){
-                        $(".icon-status").css('color', '#8f8f8f');
-                        $("#run-status").text('已暂停');
-                        $('#btn-status').text('暂停').addClass('btn-warning');
-                        SaveStatus();
-                        window.location.reload();
-                    }
+        $.ajax({
+            url: '/gateway/reset-Timing-time',
+            type:'POST',
+            dataType:'JSON',
+            success:function (arg) {
+                if(arg.status){
+                    $(".icon-status").css('color', '#8f8f8f');
+                    $("#run-status").text('已暂停');
+                    $('#btn-status').text('暂停').addClass('btn-warning');
+                    SaveStatus();
+                    window.location.reload();
                 }
-            })
-        }
+            }
+        })
     }
 
     //暂停、恢复
     function PauseTime() {
         $("#btn-status").click(function () {
-            if($('#Timing').prop('checked')){
-                var editing = $(this).hasClass('btn-warning');
-                var ths = this;
-                if(editing){
-                    $.ajax({
-                        url:'/gateway/pause-Timing-time',
-                        dataType:'JSON',
-                        success:function (arg) {
-                            if(arg.status){
-                                console.log(arg.message);
-                                $(ths).removeClass('btn-warning');
-                                $(ths).text('恢复');
-                                $(".icon-status").css('color', '#8f8f8f');
-                                $("#run-status").text('已暂停').css('color', '#8f8f8f');
-                                SaveStatus();
-                            }
+            var editing = $(this).hasClass('btn-warning');
+            var ths = this;
+            if(editing){
+                $.ajax({
+                    url:'/gateway/pause-Timing-time',
+                    dataType:'JSON',
+                    success:function (arg) {
+                        if(arg.status){
+                            console.log(arg.message);
+                            $(ths).removeClass('btn-warning');
+                            $(ths).text('恢复');
+                            $(".icon-status").css('color', '#8f8f8f');
+                            $("#run-status").text('已暂停').css('color', '#8f8f8f');
+                            SaveStatus();
                         }
-                   })
-                }else{
-                    //恢复定时时间
-                    $.ajax({
-                        url:'/gateway/resume-Timing-time',
-                        dataType:'JSON',
-                        success:function (arg) {
-                            if(arg.status){
-                                console.log(arg.message);
-                                $(ths).addClass('btn-warning');
-                                $(ths).text('暂停');
-                                $(".icon-status").css('color', '#3E8F03');
-                                $("#run-status").text('运行中...').css('color', '#3E8F03');
-                                SaveStatus();
-                            }
+                    }
+               })
+            }else{
+                //恢复定时时间
+                $.ajax({
+                    url:'/gateway/resume-Timing-time',
+                    dataType:'JSON',
+                    success:function (arg) {
+                        if(arg.status){
+                            console.log(arg.message);
+                            $(ths).addClass('btn-warning');
+                            $(ths).text('暂停');
+                            $(".icon-status").css('color', '#3E8F03');
+                            $("#run-status").text('运行中...').css('color', '#3E8F03');
+                            SaveStatus();
                         }
-                   })
-                }
+                    }
+               })
             }
         })
     }
@@ -455,10 +410,9 @@
 
     //保存状态
     function SaveStatus() {
-        var timing_status = $('#Timing').prop('checked');
         var text_status = $('#run-status').text();
         var button_status = $('#btn-status').text();
-        var data = {'timing_status':timing_status.toString(), 'text_status':text_status, 'button_status':button_status};
+        var data = {'text_status':text_status, 'button_status':button_status};
         $.ajax({
             url:'/gateway/save-status',
             type:'POST',

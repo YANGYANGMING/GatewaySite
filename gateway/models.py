@@ -178,10 +178,6 @@ class Sensor_data(models.Model):
     Importance_choices = ((0, '一般'),
                           (1, '重要'),
                           )
-    # material_choices = ((0, '未定义'),
-    #                     (1, '碳钢'),
-    #                     (2, '不锈钢'),
-    #                     )
     material = models.SmallIntegerField(default=1)
     Importance = models.SmallIntegerField(choices=Importance_choices, default=0)
     sensor_online_status_choices = ((1, '在线'),

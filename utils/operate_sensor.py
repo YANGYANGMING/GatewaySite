@@ -24,7 +24,7 @@ class OperateSensor(object):
             response['msg'] = '传感器网络号有误，需填写%s.x格式' % network_id.rsplit('.', 1)[0]
 
         alias = receive_data['alias']
-        alias_list = list(models.Sensor_data.objects.filter(delete_status=0).values('alias', 'sensor_id'))
+        alias_list = list(models.Sensor_data.objects.filter(delete_status=0).values('alias', 'network_id'))
         for item in alias_list:
             if alias == item['alias'] and network_id != item['network_id']:
                 response['msg'] = '此传感器名称已被使用'
@@ -81,23 +81,23 @@ class OperateSensor(object):
                 response['msg'] = '已有此传感器，请检查此传感器ID和传感器网络号'
             elif alias in alias_list:
                 response['msg'] = '此传感器名称已被使用'
-
-            # 添加sensor数据
-            print(receive_data)
-            # 添加成功，同时同步数据库和调度器
-            # 把'1.1.1.4'转化成16进制0x01010104
-            hex_network_id = handle_func.str_hex_dec(network_id)
-            command = "set 74 " + sensor_id + " " + str(int(hex_network_id, 16))
-            print('command', command)
-            # add_sensor_response = views.gw0.serCtrl.getSerialresp(command)
-            # print('add_sensor_response', add_sensor_response.strip('\n'))
-            add_sensor_response = 'ok'
-            if add_sensor_response.strip('\n') == 'ok':
-                models.Sensor_data.objects.create(**receive_data)
-                response['status'] = True
-                response['msg'] = '添加传感器成功'
             else:
-                response['msg'] = '添加传感器失败，传感器未响应'
+                # 添加sensor数据
+                print(receive_data)
+                # 添加成功，同时同步数据库和调度器
+                # 把'1.1.1.4'转化成16进制0x01010104
+                hex_network_id = handle_func.str_hex_dec(network_id)
+                command = "set 74 " + sensor_id + " " + str(int(hex_network_id, 16))
+                print('command', command)
+                # add_sensor_response = views.gw0.serCtrl.getSerialresp(command)
+                # print('add_sensor_response', add_sensor_response.strip('\n'))
+                add_sensor_response = 'ok'
+                if add_sensor_response.strip('\n') == 'ok':
+                    models.Sensor_data.objects.create(**receive_data)
+                    response['status'] = True
+                    response['msg'] = '添加传感器成功'
+                else:
+                    response['msg'] = '添加传感器失败，传感器未响应'
 
         # 添加成功，同时同步数据库和调度器
         views.auto_Timing_time()
@@ -112,8 +112,6 @@ class OperateSensor(object):
         :return:
         """
         response['msg'] = '删除传感器失败'
-        command = "set 74 " + sensor_id + " 0"
-        print('command', command)
         print("response['receive_data']['forcedelete']", response['receive_data']['forcedelete'])
         if response['receive_data']['forcedelete']:
             models.Sensor_data.objects.filter(sensor_id=sensor_id).delete()

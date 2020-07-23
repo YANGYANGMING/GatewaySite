@@ -144,13 +144,12 @@ class Handle_func(object):
             print('set_val_response', set_val_response.strip('\n'))
             # set_val_response = 'ok'
             header = 'set_sensor_params'
-            topic = network_id.rsplit('.', 1)[0] + '.0'
             if set_val_response.strip('\n') == 'ok':
                 update_sensor_data(val_dict)
                 models.Sensor_data.objects.filter(network_id=network_id).update(**val_dict)
-                result = {'status': True, 'network_id': network_id, 'msg': '设置参数成功', 'params_dict': val_dict}
+                result = {'status': True, 'network_id': network_id, 'msg': '设置参数成功', 'params_dict': val_dict, 'user': payload.get('user')}
             else:
-                result = {'status': False, 'network_id': network_id, 'msg': '设置参数失败', 'params_dict': val_dict}
+                result = {'status': False, 'network_id': network_id, 'msg': '设置参数失败', 'params_dict': val_dict, 'user': payload.get('user')}
 
             send_gwdata_to_server(views.client, 'pub', result, header)
             views.log.log(result['status'], result['msg'], network_id, payload['user'])
@@ -262,7 +261,7 @@ def handle_img_and_data(request):
         data['location_img_path'] = Base_img_path + img_name
     else:
         data['location_img_json'] = ''
-        if exist_img_path:
+        if exist_img_path and exist_img_path != 'None':
             data['location_img_path'] = Base_img_path + exist_img_path.rsplit('/', 1)[1]
     return data
 
@@ -409,24 +408,6 @@ def handle_data(arr):
     time_dict = {'days': temp_list[0], 'hours': temp_list[1], 'minutes': temp_list[2]}
 
     return time_dict
-
-
-# def handle_receive_data(time_data):
-#     """
-#     处理接收的用于增加/修改的时间
-#     :param time_data:
-#     :return:
-#     """
-#     for k, v in time_data.items():
-#         if not v:
-#             time_data[k] = '*'
-#         else:
-#             v_temp = ''
-#             for i in v:
-#                 v_temp += i + ','
-#                 time_data[k] = v_temp[: -1]
-#     print('time_data2', time_data)
-#     return time_data
 
 
 def check_soft_delete(network_id):
