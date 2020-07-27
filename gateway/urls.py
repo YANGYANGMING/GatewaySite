@@ -43,9 +43,4 @@ urlpatterns = [
     re_path(r'^manual-get/(.*)$', views.manual_get, name="manual_get"),
 
 
-    re_path(r'^test$', views.test),
-    re_path(r'^test-json$', views.test_json),
-
-
-
 ]

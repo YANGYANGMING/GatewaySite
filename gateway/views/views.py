@@ -48,8 +48,6 @@ heart_timeout_sche = BackgroundScheduler()
 # Gateway power on status is 0
 if models.Gateway.objects.filter(id=1).exists():
     models.Gateway.objects.filter(id=1).update(gw_status=0)
-# else:
-#     models.Gateway.objects.create(gw_status=0)
 
 # Initialize original status infomation
 if models.TimeStatus.objects.filter(id=1).exists():
@@ -901,20 +899,7 @@ threading.Thread(target=gw_get_data_func).start()
 
 
 auto_Timing_time()
-# handle_func.check_online_of_sensor_status()
+handle_func.check_online_of_sensor_status()
 
-
-def test(request):
-
-    return render(request, 'test.html', locals())
-
-@ csrf_exempt
-def test_json(request):
-    if request.method == 'POST':
-        user = json.loads(request.POST.get('user'))
-        aaa = json.loads(request.POST.get('aaa'))
-        print(user)
-        print(aaa)
-    return HttpResponse(json.dumps('...'))
 
 

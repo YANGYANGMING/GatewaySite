@@ -332,14 +332,17 @@ def send_all_sensor():
     :param headers_dict:
     :return:
     """
-    topic = models.Gateway.objects.values('network_id')[0]['network_id']  # gwntid
-    sync_sensors = list(models.Sensor_data.objects.all().values())
-    for item in sync_sensors:
-        item['date_of_installation'] = str(item['date_of_installation'])
-        item['gateway'] = topic
-        item.pop('id')
-    result = {'status': True, 'sync_sensors': sync_sensors, 'msg': "同步传感器数据成功"}
-    send_gwdata_to_server(views.client, 'pub', result, headers_dict['sync_sensors'])
+    try:
+        topic = models.Gateway.objects.values('network_id')[0]['network_id']  # gwntid
+        sync_sensors = list(models.Sensor_data.objects.all().values())
+        for item in sync_sensors:
+            item['date_of_installation'] = str(item['date_of_installation'])
+            item['gateway'] = topic
+            item.pop('id')
+        result = {'status': True, 'sync_sensors': sync_sensors, 'msg': "同步传感器数据成功"}
+        send_gwdata_to_server(views.client, 'pub', result, headers_dict['sync_sensors'])
+    except Exception as e:
+        print(e)
 
 
 def str_hex_dec(network_id):

@@ -89,9 +89,9 @@ class OperateSensor(object):
                 hex_network_id = handle_func.str_hex_dec(network_id)
                 command = "set 74 " + sensor_id + " " + str(int(hex_network_id, 16))
                 print('command', command)
-                # add_sensor_response = views.gw0.serCtrl.getSerialresp(command)
-                # print('add_sensor_response', add_sensor_response.strip('\n'))
-                add_sensor_response = 'ok'
+                add_sensor_response = views.gw0.serCtrl.getSerialresp(command)
+                print('add_sensor_response', add_sensor_response.strip('\n'))
+                # add_sensor_response = 'ok'
                 if add_sensor_response.strip('\n') == 'ok':
                     models.Sensor_data.objects.create(**receive_data)
                     response['status'] = True
