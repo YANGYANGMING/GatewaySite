@@ -164,8 +164,4 @@ keyfile = "%s/client/MyClient1.key" % crtPath
 # 错误日志
 ERROR_LOG_FILE = os.path.join(BASE_DIR, "log", 'error.log')
 # 运行日志
-
-
-
-
 RUN_LOG_FILE = os.path.join(BASE_DIR, "log", 'run.log')

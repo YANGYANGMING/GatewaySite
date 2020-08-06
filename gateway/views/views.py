@@ -730,7 +730,6 @@ def receive_gw_data(request):
                 receive_data['location_img_json'] = location_img_json
                 data = {'id': 'client', 'header': 'update_sensor', 'status': response['status'], 'msg': response['msg'],
                         'user': str(request.user), 'receive_data': receive_data}
-
                 try:
                     client.publish('pub', json.dumps(data))  # 把网关更新的sensor数据发送给server
                 except Exception as e:
