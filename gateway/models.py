@@ -167,10 +167,10 @@ class Sensor_data(models.Model):
     received_time_data = models.CharField(max_length=128)
     battery = models.CharField(max_length=32, default=100)
     cHz = models.CharField(max_length=32, default='2')
-    gain = models.CharField(max_length=32, default='60')
+    gain = models.CharField(max_length=32, default='72')
     avg_time = models.CharField(max_length=32, default='4')
-    Hz = models.CharField(max_length=32, default='2')
-    Sample_depth = models.CharField(max_length=32, default='2')
+    Hz = models.CharField(max_length=32, default='4')
+    Sample_depth = models.CharField(max_length=32, default='0')
     Sample_Hz = models.CharField(max_length=32, default='500')
     sensor_type_choices = ((0, 'ETM-100'),
                            )

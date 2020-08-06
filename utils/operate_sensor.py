@@ -89,18 +89,17 @@ class OperateSensor(object):
                 hex_network_id = handle_func.str_hex_dec(network_id)
                 command = "set 74 " + sensor_id + " " + str(int(hex_network_id, 16))
                 print('command', command)
-                add_sensor_response = views.gw0.serCtrl.getSerialresp(command)
-                print('add_sensor_response', add_sensor_response.strip('\n'))
-                # add_sensor_response = 'ok'
+                # add_sensor_response = views.gw0.serCtrl.getSerialresp(command)
+                # print('add_sensor_response', add_sensor_response.strip('\n'))
+                add_sensor_response = 'ok'
                 if add_sensor_response.strip('\n') == 'ok':
                     models.Sensor_data.objects.create(**receive_data)
                     response['status'] = True
                     response['msg'] = '添加传感器成功'
+                    # 添加成功，同时同步数据库和调度器
+                    views.auto_Timing_time()
                 else:
                     response['msg'] = '添加传感器失败，传感器未响应'
-
-        # 添加成功，同时同步数据库和调度器
-        views.auto_Timing_time()
 
         return response
 
@@ -134,7 +133,6 @@ class OperateGateway(object):
         result = {'status': False, 'msg': '更新网关失败'}
         try:
             models.Gateway.objects.all().update(**gateway_data)
-            topic = gateway_data['network_id']
             header = headers_dict['update_gateway']
             result = {'status': True, 'msg': '更新网关成功', 'gateway_data': gateway_data, 'user': user}
             handle_func.send_gwdata_to_server(views.client, 'pub', result, header)
@@ -143,9 +141,13 @@ class OperateGateway(object):
         return result
 
     def add_gateway(self, gateway_data, user):
-        models.Gateway.objects.create(**gateway_data)
-        header = 'add_gateway'
-        result = {'status': True, 'msg': '添加网关成功', 'gateway_data': gateway_data, 'user': user}
-        handle_func.send_gwdata_to_server(views.client, 'pub', result, header)
+        result = {'status': False, 'msg': '更新网关失败'}
+        try:
+            models.Gateway.objects.create(**gateway_data)
+            header = 'add_gateway'
+            result = {'status': True, 'msg': '添加网关成功', 'gateway_data': gateway_data, 'user': user}
+            handle_func.send_gwdata_to_server(views.client, 'pub', result, header)
+        except Exception as e:
+            print(e)
         return result
 

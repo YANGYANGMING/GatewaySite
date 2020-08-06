@@ -225,13 +225,8 @@
                data: {'val_dict': JSON.stringify(val_dict)},
                dataType: 'JSON',
                success: function (arg) {
-                   if(arg['status'] === true){
-                       $('#sensor-response-msg').text(arg.msg);
-                        ClearMSG('sensor-response-msg');
-                       window.location.reload();
-                   }else{
-                       $('#sensor-response-msg').text(arg.msg);
-                   }
+                   $('#sensor-response-msg').text(arg.msg);
+                    ClearMSG('sensor-response-msg');
                }
             });
           })
@@ -241,7 +236,8 @@
       //清除提示信息
         function ClearMSG(nid) {
             setTimeout(function () {
-                $("#"+nid).text('')
+                $("#"+nid).text('');
+                window.location.reload();
             }, 3000);
         }
 

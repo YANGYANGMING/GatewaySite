@@ -63,8 +63,9 @@ class Handle_func(object):
         :return:
         """
         print('添加........')
+        print('payload', payload)
         response = views.receive_server_data(payload.get('data'))
-        views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'), payload.get('user'))
+        views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'))
         response['user'] = payload.get('user')
         send_gwdata_to_server(views.client, 'pub', response, headers_dict['add_sensor'])
 
@@ -135,24 +136,9 @@ class Handle_func(object):
         try:
             val_dict = payload['val_dict']
             network_id = payload['network_id']
-            # 准备发送的命令字符串  cmd_str = "set 0001 2 60 4 2 2 500"
-            cmd_str = str(" " + val_dict['cHz'] + " " + val_dict['gain'] + " " + val_dict[
-                'avg_time'] + " " + val_dict['Hz'] + " " + val_dict['Sample_depth'] + " " + val_dict['Sample_Hz'])
-            command = "set 71 " + network_id.rsplit('.', 1)[1] + cmd_str
-            print('command', command)
-            set_val_response = views.gw0.serCtrl.getSerialresp(command)
-            print('set_val_response', set_val_response.strip('\n'))
-            # set_val_response = 'ok'
-            header = 'set_sensor_params'
-            if set_val_response.strip('\n') == 'ok':
-                update_sensor_data(val_dict)
-                models.Sensor_data.objects.filter(network_id=network_id).update(**val_dict)
-                result = {'status': True, 'network_id': network_id, 'msg': '设置参数成功', 'params_dict': val_dict, 'user': payload.get('user')}
-            else:
-                result = {'status': False, 'network_id': network_id, 'msg': '设置参数失败', 'params_dict': val_dict, 'user': payload.get('user')}
+            result, header = set_sensor_params_func(network_id, val_dict)
 
             send_gwdata_to_server(views.client, 'pub', result, header)
-            views.log.log(result['status'], result['msg'], network_id, payload['user'])
         except Exception as e:
             print(e, '设置参数失败')
 
@@ -279,6 +265,32 @@ def mkdir_path(path=None, gw_network_id=None):
         if not os.path.exists(path):
             os.mkdir(path)
     return path
+
+
+def set_sensor_params_func(network_id, val_dict):
+    """
+    设置参数功能函数
+    :return:
+    """
+    # 准备发送的命令字符串  cmd_str = "set 0001 2 60 4 2 2 500"
+    cmd_str = str(" " + val_dict['cHz'] + " " + val_dict['gain'] + " " + val_dict[
+        'avg_time'] + " " + val_dict['Hz'] + " " + val_dict['Sample_depth'] + " " + val_dict['Sample_Hz'])
+    command = "set 71 " + network_id.rsplit('.', 1)[1] + cmd_str
+    print('command', command)
+    set_val_response = views.gw0.serCtrl.getSerialresp(command)
+    print('set_val_response', set_val_response.strip('\n'))
+    # set_val_response = 'ok'
+    header = 'set_sensor_params'
+    if set_val_response.strip('\n') == 'ok':
+        update_sensor_data(val_dict)
+        models.Sensor_data.objects.filter(network_id=network_id).update(**val_dict)
+        result = {'status': True, 'network_id': network_id, 'msg': '设置参数成功', 'params_dict': val_dict}
+    else:
+        result = {'status': False, 'network_id': network_id, 'msg': '设置参数失败', 'params_dict': val_dict}
+
+    views.log.log(result['status'], result['msg'], network_id)
+
+    return result, header
 
 
 def send_gwdata_to_server(client, topic, result, header):

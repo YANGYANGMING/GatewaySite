@@ -1,0 +1,158 @@
+
+{% extends 'index.html' %}
+{% load staticfiles %}
+
+{% block main_content %}
+
+    <!-- Main content -->
+    <section class="content" id="loading">
+
+      <!-- /.table -->
+      <div class="box box-solid box-warning">
+        <div class="box-header with-border">
+          <h3 class="box-title">编辑报警信息</h3>
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i></button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-remove"></i></button>
+          </div>
+        </div>
+            <!-- /.box-header -->
+        <div class="box-body">
+              <div class="row">
+                  <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="sensor-id">传感器ID</label>
+                        <input type="text" class="form-control" name="sensor-id" id="sensor-id" value="{{ sensor_obj.sensor_id }}" disabled>
+                    </div>
+                </div>
+                <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="alias">传感器名称</label>
+                        <input type="text" class="form-control" name="alias" id="alias" value="{{ sensor_obj.alias }}" disabled>
+                    </div>
+                </div>
+                <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="network_id">传感器网络号</label>
+                        <input type="text" class="form-control" name="network-id" id="network-id" value="{{ sensor_obj.network_id }}" disabled>
+                    </div>
+                </div>
+                  <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="initial-thickness">初始厚度</label>
+                        <input type="text" class="form-control" name="initial-thickness" id="initial-thickness" value="{{ sensor_obj.initial_thickness }}">
+                    </div>
+                </div>
+                  <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="alarm-thickness">报警厚度</label>
+                        <input type="text" class="form-control" name="alarm-thickness" id="alarm-thickness" value="{{ sensor_obj.alarm_thickness }}">
+                    </div>
+                </div>
+                <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="alarm-battery">报警电量</label>
+                        <input type="text" class="form-control" name="alarm-battery" id="alarm-battery" value="{{ sensor_obj.alarm_battery }}">
+                    </div>
+                </div>
+                <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="alarm-temperature">报警温度</label>
+                        <input type="text" class="form-control" name="alarm-temperature" id="alarm-temperature" value="{{ sensor_obj.alarm_temperature }}">
+                    </div>
+                </div>
+                <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="alarm-corrosion">报警腐蚀率</label>
+                        <input type="text" class="form-control" name="alarm-corrosion" id="alarm-corrosion" value="{{ sensor_obj.alarm_corrosion }}">
+                    </div>
+                </div>
+              </div>
+            <!-- /.col -->
+            <div class="row">
+                <div class="col-md-3 col-md-offset-4">
+                  <div class="form-group" style="margin-top: 10px">
+                      <span id="response-alarm-msg" style="color: red;"></span>
+                  </div>
+                </div>
+                <div class="col-md-1">
+                  <div class="form-group">
+                      <a href="javascript:history.go(-1);" type="button" class="btn btn-default">取消</a>
+                  </div>
+                </div>
+                <div class="col-md-1">
+                  <div class="form-group">
+                      <button type="button" class="btn btn-success" onclick="Update()">更新</button>
+                  </div>
+                </div>
+        </div>
+        <!-- /.row -->
+      </div>
+      <!-- /.box -->
+    </div>
+    </section>
+
+
+{% endblock %}
+
+{% block script %}
+
+    <script>
+
+        $(function () {
+            $('.select2').select2();
+
+        });
+
+        function Update() {
+            ShowLoading();
+
+            var fd = new FormData();
+
+            var sensor_id = $('#sensor-id').val();
+            var alias = $('#alias').val();
+            var network_id = $('#network-id').val();
+            var initial_thickness = $('#initial-thickness').val();
+            var alarm_thickness = $('#alarm-thickness').val();
+            var alarm_battery = $('#alarm-battery').val();
+            var alarm_temperature = $('#alarm-temperature').val();
+            var alarm_corrosion = $('#alarm-corrosion').val();
+            var location_img_obj = '';
+            var exist_img_path = '{{ sensor_obj.location_img_path }}';
+            var data = JSON.stringify({'sensor_id': sensor_id, 'alias': alias, 'network_id': network_id,
+                'choice': 'update', 'initial_thickness': initial_thickness, 'alarm_thickness': alarm_thickness,
+                'alarm_battery': alarm_battery, 'alarm_temperature': alarm_temperature, 'alarm_corrosion': alarm_corrosion,
+                'exist_img_path': exist_img_path});
+            fd.append('location_img_obj', location_img_obj);
+            fd.append('data', data);
+            $.ajax({
+                url: "/gateway/receive-gw-data",
+                type:'POST',
+                data: fd,
+                processData : false, // 使数据不做处理
+                contentType : false, // 不要设置Content-Type请求头
+                success:function (arg) {
+                    $('#loading').busyLoad("hide");
+                    var args = JSON.parse(arg);
+                    console.log(args);
+                    $('#response-alarm-msg').html(args.msg);
+                    if(args.status){
+                        ClearMSG('#response-alarm-msg');
+                    }
+                }
+            })
+
+        }
+
+        //清除提示信息
+        function ClearMSG(ele_id) {
+            setTimeout(function () {
+                $(ele_id).html('');
+                window.location.href="/gateway/sensor-manage";
+            }, 1500);
+        }
+
+
+    </script>
+
+{% endblock %}

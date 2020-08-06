@@ -296,7 +296,7 @@
         if('{{ latest_time_status.button_status }}'==='暂停'){
             $("#btn-status").addClass('btn-warning');
          }else{
-            $("#btn-status").removeClass('btn-warning');
+            $("#btn-status").removeClass('btn-warning').addClass('btn-success');
          }
     }
 
@@ -357,6 +357,7 @@
                         if(arg.status){
                             console.log(arg.message);
                             $(ths).removeClass('btn-warning');
+                            $(ths).addClass('btn-success');
                             $(ths).text('恢复');
                             $(".icon-status").css('color', '#8f8f8f');
                             $("#run-status").text('已暂停').css('color', '#8f8f8f');

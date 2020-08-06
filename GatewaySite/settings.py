@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = ')n0vse!y)9)npl9z0h_td%9%hs6+u=1tl#3r=0sc4cubq8*ly-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'GatewaySite.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'ORISONIC_GW_db.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, 'db1haoGW.sqlite3'),
     }
 }
 
@@ -150,10 +150,12 @@ headers_dict = {
 
 }
 
+
 # EMQ X SETTINGS
 MQTT_USERNAME = "ORISONIC"
 MQTT_PASSWORD = "ORISONIC2020"
-MQTT_HOST = "47.93.190.54"
+# MQTT_HOST = "121.36.220.210"
+MQTT_HOST = "192.168.0.44"
 crtPath = BASE_DIR + r"/crt_new"
 ca_certs = "%s/ca/MyRootCA.pem" % crtPath
 certfile = "%s/client/MyClient1.pem" % crtPath
@@ -162,4 +164,8 @@ keyfile = "%s/client/MyClient1.key" % crtPath
 # 错误日志
 ERROR_LOG_FILE = os.path.join(BASE_DIR, "log", 'error.log')
 # 运行日志
+
+
+
+
 RUN_LOG_FILE = os.path.join(BASE_DIR, "log", 'run.log')

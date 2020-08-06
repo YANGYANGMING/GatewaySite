@@ -10,7 +10,7 @@ from gateway.eelib.eelib.message import *
 from utils.mqtt_client import MQTT_Client
 from utils import handle_func
 from utils.operate_sensor import OperateSensor, OperateGateway
-from queue import Queue
+from queue import PriorityQueue
 import serial
 import threading
 
@@ -35,7 +35,7 @@ except Exception as e:
 
 num = 0
 
-gw_queue = Queue()
+gw_queue = PriorityQueue()
 
 # Timing task start flag bit
 TimingStatus = False
@@ -62,7 +62,7 @@ else:
     models.Set_Time.objects.create(days=1, hours=0, minutes=0)
 
 
-def send_network_id_to_server_queue(network_id, level=3):
+def send_network_id_to_server_queue(network_id, true_header, val_dict=None, receive_data=None, level=10):
     """
     发送network到服务端队列，等待采样
     :param network_id:
@@ -73,6 +73,7 @@ def send_network_id_to_server_queue(network_id, level=3):
         # Polling sensor
         snr_num = models.Sensor_data.objects.values('network_id').all()
         network_id_list = [item['network_id'] for item in snr_num]
+        level = 8
     else:
         # Single sensor, manual data collection / automatic data collection
         network_id_list = [network_id]
@@ -81,13 +82,20 @@ def send_network_id_to_server_queue(network_id, level=3):
     gateway_obj = models.Gateway.objects.values('Enterprise', 'gw_status').first()
     gw_status = gateway_obj['gw_status']
     enterprise = gateway_obj['Enterprise']
+    print('gateway_obj', gateway_obj)
+    header = 'send_network_id_to_queue'
+    result = {'status': True, 'network_id_list': network_id_list, 'Enterprise': enterprise, 'level': level,
+              'true_header': true_header, 'val_dict': val_dict, 'receive_data': receive_data}
+    print('send_network_id_to_server_queue_result', result)
     if gw_status:  # 如果连接服务器成功，把network_id_list发送到服务器队列
-        header = 'send_network_id_to_queue'
-        result = {'status': True, 'network_id_list': network_id_list, 'Enterprise': enterprise, 'level': level}
         handle_func.send_gwdata_to_server(client, 'pub', result, header)
     else:  # 如果连接服务器失败，把network_id_list发送到网关队列
         for network_id_item in network_id_list:
-            gw_queue.put(network_id_item)
+            gw_queue.put((level, json.dumps({'network_id': network_id_item,
+                                             'true_header': true_header,
+                                             'val_dict': val_dict,
+                                             'receive_data': receive_data,
+                                             })))
 
 
 def auto_Timing_time(network_id=None):
@@ -127,7 +135,7 @@ def auto_Timing_time(network_id=None):
             if db_job['network_id'] not in sche_job_id_list:
                 scheduler.add_job(send_network_id_to_server_queue, 'interval', days=int(received_time_data_dict['days']),
                                   hours=int(received_time_data_dict['hours']), minutes=int(received_time_data_dict['minutes']),
-                                  id=jobs_id, args=[db_job['network_id']])
+                                  id=jobs_id, args=[db_job['network_id'], 'gwdata'])
                 cur_sensor_run_status = models.Sensor_data.objects.filter(network_id=db_job['network_id']).values('sensor_run_status')[0]['sensor_run_status']
                 # Pause the corresponding sensor when starting or restarting
                 if not cur_sensor_run_status:
@@ -190,7 +198,7 @@ try:
     """定时初始化"""
     scheduler.add_job(send_network_id_to_server_queue, 'interval', days=settings.initial_time['days'],
                       hours=settings.initial_time['hours'], minutes=settings.initial_time['minutes'],
-                      id='interval_time 0.0.0.0', args=["0.0.0.0"])
+                      id='interval_time 0.0.0.0', args=["0.0.0.0", "gwdata"])
     scheduler.start()
     # 加载程序时暂停定时器
     scheduler.pause_job('interval_time 0.0.0.0')
@@ -394,6 +402,7 @@ def save_status(request):
     return HttpResponse(json.dumps(ret))
 
 
+@login_required
 def start_Timing_time(reset=False):
     """
     设置/更新定时时间
@@ -682,7 +691,7 @@ def refresh_gw_status(request):
         gw_status = models.Gateway.objects.values('gw_status').first()['gw_status']
     except Exception as e:
         print(e)
-        gw_status = {'message': ''}
+        gw_status = False
     if gw_status:
         result = {'message': '<a href="#"><i style="font-size: larger" class="fa fa-circle text-green"></i>&nbsp;&nbsp;已连接服务器</a>'}
     else:
@@ -708,38 +717,44 @@ def receive_gw_data(request):
         print('receive_data', receive_data)  # {"received_time_data":{"month":[],"day":[],"hour":["1"],"mins":["1"]},"sensor_id":"536876188","alias":"1号传感器","network_id":"0.0.0.1","choice":"update"}
 
         sensor_id = receive_data['sensor_id']
+        network_id = receive_data.get('network_id')
         choice = receive_data.pop('choice')
         location_img_json = receive_data.pop('location_img_json')
 
         # 更新
         if choice == 'update':
             response = operate_sensor.update_sensor(receive_data, response)
-            log.log(response['status'], response['msg'], receive_data.get('network_id'), request.user)
+            log.log(response['status'], response['msg'], network_id, request.user)
+            print('response', response)
             if response['status']:
                 receive_data['location_img_json'] = location_img_json
                 data = {'id': 'client', 'header': 'update_sensor', 'status': response['status'], 'msg': response['msg'],
                         'user': str(request.user), 'receive_data': receive_data}
-                client.publish('pub', json.dumps(data))  # 把网关更新的sensor数据发送给server
+
+                try:
+                    client.publish('pub', json.dumps(data))  # 把网关更新的sensor数据发送给server
+                except Exception as e:
+                    print(e)
 
         # 添加
         elif choice == 'add':
-            response = operate_sensor.add_sensor(receive_data, sensor_id, response)
-            log.log(response['status'], response['msg'], receive_data.get('network_id'), request.user)
-            if response['status']:
-                receive_data['location_img_json'] = location_img_json
-                data = {'id': 'client', 'header': 'add_sensor', 'status': response['status'], 'msg': response['msg'],
-                        'user': str(request.user), 'receive_data': receive_data}
-                client.publish('pub', json.dumps(data))  # 把网关增加的sensor数据发送给server
+            receive_data["choice"] = "add"
+            receive_data["location_img_json"] = location_img_json
+
+            send_network_id_to_server_queue(network_id, 'add_sensor', receive_data=receive_data, level=2)
 
         # 删除
         elif choice == 'remove':
             response = operate_sensor.remove_sensor(sensor_id, response)
-            log.log(response['status'], response['msg'], receive_data.get('network_id'), request.user)
+            log.log(response['status'], response['msg'], network_id, request.user)
             if response['status']:
                 receive_data['location_img_json'] = location_img_json
                 data = {'id': 'client', 'header': 'remove_sensor', 'status': response['status'], 'msg': response['msg'],
                         'user': str(request.user), 'receive_data': receive_data}
-                client.publish('pub', json.dumps(data))  # 把网关删除的sensor数据发送给server
+                try:
+                    client.publish('pub', json.dumps(data))  # 把网关删除的sensor数据发送给server
+                except Exception as e:
+                    print(e)
 
         return HttpResponse(json.dumps(response))
 
@@ -750,8 +765,8 @@ def receive_server_data(receive_data):
     :param receive_data: 收到服务器的时间是已经在服务器端验证通过的时间，可以直接使用
     :return:
     """
-    response = {'status': False, 'msg': '操作失败', 'times': time.time(), 'receive_data': receive_data}
-    print('receive_data', receive_data)  # {"received_time_data":{"month":[],"day":[],"hour":["1"],"mins":["1"]},"sensor_id":"536876188","alias":"1号传感器","network_id":"0.0.0.1","choice":"update"}
+    response = {'status': False, 'msg': '操作失败', 'receive_data': receive_data}
+    print('receive_data=------------', receive_data)  # {"received_time_data":{"month":[],"day":[],"hour":["1"],"mins":["1"]},"sensor_id":"536876188","alias":"1号传感器","network_id":"0.0.0.1","choice":"update"}
 
     sensor_id = receive_data['sensor_id']
     choice = receive_data.pop('choice')
@@ -809,7 +824,7 @@ def set_sensor_params(request):
     :param request:
     :return:
     """
-    result = {'status': False, 'msg': '设置参数失败'}
+    result = {'status': False, 'msg': '设置参数中...'}
     val_dict = json.loads(request.POST.get('val_dict'))
     network_id = val_dict.pop('network_id')
     print('val_dict', val_dict)
@@ -819,26 +834,12 @@ def set_sensor_params(request):
             result = {'status': False, 'msg': '采样频率参数范围：200-5000'}
             return HttpResponse(json.dumps(result))
 
-        # 准备发送的命令字符串  cmd_str = "set 0001 2 60 4 2 2 500"
-        cmd_str = str(" " + val_dict['cHz'] + " " + val_dict['gain'] + " " + val_dict[
-            'avg_time'] + " " + val_dict['Hz'] + " " + val_dict['Sample_depth'] + " " + val_dict['Sample_Hz'])
-        command = "set 71 " + network_id.rsplit('.', 1)[1] + cmd_str
-        print('command', command)
-        set_val_response = gw0.serCtrl.getSerialresp(command)
-        print('set_val_response', set_val_response.strip('\n'))
-        # set_val_response = 'ok'
-        header = 'set_sensor_params'
-        if set_val_response.strip('\n') == 'ok':
-            handle_func.update_sensor_data(val_dict)
-            models.Sensor_data.objects.filter(network_id=network_id).update(**val_dict)
-            result = {'status': True, 'network_id': network_id, 'msg': '设置参数成功', 'params_dict': val_dict, 'user': str(request.user)}
-        else:
-            result = {'status': False, 'network_id': network_id, 'msg': '设置参数失败', 'params_dict': val_dict, 'user': str(request.user)}
-        handle_func.send_gwdata_to_server(client, 'pub', result, header)
+        send_network_id_to_server_queue(network_id, 'set_sensor_params', val_dict=val_dict, level=4)
+
     except Exception as e:
         print(e, '设置参数失败')
 
-    log.log(result['status'], result['msg'], network_id, str(request.user))
+    # log.log(result['status'], result['msg'], network_id, str(request.user))
 
     return HttpResponse(json.dumps(result))
 
@@ -857,7 +858,7 @@ def manual_get(request, network_id):
     if network_id == '':
         result['message'] = "没有选择传感器"
     else:
-        send_network_id_to_server_queue(network_id, level=1)
+        send_network_id_to_server_queue(network_id, 'gwdata', level=6)
 
     return HttpResponse(json.dumps(result))
 
@@ -890,8 +891,18 @@ def gw_get_data_func():
     :return:
     """
     while True:
-        network_id = gw_queue.get()
-        time_job(network_id)
+        a = gw_queue.get()
+        print(a)
+        gw_queue_1 = json.loads(a[1])
+        true_header = gw_queue_1.get('true_header')
+        network_id = gw_queue_1.get('network_id')
+        if true_header == "gwdata":
+            time_job(network_id)
+        elif true_header == "add_sensor":
+            receive_server_data(gw_queue_1.get('receive_data'))
+        elif true_header == "set_sensor_params":
+            val_dict = gw_queue_1.get('val_dict')
+            handle_func.set_sensor_params_func(network_id, val_dict)
 
 
 # 网关取数队列线程
@@ -899,7 +910,7 @@ threading.Thread(target=gw_get_data_func).start()
 
 
 auto_Timing_time()
-handle_func.check_online_of_sensor_status()
+# handle_func.check_online_of_sensor_status()
 
 
 
