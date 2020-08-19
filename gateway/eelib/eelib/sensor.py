@@ -79,41 +79,22 @@ class SerialCtrl():
             self.serialPort.open()
         self.serialPort.write(cmd.encode('ascii'))
 
-    def getSerialData(self, network_id, timeout_s=28):
-        """发送命令并读取串口数据"""
+    def getSerialData(self, command, timeout):
+        """发送命令，并读取串口返回的数据"""
         serdata = ''
         time_start = time.time()
-        command = 'get 83 ' + network_id.rsplit('.', 1)[1]
-        print('cmd', command)
         self.atCMD(command)
         try:
             # 先清空串口缓存
             self.serialPort.flushInput()
-            while ((time.time() - time_start) < timeout_s):
+            while ((time.time() - time_start) < timeout):
                 serdata = self.serialPort.readline().decode('ascii')
                 if (serdata != ''):
-                    time.sleep(0.1)
                     break
         except Exception as e:
             print(e)
             self.serialPort.close()
         return serdata
-
-    def getSerialresp(self, command, timeout_s=6):
-        """发送命令并读取串口返回值"""
-        response = ''
-        time_start = time.time()
-        self.atCMD(command)
-        try:
-            self.serialPort.flushInput()
-            while ((time.time() - time_start) < timeout_s):
-                response = self.serialPort.readline().decode('ascii')
-                if (response != ''):
-                    break
-        except Exception as e:
-            print(e)
-            self.serialPort.close()
-        return response
 
     def ser2snrData(self, serdata):
         """串口数据转换成传感器数据"""
@@ -153,7 +134,9 @@ class SerialCtrl():
         snrdata = SensorData()
 
         """获取串口数据"""
-        serdata = self.getSerialData(network_id)
+        command = 'get 83 ' + network_id.rsplit('.', 1)[1]
+        print('cmd', command)
+        serdata = self.getSerialData(command, timeout=28)
         # print('serdata:', serdata)
         if(serdata!=''):
             snrdata = self.ser2snrData(serdata)

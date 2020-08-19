@@ -46,8 +46,8 @@ scheduler = BackgroundScheduler()
 heart_timeout_sche = BackgroundScheduler()
 
 # Gateway power on status is 0
-if models.Gateway.objects.filter(id=1).exists():
-    models.Gateway.objects.filter(id=1).update(gw_status=0)
+if models.Gateway.objects.first():
+    models.Gateway.objects.update(gw_status=0)
 
 # Initialize original status infomation
 if models.TimeStatus.objects.filter(id=1).exists():
@@ -346,6 +346,7 @@ def sensor_manage(request):
         for ii in sche_obj:
             if sensor_item.network_id == ii.id.split(' ')[1]:
                 sensor_item.start_date = str(ii.next_run_time).split('.')[0]
+                print('next_run_time', str(ii.next_run_time).split('.')[0])
         received_time_data = models.Sensor_data.objects.filter(sensor_id=sensor_item.sensor_id).\
             values('sensor_id', 'received_time_data')
 
@@ -535,7 +536,7 @@ def thickness_json_report(request):
         response['datas'] = [{'name': '厚度值', 'data': data_list}]
         response['alias'] = alias
         response['yAxis_max_limit'] = thickness_avg * 2
-        print(response)
+        response['thickness_avg'] = thickness_avg
     except Exception as e:
         print(e)
 
@@ -640,6 +641,55 @@ def set_gateway_json(request):
         # add_gateway
         result = operate_gateway.add_gateway(gateway_data, user=str(request.user))
     log.log(result['status'], result['msg'], gateway_data['network_id'], str(request.user))
+
+    return HttpResponse(json.dumps(result))
+
+
+@csrf_exempt
+@login_required
+def get_gateway_networkid(request):
+    """
+    发送命令获取网关网络号
+    :param request:
+    :return:
+    """
+    result = {'status': False, 'gw_ntid': '未获取到网关网络号'}
+    command = "get 78 "
+    get_gwntid_response = gw0.serCtrl.getSerialData(command, timeout=5)
+    print('get_gwntid_response', get_gwntid_response.strip('\n'))
+    if get_gwntid_response:
+        get_gwntid_response = handle_func.str_dec_hex(get_gwntid_response)
+        print('get_gwntid_response', get_gwntid_response.strip('\n'))
+        result = {'status': True, 'gw_ntid': get_gwntid_response}
+
+    return HttpResponse(json.dumps(result))
+
+
+@login_required
+def test_signal_strength(request, network_id):
+    """
+    测试信号强度
+    :param request:
+    :return:
+    """
+    result = {'status': False, 'msg': ''}
+    resend_num = 0
+    command = "get 65 " + network_id.rsplit('.', 1)[1]
+    while resend_num < 2:  # 未收到数据后重发
+        online_of_sensor_signal_strength_response = gw0.serCtrl.getSerialData(command, timeout=6)
+        response_msg = online_of_sensor_signal_strength_response.strip('\n').split(',')[0]
+        if response_msg == 'ok':
+            models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=1)
+            response_strength = online_of_sensor_signal_strength_response.strip('\n').split(',')[1]
+            print('test_signal_strength_response_strength', response_strength)
+            msg_of_signal_strength = handle_func.judgment_level_of_test_signal_strength(response_strength)
+            result = {'status': True, 'msg': msg_of_signal_strength}
+            break
+        else:
+            models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=0)
+            resend_num += 1
+            msg_of_signal_strength = handle_func.judgment_level_of_test_signal_strength(-1)
+            result = {'status': False, 'msg': msg_of_signal_strength}
 
     return HttpResponse(json.dumps(result))
 
@@ -862,6 +912,35 @@ def manual_get(request, network_id):
     return HttpResponse(json.dumps(result))
 
 
+@csrf_exempt
+def check_alias_to_update_sensor(request):
+    """
+    检查服务器中是否存在alias，为update sensor准备
+    :param request:
+    :return:
+    """
+    if request.method == 'POST':
+        alias = request.POST.get('alias')
+        network_id = request.POST.get('network_id')
+        result = {'alias': alias, 'network_id': network_id}
+        header = 'check_alias'
+        handle_func.send_gwdata_to_server(client, 'pub', result, header)
+        start_time = time.time()
+        ret = {'check_alias_payload': '', 'msg': ''}
+        while (time.time() - start_time) < 2:
+            if handle_func.check_alias_payload:
+                check_alias_payload = handle_func.check_alias_payload['alias_is_exist']
+                ret = {'check_alias_payload': check_alias_payload}
+                if ret['check_alias_payload']:
+                    ret['msg'] = '已存在此名称！'
+                else:
+                    ret['msg'] = ''
+                break
+        handle_func.check_alias_payload = {}
+
+        return HttpResponse(json.dumps(ret))
+
+
 def server_get_data(network_id):
     """
     服务器队列中的触发任务命令
@@ -890,9 +969,9 @@ def gw_get_data_func():
     :return:
     """
     while True:
-        a = gw_queue.get()
-        print(a)
-        gw_queue_1 = json.loads(a[1])
+        get_queue_data = gw_queue.get()
+        print('get_queue_data', get_queue_data)
+        gw_queue_1 = json.loads(get_queue_data[1])
         true_header = gw_queue_1.get('true_header')
         network_id = gw_queue_1.get('network_id')
         if true_header == "gwdata":

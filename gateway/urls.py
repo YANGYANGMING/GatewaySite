@@ -26,11 +26,12 @@ urlpatterns = [
 
     re_path(r'^pause-Timing-time$', views.pause_Timing_time),
     re_path(r'^resume-Timing-time$', views.resume_Timing_time),
-    # re_path(r'^resume-cycle-time$', views.resume_cycle_time),
     re_path(r'^reset-Timing-time$', views.reset_Timing_time),
 
     re_path(r'^edit-sensor/(\d+)$', views.edit_sensor, name="edit_sensor"),
     re_path(r'^edit-sensor-alarm-msg/(\d+)$', views.edit_sensor_alarm_msg, name="edit_sensor_alarm_msg"),
+    re_path(r'^get-gateway-networkid$', views.get_gateway_networkid),
+    re_path(r'^test-signal-strength/(.*)$', views.test_signal_strength),
     re_path(r'^set-gateway-json$', views.set_gateway_json, name="set_gateway_json"),
     re_path(r'^judge-username-exist-json$', views.judge_username_exist_json),
 
@@ -41,6 +42,8 @@ urlpatterns = [
     re_path(r'^receive-gw-data$', views.receive_gw_data, name="receive_gw_data"),
 
     re_path(r'^manual-get/(.*)$', views.manual_get, name="manual_get"),
+
+    re_path(r'^check-alias-to-update-sensor$', views.check_alias_to_update_sensor),
 
 
 ]

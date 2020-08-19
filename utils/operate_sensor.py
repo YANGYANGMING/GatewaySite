@@ -64,6 +64,8 @@ class OperateSensor(object):
             models.Sensor_data.objects.filter(network_id=network_id).update(**receive_data)
             response['status'] = True
             response['msg'] = '添加传感器成功'
+            # 添加成功，同时同步数据库和调度器
+            views.auto_Timing_time()
         else:
             network_id_list = []
             sensor_id_list = []
@@ -85,11 +87,11 @@ class OperateSensor(object):
                 # 添加sensor数据
                 print(receive_data)
                 # 添加成功，同时同步数据库和调度器
-                # 把'1.1.1.4'转化成16进制0x01010104
+                # 把'0.0.1.3'转化成'259'
                 hex_network_id = handle_func.str_hex_dec(network_id)
-                command = "set 74 " + sensor_id + " " + str(int(hex_network_id, 16))
+                command = "set 74 " + sensor_id + " " + hex_network_id
                 print('command', command)
-                # add_sensor_response = views.gw0.serCtrl.getSerialresp(command)
+                # add_sensor_response = views.gw0.serCtrl.getSerialData(command, timeout=6)
                 # print('add_sensor_response', add_sensor_response.strip('\n'))
                 add_sensor_response = 'ok'
                 if add_sensor_response.strip('\n') == 'ok':

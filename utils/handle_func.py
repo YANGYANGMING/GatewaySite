@@ -6,6 +6,8 @@ from gateway import models
 from PIL import Image
 
 
+check_alias_payload = {}
+
 class Handle_func(object):
 
     def __init__(self):
@@ -142,7 +144,6 @@ class Handle_func(object):
         except Exception as e:
             print(e, '设置参数失败')
 
-
     def update_gateway(self, topic, payload):
         """
         接收服务器的更新网关指令，并执行
@@ -152,6 +153,16 @@ class Handle_func(object):
         """
         ret = views.operate_gateway.update_gateway(payload['gateway_data'], payload.get('user'))
         views.log.log(ret['status'], ret['msg'], topic, payload.get('user'))
+
+    def check_alias(self, topic, payload):
+        """
+        接收服务器检查的alias是否存在的结果
+        :param topic:
+        :param payload:
+        :return:
+        """
+        global check_alias_payload
+        check_alias_payload = payload
 
 
 class HandleImgs(object):
@@ -277,7 +288,7 @@ def set_sensor_params_func(network_id, val_dict):
         'avg_time'] + " " + val_dict['Hz'] + " " + val_dict['Sample_depth'] + " " + val_dict['Sample_Hz'])
     command = "set 71 " + network_id.rsplit('.', 1)[1] + cmd_str
     print('command', command)
-    set_val_response = views.gw0.serCtrl.getSerialresp(command)
+    set_val_response = views.gw0.serCtrl.getSerialData(command, timeout=7)
     print('set_val_response', set_val_response.strip('\n'))
     # set_val_response = 'ok'
     header = 'set_sensor_params'
@@ -323,10 +334,13 @@ def check_online_of_sensor_status():
             print('command', command)
             while resend_num < 3:  # 未收到数据后重发
                 print(time.time())
-                online_of_sensor_status_response = views.gw0.serCtrl.getSerialresp(command)
-                print('online_of_sensor_status_response', online_of_sensor_status_response.strip('\n'))
-                if online_of_sensor_status_response.strip('\n') == 'ok':
+                online_of_sensor_status_response = views.gw0.serCtrl.getSerialData(command, timeout=6)
+                response_msg = online_of_sensor_status_response.strip('\n').split(',')[0]
+                print('online_of_sensor_status_response_msg', response_msg)
+                if response_msg == 'ok':
                     models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=1)
+                    response_strength = online_of_sensor_status_response.strip('\n').split(',')[1]
+                    print('online_of_sensor_status_response_strength', response_strength)
                     break
                 else:
                     models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=0)
@@ -369,6 +383,8 @@ def str_hex_dec(network_id):
             hex_network_id += '0' + hex(int(network_item)).split('0x')[1]
         else:
             hex_network_id += hex(int(network_item)).split('0x')[1]
+    hex_network_id = str(int(hex_network_id, 16))
+
     return hex_network_id
 
 
@@ -494,6 +510,27 @@ def show_selected_permissions(request, Group, nid):
                                      [item['id'] for item in selected_user_manual_assign_permissions_list]
     selected_user_permissions_list = list_dict_duplicate_removal(selected_user_permissions_list)
     return cur_user_all_permissions_list, selected_user_permissions_list
+
+
+def judgment_level_of_test_signal_strength(response_strength):
+    """
+    判断信号强度等级
+    :return:
+    """
+    try:
+        response_strength = int(response_strength)
+    except Exception as e:
+        print(e)
+    if 0 < response_strength < 20:
+        msg_of_signal_strength = '测试信号强度 <b style="color: green">强</b>'
+    elif 20 <= response_strength < 50:
+        msg_of_signal_strength = '测试信号强度 <b style="color: orange">中</b>'
+    elif response_strength >= 50:
+        msg_of_signal_strength = '测试信号强度 <b style="color: red">弱</b>'
+    else:
+        msg_of_signal_strength = '测试信号强度 <b style="color: red">失联</b>'
+
+    return msg_of_signal_strength
 
 
 def list_dict_duplicate_removal(distinct_list):

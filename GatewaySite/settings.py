@@ -78,6 +78,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db1haoGW.sqlite3'),
+        # 'NAME': os.path.join(BASE_DIR, 'ORISONIC_GW_db.sqlite3'),
+        # 'NAME': os.path.join(BASE_DIR, 'dbtest.sqlite3'),
     }
 }
 
@@ -154,9 +156,10 @@ headers_dict = {
 # EMQ X SETTINGS
 MQTT_USERNAME = "ORISONIC"
 MQTT_PASSWORD = "ORISONIC2020"
-# MQTT_HOST = "121.36.220.210"
 MQTT_HOST = "192.168.0.44"
-crtPath = BASE_DIR + r"/crt_new"
+# MQTT_HOST = "47.93.190.54"
+crtPath = BASE_DIR + r"/crt_192.168.0.44"
+# crtPath = BASE_DIR + r"/crt_47.93.190.54"
 ca_certs = "%s/ca/MyRootCA.pem" % crtPath
 certfile = "%s/client/MyClient1.pem" % crtPath
 keyfile = "%s/client/MyClient1.key" % crtPath

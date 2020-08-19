@@ -20,7 +20,7 @@
                     <div class="form-group">
                         <label class="col-sm-4 control-label">名称：</label>
                         <div class="col-sm-5">
-                            <input type="text" class="form-control" id="modal-alias" value="1号传感器" placeholder="1号传感器">
+                            <input type="text" class="form-control" id="modal-alias" value="" disabled>
                         </div>
                     </div>
                     <div class="form-group">
@@ -32,7 +32,7 @@
                   <label class="col-sm-4 control-label">周波数：&nbsp;&nbsp;</label>
                   <div class="col-sm-5">
                       <div class="form-group">
-                        <select class="form-control select2" id="modal-chz" style="width: 92%; margin-left: 10px;">
+                        <select class="form-control select2" id="modal-chz" style="width: 92%; margin-left: 10px;" disabled>
                           <option></option>
                             {% for cHz_item in context.cHz %}
                                 <option value="{{ cHz_item }}">{{ cHz_item }}</option>
@@ -65,7 +65,7 @@
                     <label class="col-sm-4 control-label">频率：&nbsp;&nbsp;</label>
                     <div class="col-sm-5">
                       <div class="form-group">
-                        <select class="form-control select2" id="modal-hz" style="width: 92%; margin-left: 10px;">
+                        <select class="form-control select2" id="modal-hz" style="width: 92%; margin-left: 10px;" disabled>
                           <option></option>
                             {% for Hz_item in context.Hz %}
                                 <option value="{{ Hz_item }}">{{ Hz_item }}</option>
@@ -76,7 +76,7 @@
                     <label class="col-sm-4 control-label">采样深度：&nbsp;&nbsp;</label>
                     <div class="col-sm-5">
                       <div class="form-group">
-                        <select class="form-control select2" id="modal-Sample-depth" style="width: 92%; margin-left: 10px;">
+                        <select class="form-control select2" id="modal-Sample-depth" style="width: 92%; margin-left: 10px;" disabled>
                           <option></option>
                             {% for Sample_depth_item in context.Sample_depth %}
                                 <option value="{{ Sample_depth_item }}">{{ Sample_depth_item }}</option>
@@ -124,29 +124,29 @@
             <table id="data-param" class="table table-bordered table-striped table-hover" style="width: 100%;">
                 <thead>
                     <tr>
-                        <th>名称</th>
-                        <th>网络号</th>
-                        <th>周波数</th>
-                        <th>增益</th>
-                        <th>平均次数</th>
-                        <th>Hz</th>
-                        <th>采样深度</th>
-                        <th>采样频率</th>
-                        <th>编辑参数</th>
+                        <th>名&nbsp;称&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                        <th>网&nbsp;络&nbsp;号&nbsp;&nbsp;</th>
+                        <th>周&nbsp;波&nbsp;数</th>
+                        <th>增&nbsp;益</th>
+                        <th>平&nbsp;均&nbsp;次&nbsp;数</th>
+                        <th>频&nbsp;率</th>
+                        <th>采&nbsp;样&nbsp;深&nbsp;度</th>
+                        <th>采&nbsp;样&nbsp;频&nbsp;率</th>
+                        <th>编&nbsp;辑&nbsp;参&nbsp;数</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in sensor_obj %}
                         <tr>
-                            <td><p style="width: 50px;">{{ item.alias }}</p></td>
-                            <td><p style="width: 80px;">{{ item.network_id }}</p></td>
-                            <td><p style="width: 70px;">{{ item.cHz }}</p></td>
-                            <td><p style="width: 50px;">{{ item.gain }}</p></td>
-                            <td><p style="width: 80px;">{{ item.avg_time }}</p></td>
-                            <td><p style="width: 50px;">{{ item.Hz }}</p></td>
-                            <td><p style="width: 80px;">{{ item.Sample_depth }}</p></td>
-                            <td><p style="width: 80px;">{{ item.Sample_Hz }}</p></td>
-                            <td><a href="#" data-toggle="modal" data-target="#modal-default" onclick="ShowModel(this);"><button type="button" class="btn btn-success"><p style="width: 80px;"><i class="fa fa-pencil fa-fw"></i>编辑</p></button></a></td>
+                            <td>{{ item.alias }}</td>
+                            <td>{{ item.network_id }}</td>
+                            <td>{{ item.cHz }}</td>
+                            <td>{{ item.gain }}</td>
+                            <td>{{ item.avg_time }}</td>
+                            <td>{{ item.Hz }}</td>
+                            <td>{{ item.Sample_depth }}</td>
+                            <td>{{ item.Sample_Hz }}</td>
+                            <td><a href="#" data-toggle="modal" data-target="#modal-default" onclick="ShowModel(this);"><button type="button" class="btn btn-success"><i class="fa fa-pencil fa-fw"></i>编辑</button></a></td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -190,7 +190,7 @@
           var Sample_depth = $cur_tr.children().eq(6).text();
           var Sample_hz = $cur_tr.children().eq(7).text();
 
-          $(".modal-title").html(alias + "详细信息");
+          $(".modal-title").html(alias + "参数信息");
           $("#modal-alias").val(alias);
           $("#modal-network-id").val(network_id);
           $("#modal-chz").val(cHz);
@@ -238,7 +238,7 @@
             setTimeout(function () {
                 $("#"+nid).text('');
                 window.location.reload();
-            }, 3000);
+            }, 7000);
         }
 
 

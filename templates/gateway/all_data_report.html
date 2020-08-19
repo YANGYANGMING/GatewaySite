@@ -39,27 +39,37 @@
             <table id="all-data" class="table table-bordered table-striped table-hover" style="width: 100%;">
                 <thead>
                     <tr>
-                        <th>名称</th>
-                        <th style="display: none;">id</th>
-                        <th>网络号</th>
-                        <th>时间</th>
-                        <th>电量</th>
-                        <th>温度</th>
-                        <th>厚度值</th>
-                        <th>数据详情</th>
+                        <th>名&nbsp;称&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                        <th style="display: none">id&nbsp;&nbsp;&nbsp;</th>
+                        <th>网&nbsp;络&nbsp;号&nbsp;&nbsp;</th>
+                        <th>时&nbsp;间&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                        <th>电&nbsp;量&nbsp;&nbsp;&nbsp;</th>
+                        <th>温&nbsp;度&nbsp;&nbsp;&nbsp;</th>
+                        <th>厚&nbsp;度&nbsp;值&nbsp;&nbsp;&nbsp;</th>
+                        <th>数&nbsp;据&nbsp;详&nbsp;情&nbsp;</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for row in data_obj %}
                         <tr>
-                            <td><p style="width: 50px;">{{ row.network_id__alias }}</p></td>
-                            <td style="display: none;">{{ row.id }}</td>
-                            <td><p style="width: 70px;">{{ row.network_id }}</p></td>
-                            <td><p style="width: 75px;">{{ row.time_tamp }}</p></td>
-                            <td><p style="width: 55px;">{{ row.battery }}</p></td>
-                            <td><p style="width: 50px;">{{ row.temperature }}</p></td>
-                            <td><p style="width: 70px;">{{ row.thickness }}</p></td>
-                            <td><a href="javascript:;" style="cursor: pointer;" onclick="GetData(this);"><p style="width: 80px;"><i class="fa fa-pencil"></i> 数据详情</p></a></td>
+
+                            <td>{{ row.network_id__alias }}</td>
+                            <td style="display: none">{{ row.id }}</td>
+                            <td>{{ row.network_id }}</td>
+                            <td>{{ row.time_tamp }}</td>
+                            <td>{{ row.battery }}</td>
+                            <td>{{ row.temperature }}</td>
+                            <td>{{ row.thickness }}</td>
+                            <td><a href="javascript:;" onclick="GetData(this);"><i class="fa fa-pencil"></i> 数据详情</a></td>
+
+{#                            <td><p style="width: 50px;">{{ row.network_id__alias }}</p></td>#}
+{#                            <td style="display: none;">{{ row.id }}</td>#}
+{#                            <td><p style="width: 70px;">{{ row.network_id }}</p></td>#}
+{#                            <td><p style="width: 75px;">{{ row.time_tamp }}</p></td>#}
+{#                            <td><p style="width: 55px;">{{ row.battery }}</p></td>#}
+{#                            <td><p style="width: 50px;">{{ row.temperature }}</p></td>#}
+{#                            <td><p style="width: 70px;">{{ row.thickness }}</p></td>#}
+{#                            <td><a href="javascript:;" style="cursor: pointer;" onclick="GetData(this);"><p style="width: 80px;"><i class="fa fa-pencil"></i> 数据详情</p></a></td>#}
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -114,13 +124,13 @@
                 yAxis: {
                     endOnTick: false, //对数Y轴不强制结束于标线
                     title: {
-                        text: '值'
+                        text: null
                     },
-                    plotLines: [{
-                        value: 0,
-                        width: 1,
-                        color: '#808080'
-                    }]
+                },
+                plotOptions: {
+                  series: {
+                      lineWidth: 1.5,
+                  }
                 },
                 tooltip: {
                     formatter: function () {
@@ -131,6 +141,16 @@
                 },
                 legend: {
                     enabled: false
+                },
+                lang:{
+                   contextButtonTitle:"图表导出菜单",
+                   downloadJPEG:"下载JPEG图片",
+                   downloadPDF:"下载PDF文件",
+                   downloadPNG:"下载PNG文件",
+                   downloadSVG:"下载SVG文件",
+                   printChart:"打印图表",
+                   resetZoom:"恢复缩放",
+                   resetZoomTitle:"恢复图表",
                 },
                 exporting: {
                     enabled: true
@@ -164,13 +184,13 @@
                 yAxis: {
                     endOnTick: false, //对数Y轴不强制结束于标线
                     title: {
-                        text: '值'
+                        text: null
                     },
-                    plotLines: [{
-                        value: 0,
-                        width: 1,
-                        color: '#808080'
-                    }]
+                },
+                plotOptions: {
+                  series: {
+                      lineWidth: 1.5,
+                  }
                 },
                 tooltip: {
                     followTouchMove: true,
@@ -183,8 +203,18 @@
                 legend: {
                     enabled: false
                 },
+                lang:{
+                   contextButtonTitle:"图表导出菜单",
+                   downloadJPEG:"下载JPEG图片",
+                   downloadPDF:"下载PDF文件",
+                   downloadPNG:"下载PNG文件",
+                   downloadSVG:"下载SVG文件",
+                   printChart:"打印图表",
+                   resetZoom:"恢复缩放",
+                   resetZoomTitle:"恢复图表",
+                },
                 exporting: {
-                    enabled: false
+                    enabled: true
                 },
                 series: [
                     {

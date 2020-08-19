@@ -84,11 +84,15 @@
                     type: 'category',
                    },
                 yAxis: {
-                    tickInterval: 0.1,
-                    min: 0,
+                    tickInterval: 0.2,
                     title: {
-                        text: '值'
+                        text: null
                     },
+                },
+                plotOptions: {
+                  series: {
+                      lineWidth: 1.5,
+                  }
                 },
                 legend: {
                     enabled: false
@@ -125,7 +129,8 @@
                 success:function(arg){
                     config['series'] = arg['datas'];
                     config['title']['text'] = arg['alias'];
-                    config['yAxis']['max'] = arg['yAxis_max_limit'];
+                    {#config['yAxis']['max'] = arg['thickness_avg'] + 1;#}
+                    {#config['yAxis']['min'] = arg['thickness_avg'] - 1;#}
                     $('#container').highcharts(config);
                     if(arg.length===0){
                         $('#show-thickness-msg').text('当前传感器暂无数据！');
