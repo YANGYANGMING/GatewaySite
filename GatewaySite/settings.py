@@ -123,7 +123,7 @@ USE_TZ = False
 AUTH_USER_MODEL = 'gateway.UserProfile'
 
 STATIC_URL = '/static/'
-
+# STATIC_ROOT = 'static'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
@@ -156,7 +156,7 @@ headers_dict = {
 # EMQ X SETTINGS
 MQTT_USERNAME = "ORISONIC"
 MQTT_PASSWORD = "ORISONIC2020"
-MQTT_HOST = "192.168.0.44"
+MQTT_HOST = "192.168.0.43"
 # MQTT_HOST = "47.93.190.54"
 crtPath = BASE_DIR + r"/crt_192.168.0.44"
 # crtPath = BASE_DIR + r"/crt_47.93.190.54"

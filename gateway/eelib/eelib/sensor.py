@@ -77,7 +77,13 @@ class SerialCtrl():
         cmd = str(data) + "\r\n"
         if not self.serialPort.isOpen():
             self.serialPort.open()
-        self.serialPort.write(cmd.encode('ascii'))
+        try:
+            self.serialPort.write(cmd.encode('ascii'))
+        except Exception as e:
+            print(e)
+            self.serialPort.close()
+            self.serialPort.open()
+            self.serialPort.write(cmd.encode('ascii'))
 
     def getSerialData(self, command, timeout):
         """发送命令，并读取串口返回的数据"""

@@ -18,6 +18,9 @@ from django.conf.urls import include
 from django.urls import path, re_path
 from gateway.views import account
 from django.views.generic import RedirectView
+from django.views import static ##新增
+from django.conf import settings ##新增
+from django.conf.urls import url ##新增
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,4 +30,7 @@ urlpatterns = [
     re_path(r'^$', RedirectView.as_view(url='gateway/index')),
 
     re_path(r'\S', account.page_404),
+##　以下是新增
+    # url(r'^static/(?P<path>.*)$', static.serve,
+    #     {'document_root': settings.STATIC_ROOT}, name='static'),
 ]

@@ -7,8 +7,10 @@ from PIL import Image
 
 
 check_alias_payload = {}
+test_signal_strength_result = {}
 
-class Handle_func(object):
+
+class HandleFunc(object):
 
     def __init__(self):
         pass
@@ -42,6 +44,7 @@ class Handle_func(object):
         result = views.server_get_data(payload.get('data'))
         views.log.log(result['status'], result['msg'], result.get('network_id'))
         send_gwdata_to_server(views.client, 'pub', result, headers_dict['gwdata'])
+        send_gwdata_to_server(views.client, topic, result, headers_dict['gwdata']) # 发送给MQTT websocket，用于显示给指定订阅用户界面
 
     def update_sensor(self, topic, payload):
         """
@@ -55,7 +58,8 @@ class Handle_func(object):
         views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'), payload.get('user'))
         print('response....', response)
         response['user'] = payload.get('user')
-        send_gwdata_to_server(views.client, 'pub', response, headers_dict['update_sensor'])
+        send_gwdata_to_server(views.client, 'pub', response, headers_dict['update_sensor'])  # 发送给MQTT后端服务器，用于处理数据
+        send_gwdata_to_server(views.client, topic, response, headers_dict['update_sensor'])  # 发送给MQTT websocket，用于显示给指定订阅用户界面
 
     def add_sensor(self, topic, payload):
         """
@@ -66,10 +70,12 @@ class Handle_func(object):
         """
         print('添加........')
         print('payload', payload)
+        print('topic', topic)
         response = views.receive_server_data(payload.get('data'))
         views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'))
         response['user'] = payload.get('user')
         send_gwdata_to_server(views.client, 'pub', response, headers_dict['add_sensor'])
+        send_gwdata_to_server(views.client, topic, response, headers_dict['add_sensor'])  # 发送给MQTT websocket，用于显示给指定订阅用户界面
 
     def remove_sensor(self, topic, payload):
         """
@@ -83,6 +89,7 @@ class Handle_func(object):
         views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'), payload.get('user'))
         response['user'] = payload.get('user')
         send_gwdata_to_server(views.client, 'pub', response, headers_dict['remove_sensor'])
+        send_gwdata_to_server(views.client, topic, response, headers_dict['remove_sensor'])  # 发送给MQTT websocket，用于显示给指定订阅用户界面
 
     def resume_sensor(self, topic, payload):
         """
@@ -138,9 +145,10 @@ class Handle_func(object):
         try:
             val_dict = payload['val_dict']
             network_id = payload['network_id']
-            result, header = set_sensor_params_func(network_id, val_dict)
+            result = set_sensor_params_func(network_id, val_dict)
 
-            send_gwdata_to_server(views.client, 'pub', result, header)
+            send_gwdata_to_server(views.client, 'pub', result, "set_sensor_params")
+            send_gwdata_to_server(views.client, topic, result, "set_sensor_params")  # 发送给MQTT websocket，用于显示给指定订阅用户界面
         except Exception as e:
             print(e, '设置参数失败')
 
@@ -163,6 +171,16 @@ class Handle_func(object):
         """
         global check_alias_payload
         check_alias_payload = payload
+
+    def test_signal_strength(self, topic, payload):
+        """
+        接收服务器的测试信号强度的命令
+        :param topic:
+        :param payload:
+        :return:
+        """
+        network_id = payload['network_id']
+        handle_test_signal_strength(network_id)
 
 
 class HandleImgs(object):
@@ -291,7 +309,6 @@ def set_sensor_params_func(network_id, val_dict):
     set_val_response = views.gw0.serCtrl.getSerialData(command, timeout=7)
     print('set_val_response', set_val_response.strip('\n'))
     # set_val_response = 'ok'
-    header = 'set_sensor_params'
     if set_val_response.strip('\n') == 'ok':
         update_sensor_data(val_dict)
         models.Sensor_data.objects.filter(network_id=network_id).update(**val_dict)
@@ -301,7 +318,32 @@ def set_sensor_params_func(network_id, val_dict):
 
     views.log.log(result['status'], result['msg'], network_id)
 
-    return result, header
+    return result
+
+
+def handle_test_signal_strength(network_id):
+    """
+    测试信号强度
+    :param network_id:
+    :return:
+    """
+    command = "get 65 " + network_id.rsplit('.', 1)[1]
+    online_of_sensor_signal_strength_response = views.gw0.serCtrl.getSerialData(command, timeout=6)
+    # online_of_sensor_signal_strength_response = 'ok, 40'
+    response_msg = online_of_sensor_signal_strength_response.strip('\n').split(',')[0]
+    if response_msg == 'ok':
+        models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=1)
+        response_strength = online_of_sensor_signal_strength_response.strip('\n').split(',')[1]
+        print('test_signal_strength_response_strength', response_strength)
+        msg_of_signal_strength = judgment_level_of_test_signal_strength(response_strength)
+        result = {'status': True, 'msg': msg_of_signal_strength}
+    else:
+        models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=0)
+        msg_of_signal_strength = judgment_level_of_test_signal_strength(-1)
+        result = {'status': False, 'msg': msg_of_signal_strength}
+
+    global test_signal_strength_result
+    test_signal_strength_result = result
 
 
 def send_gwdata_to_server(client, topic, result, header):
@@ -327,24 +369,20 @@ def check_online_of_sensor_status():
     sensor_obj_list = models.Sensor_data.objects.filter(delete_status=0)
     # 准备发送的命令字符串  command = "get 65 1"
     for sensor_obj in sensor_obj_list.values('network_id', 'id'):
-        resend_num = 1
         try:
             network_id = sensor_obj['network_id']
             command = "get 65 " + network_id.rsplit('.', 1)[1]
             print('command', command)
-            while resend_num < 3:  # 未收到数据后重发
-                print(time.time())
-                online_of_sensor_status_response = views.gw0.serCtrl.getSerialData(command, timeout=6)
-                response_msg = online_of_sensor_status_response.strip('\n').split(',')[0]
-                print('online_of_sensor_status_response_msg', response_msg)
-                if response_msg == 'ok':
-                    models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=1)
-                    response_strength = online_of_sensor_status_response.strip('\n').split(',')[1]
-                    print('online_of_sensor_status_response_strength', response_strength)
-                    break
-                else:
-                    models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=0)
-                    resend_num += 1
+            online_of_sensor_status_response = views.gw0.serCtrl.getSerialData(command, timeout=6)
+            response_msg = online_of_sensor_status_response.strip('\n').split(',')[0]
+            print('online_of_sensor_status_response_msg', response_msg)
+            if response_msg == 'ok':
+                models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=1)
+                response_strength = online_of_sensor_status_response.strip('\n').split(',')[1]
+                print('online_of_sensor_status_response_strength', response_strength)
+                break
+            else:
+                models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=0)
 
         except Exception as e:
             print(e, '检查节点失败')
@@ -508,6 +546,8 @@ def show_selected_permissions(request, Group, nid):
     # 当前被选中要修改的用户所拥有的角色权限和被手动分配的权限的总和
     selected_user_permissions_list = [item['permissions__id'] for item in selected_user_role_permissions_list] + \
                                      [item['id'] for item in selected_user_manual_assign_permissions_list]
+    if not selected_user_permissions_list[0]:  # 如果没有设置权限，默认为-1，防止前端console显示出错
+        selected_user_permissions_list[0] = -1
     selected_user_permissions_list = list_dict_duplicate_removal(selected_user_permissions_list)
     return cur_user_all_permissions_list, selected_user_permissions_list
 
@@ -520,13 +560,14 @@ def judgment_level_of_test_signal_strength(response_strength):
     try:
         response_strength = int(response_strength)
     except Exception as e:
-        print(e)
+        response_strength = -1
+        print("-1====", e)
     if 0 < response_strength < 20:
-        msg_of_signal_strength = '测试信号强度 <b style="color: green">强</b>'
+        msg_of_signal_strength = '测试信号强度 <b style="color: red">弱</b>'
     elif 20 <= response_strength < 50:
         msg_of_signal_strength = '测试信号强度 <b style="color: orange">中</b>'
     elif response_strength >= 50:
-        msg_of_signal_strength = '测试信号强度 <b style="color: red">弱</b>'
+        msg_of_signal_strength = '测试信号强度 <b style="color: green">强</b>'
     else:
         msg_of_signal_strength = '测试信号强度 <b style="color: red">失联</b>'
 
@@ -544,7 +585,7 @@ def list_dict_duplicate_removal(distinct_list):
 
 
 ##########################################################
-handle_func = Handle_func()
+handle_func = HandleFunc()
 
 
 def handle_recv_server(topic, payload):

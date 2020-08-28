@@ -36,7 +36,8 @@ class Gateway(GatewayCtrl):
     def localCalThickness(self, svrdata, vel_mps):
         thick_mm = -19
         if(svrdata["data_len"] == 2048):
-            thick_mm = calThickness(data=svrdata['data'], gain_db=svrdata['gain'], vel_mps=vel_mps)
+            # thick_mm = calThickness(data=svrdata['data'], gain_db=svrdata['gain'], vel_mps=vel_mps)
+            thick_mm = calThickness(data=svrdata['data'], gain_db=60, vel_mps=vel_mps)
         return thick_mm
 
     def sendData2Server(self, network_id):

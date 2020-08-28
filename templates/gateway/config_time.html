@@ -335,10 +335,10 @@
             success:function (arg) {
                 if(arg.status){
                     $(".icon-status").css('color', '#8f8f8f');
-                    $("#run-status").text('已暂停');
+                    $("#run-status").text('已暂停').css('color', '#8f8f8f');
                     $('#btn-status').text('暂停').addClass('btn-warning');
                     SaveStatus();
-                    window.location.reload();
+                    //window.location.reload();
                 }
             }
         })

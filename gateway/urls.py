@@ -8,14 +8,16 @@ urlpatterns = [
     re_path(r'^thickness-report$', views.thickness_report, name="thickness_report"),
     re_path(r'^edit-sensor-params$', views.edit_sensor_params, name="edit_sensor_params"),
     re_path(r'^sensor-manage$', views.sensor_manage, name="sensor_manage"),
+    re_path(r'^set-gateway$', views.set_gateway_page, name="set_gateway_page"),
+    re_path(r'^add-sensor/(.*)$', views.add_sensor_page, name="add_sensor_page"),
     re_path(r'^user-add$', account.user_add, name="user_add"),
     re_path(r'^user-edit/(\d+)$', account.user_edit, name="user_edit"),
     re_path(r'^user-delete/(\d+)$', account.user_delete, name="user_delete"),
     re_path(r'^user-list$', account.user_list, name="user_list"),
-    re_path(r'^add-sensor/(.*)$', views.add_sensor_page, name="add_sensor_page"),
-    re_path(r'^set-gateway$', views.set_gateway_page, name="set_gateway_page"),
     re_path(r'^user-profile$', account.user_profile),
     re_path(r'^change-pwd$', account.change_pwd),
+
+    re_path(r'^get-user-permissions-json$', account.get_user_permissions_json),
 
     re_path(r'^data-json-report-(\d+)$', views.data_json_report),
     re_path(r'^thickness-json-report$', views.thickness_json_report),

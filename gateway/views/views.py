@@ -88,8 +88,10 @@ def send_network_id_to_server_queue(network_id, true_header, val_dict=None, rece
               'true_header': true_header, 'val_dict': val_dict, 'receive_data': receive_data}
     print('send_network_id_to_server_queue_result', result)
     if gw_status:  # 如果连接服务器成功，把network_id_list发送到服务器队列
+        print("把network_id_list发送到服务器队列")
         handle_func.send_gwdata_to_server(client, 'pub', result, header)
     else:  # 如果连接服务器失败，把network_id_list发送到网关队列
+        print("把network_id_list发送到网关队列")
         for network_id_item in network_id_list:
             gw_queue.put((level, json.dumps({'network_id': network_id_item,
                                              'true_header': true_header,
@@ -217,27 +219,6 @@ except Exception as e:
     heart_timeout_sche.shutdown()
 
 
-# def pause_all_sensor():
-#     """轮询or手动触发开始，暂停所有传感器"""
-#     for job_obj in scheduler.get_jobs():
-#         if job_obj.next_run_time:
-#             job_obj.pause()
-#         else:
-#             global Suspended_job_id_list  # 暂停前找出已经暂停了的job_id
-#             Suspended_job_id_list.append(job_obj.id.split(' ')[1])
-#     print('Suspended_job_id_list1', Suspended_job_id_list)
-#
-#
-# def resume_all_sensor():
-#     """轮询or手动触发结束，恢复所有传感器"""
-#     print('Suspended_job_id_list2', Suspended_job_id_list)
-#     for job_obj in scheduler.get_jobs():
-#         # 之前已经暂停的传感器不会恢复
-#         if job_obj.id.split(' ')[1] not in Suspended_job_id_list:
-#             job_obj.resume()
-#             # print('job_obj_resume', job_obj)
-
-
 @login_required
 def index(request):
     """
@@ -246,8 +227,10 @@ def index(request):
     :return:
     """
 
-    latest_data = models.GWData.objects.values('id', 'network_id', 'network_id__alias', 'battery', 'temperature', 'thickness').order_by('-id')[:5]
+    latest_data = models.GWData.objects.values('id', 'network_id', 'network_id__alias', 'battery', 'temperature', 'thickness').order_by('-id')[:10]
     sensor_nums = models.Sensor_data.objects.all().count()
+    all_sensor_list = models.Sensor_data.objects.values('network_id', 'alias', 'sensor_run_status', 'sensor_online_status').filter(delete_status=0)
+    print('all_sensor_list', all_sensor_list)
 
     return render(request, 'index.html', locals())
 
@@ -280,7 +263,7 @@ def config_time(request):
 
 
 @login_required
-@permissions.check_permission
+# @permissions.check_permission
 def all_data_report(request):
     """
     全部数据
@@ -294,7 +277,7 @@ def all_data_report(request):
 
 
 @login_required
-@permissions.check_permission
+# @permissions.check_permission
 def thickness_report(request):
     """
     单个传感器厚度曲线
@@ -346,7 +329,6 @@ def sensor_manage(request):
         for ii in sche_obj:
             if sensor_item.network_id == ii.id.split(' ')[1]:
                 sensor_item.start_date = str(ii.next_run_time).split('.')[0]
-                print('next_run_time', str(ii.next_run_time).split('.')[0])
         received_time_data = models.Sensor_data.objects.filter(sensor_id=sensor_item.sensor_id).\
             values('sensor_id', 'received_time_data')
 
@@ -369,7 +351,7 @@ def set_timing_time(request):
             time_dict = handle_func.handle_data(arr)  # 处理数据
             print('time_dict', time_dict)
             models.Set_Time.objects.filter(id=1).update(**time_dict)
-            start_Timing_time()
+            start_Timing_time(request)
             auto_Timing_time()
             ret = {'status': True, 'message': '定时时间设置成功'}
             global TimingStatus
@@ -404,12 +386,13 @@ def save_status(request):
 
 
 @login_required
-def start_Timing_time(reset=False):
+def start_Timing_time(request, reset=False):
     """
     设置/更新定时时间
     :param reset: 重置按钮标志位，如果为true，把定时模式暂停
     :return:
     """
+    print('aaaaaaaa')
     st_temp = models.Set_Time.objects.filter(id=1).values('days', 'hours', 'minutes')[0]
     for k, v in st_temp.items():
         st_temp[k] = int(v)
@@ -479,7 +462,7 @@ def reset_Timing_time(request):
     ret = {'status': False, 'message': None}
     try:
         models.Set_Time.objects.filter(id=1).update(days='1', hours='0', minutes='0')
-        start_Timing_time(reset=True)
+        start_Timing_time(request, reset=True)
         scheduler.pause_job('interval_time 0.0.0.0')
         ret['status'] = True
         ret['message'] = 'success'
@@ -670,28 +653,40 @@ def test_signal_strength(request, network_id):
     """
     测试信号强度
     :param request:
+    :param network_id:
     :return:
     """
-    result = {'status': False, 'msg': ''}
-    resend_num = 0
-    command = "get 65 " + network_id.rsplit('.', 1)[1]
-    while resend_num < 2:  # 未收到数据后重发
-        online_of_sensor_signal_strength_response = gw0.serCtrl.getSerialData(command, timeout=6)
-        response_msg = online_of_sensor_signal_strength_response.strip('\n').split(',')[0]
-        if response_msg == 'ok':
-            models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=1)
-            response_strength = online_of_sensor_signal_strength_response.strip('\n').split(',')[1]
-            print('test_signal_strength_response_strength', response_strength)
-            msg_of_signal_strength = handle_func.judgment_level_of_test_signal_strength(response_strength)
-            result = {'status': True, 'msg': msg_of_signal_strength}
-            break
-        else:
-            models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=0)
-            resend_num += 1
-            msg_of_signal_strength = handle_func.judgment_level_of_test_signal_strength(-1)
-            result = {'status': False, 'msg': msg_of_signal_strength}
+    send_network_id_to_server_queue(network_id, "test_signal_strength", level=1)
 
-    return HttpResponse(json.dumps(result))
+    test_signal_strength_result = {'status': False, 'msg': ''}
+    start_time = time.time()
+    while (time.time() - start_time) < 70:  # 防止此时正在取数，设70秒最大值
+        time.sleep(0.5)
+        if handle_func.test_signal_strength_result:
+            test_signal_strength_result = handle_func.test_signal_strength_result
+            break
+
+    handle_func.test_signal_strength_result = {}
+
+    # resend_num = 0
+    # command = "get 65 " + network_id.rsplit('.', 1)[1]
+    # while resend_num < 2:  # 未收到数据后重发
+    #     online_of_sensor_signal_strength_response = gw0.serCtrl.getSerialData(command, timeout=6)
+    #     response_msg = online_of_sensor_signal_strength_response.strip('\n').split(',')[0]
+    #     if response_msg == 'ok':
+    #         models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=1)
+    #         response_strength = online_of_sensor_signal_strength_response.strip('\n').split(',')[1]
+    #         print('test_signal_strength_response_strength', response_strength)
+    #         msg_of_signal_strength = handle_func.judgment_level_of_test_signal_strength(response_strength)
+    #         result = {'status': True, 'msg': msg_of_signal_strength}
+    #         break
+    #     else:
+    #         models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=0)
+    #         resend_num += 1
+    #         msg_of_signal_strength = handle_func.judgment_level_of_test_signal_strength(-1)
+    #         result = {'status': False, 'msg': msg_of_signal_strength}
+
+    return HttpResponse(json.dumps(test_signal_strength_result))
 
 
 @login_required
@@ -789,7 +784,6 @@ def receive_gw_data(request):
         elif choice == 'add':
             receive_data["choice"] = "add"
             receive_data["location_img_json"] = location_img_json
-
             send_network_id_to_server_queue(network_id, 'add_sensor', receive_data=receive_data, level=2)
 
         # 删除
@@ -919,7 +913,9 @@ def check_alias_to_update_sensor(request):
     :param request:
     :return:
     """
-    if request.method == 'POST':
+    ret = {'check_alias_payload': '', 'msg': ''}
+    gw_status = models.Gateway.objects.values('Enterprise', 'gw_status').first()['gw_status']
+    if request.method == 'POST' and gw_status:
         alias = request.POST.get('alias')
         network_id = request.POST.get('network_id')
         result = {'alias': alias, 'network_id': network_id}
@@ -938,7 +934,7 @@ def check_alias_to_update_sensor(request):
                 break
         handle_func.check_alias_payload = {}
 
-        return HttpResponse(json.dumps(ret))
+    return HttpResponse(json.dumps(ret))
 
 
 def server_get_data(network_id):
@@ -981,6 +977,10 @@ def gw_get_data_func():
         elif true_header == "set_sensor_params":
             val_dict = gw_queue_1.get('val_dict')
             handle_func.set_sensor_params_func(network_id, val_dict)
+        elif true_header == "test_signal_strength":
+            network_id = gw_queue_1.get('network_id')
+            handle_func.handle_test_signal_strength(network_id)
+            print("test_signal_strength.......................................", network_id)
 
 
 # 网关取数队列线程

@@ -85,7 +85,7 @@
                   <a href="/gateway/user-profile" class="btn btn-default btn-flat">Profile</a>
                 </div>
                 <div class="pull-right">
-                  <a href="logout" class="btn btn-default btn-flat">Sign out</a>
+                  <a href="{% url 'logout' %}" class="btn btn-default btn-flat">Sign out</a>
                 </div>
               </li>
             </ul>
@@ -147,9 +147,9 @@
                   <a href="/gateway/config-time">
                       <div class="small-box bg-aqua">
                         <div class="inner">
-                          <h4>设置调试时间</h4>
+                          <h4>调试</h4>
 
-                          <p>Set debugging time</p>
+                          <p>Debugging</p>
                         </div>
                         <div class="icon">
                           <i class="ion ion-gear-b"></i>
@@ -215,7 +215,7 @@
               <!-- Main row -->
               <div class="row">
                 <!-- Left col -->
-                <section class="col-lg-7 connectedSortable">
+                <section class="col-lg-6 connectedSortable">
 
                   <div class="row">
                       <div class="col-xs-12">
@@ -229,7 +229,7 @@
                               </div>
                             </div>
                             <!-- /.box-header -->
-                            <div class="box-body" style="overflow: auto;">
+                            <div class="box-body" style="overflow: auto; height: 400px">
                               <table id="example2" class="table table-bordered table-hover">
                                 <thead>
                                     <tr>
@@ -262,6 +262,56 @@
                           <!-- /.box -->
                       </div>
                   <!-- /.col -->
+                  </div>
+
+                </section>
+                <section class="col-lg-6 connectedSortable">
+
+                  <!-- 传感器状态 -->
+                  <div class="box box-solid box-success">
+                    <div class="box-header with-border">
+                      <h3 class="box-title">传感器状态</h3>
+
+                      <div class="box-tools pull-right">
+                        <button type="button" class="btn btn-box-tool" data-widget="collapse"><i class="fa fa-minus"></i>
+                        </button>
+                        <button type="button" class="btn btn-box-tool" data-widget="remove"><i class="fa fa-times"></i></button>
+                      </div>
+                    </div>
+                    <div class="box-body" style="overflow-x: auto; height: 400px">
+                        <table id="example1" class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>网络号</th>
+                                    <th>名称</th>
+                                    <th>运行状态</th>
+                                    <th>在线状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in all_sensor_list %}
+                                    <tr>
+                                        <td>{{ row.network_id }}</td>
+                                        <td>{{ row.alias }}</td>
+                                        <td>
+                                            {% if row.sensor_run_status == 1 %}
+                                                <p style="color: green; font-weight: bolder; font-size: larger;">开通</p>
+                                            {% elif row.sensor_run_status == 0 %}
+                                                <p style="color: red; font-weight: bolder; font-size: larger;">禁止</p>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if row.sensor_online_status == 1 %}
+                                                <p style="color: green; font-weight: bolder; font-size: larger;">在线</p>
+                                            {% elif row.sensor_online_status == 0 %}
+                                                <p style="color: red; font-weight: bolder; font-size: larger;">离线</p>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                      </div>
                   </div>
 
                 </section>

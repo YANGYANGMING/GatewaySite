@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.decorators import login_required
@@ -10,6 +10,7 @@ from gateway import models
 from gateway import permissions
 from gateway.views.views import log
 from utils import handle_func
+import json
 
 
 @csrf_exempt
@@ -62,8 +63,21 @@ def user_add(request):
     """
     user_obj = models.UserProfile.objects.get(id=request.user.id)
     if request.method == "GET":
-        roles_obj = models.Role.objects.values('id', 'name').all().exclude(id__in=[1, 5])
-        groups_obj = Group.objects.values('id', 'name').all().exclude(id=1)
+        roles_obj = models.Role.objects.values('id', 'name').all().exclude(name__in=['管理员'])
+        groups_obj = Group.objects.values('id', 'name').all().exclude(name__in=['管理员权限'])
+
+        cur_user_role_permissions_list = list(
+            Group.objects.values('permissions__id', 'permissions__name').filter(user=request.user.id))
+        cur_user_manual_assign_permissions_list = models.UserProfile.objects.get(
+            id=request.user.id).user_permissions.values('id', 'name').all()
+        cur_user_all_permissions_list = []
+        for item in cur_user_manual_assign_permissions_list:
+            item_temp = {}
+            item_temp['permissions__id'] = item['id']
+            item_temp['permissions__name'] = item['name']
+            cur_user_all_permissions_list.append(item_temp)
+        # 当前登录用户所拥有的角色权限和被手动分配的权限的总和
+        cur_user_all_permissions_list += cur_user_role_permissions_list
 
         cur_role_list = [item['name'] for item in
                          models.UserProfile.objects.get(id=request.user.id).role.values('name')]
@@ -76,13 +90,14 @@ def user_add(request):
         password = make_password(request.POST.get('password'))
         role = request.POST.getlist('role')
         groups = request.POST.getlist('groups')
-        # user_permissions = request.POST.getlist('user_permissions')
+        user_permissions = request.POST.getlist('user_permissions')
         is_active = False if not request.POST.get('is_active') else True
         # create user
         try:
             create_user_obj = models.UserProfile.objects.create(name=name, password=password, is_active=is_active)
             create_user_obj.role.add(*role)
             create_user_obj.groups.add(*groups)
+            create_user_obj.user_permissions.add(*user_permissions)
             result = {'status': True, 'msg': '增加用户成功'}
         except Exception as e:
             print(e)
@@ -106,8 +121,8 @@ def user_edit(request, nid):
         # 在编辑用户页面显示选中的用户权限
         cur_user_all_permissions_list, selected_user_permissions_list = handle_func.show_selected_permissions(request, Group, nid)
 
-        roles_obj = models.Role.objects.values('id', 'name').exclude(id__in=[1, 5])
-        groups_obj = Group.objects.values('id', 'name').exclude(id=1)
+        roles_obj = models.Role.objects.values('id', 'name').exclude(name__in=['管理员'])
+        groups_obj = Group.objects.values('id', 'name').exclude(name__in=['管理员权限'])
         cur_name = user_obj.values('name')[0]['name']
         cur_role = user_obj[0].role.values('id').all()
         role_list = [item['id'] for item in cur_role]
@@ -222,6 +237,22 @@ def change_pwd(request):
     return render(request, 'gateway/change_pwd.html', locals())
 
 
+@csrf_exempt
+def get_user_permissions_json(request):
+    """
+    获取用户选中权限组的权限
+    :param request:
+    :return:
+    """
+    group_list = json.loads(request.POST.get('groups_list'))
+    print(group_list)
+    all_permissions_list = []
+    for item in group_list:
+        group_obj = Group.objects.get(id=item)
+        permissions_list = [i['id'] for i in group_obj.permissions.values('id')]
+        all_permissions_list += permissions_list
+
+    return HttpResponse(json.dumps(all_permissions_list))
 
 
 

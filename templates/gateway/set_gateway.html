@@ -119,13 +119,18 @@
         $(function () {
             $('.select2').select2();
 
-            InitGetGWntid();
-
             ShowOriginData()
         });
 
-        // 初始化页面获取网关网络号
-        function InitGetGWntid() {
+        // 通过判断条件来获取网关网络号
+        if ("{{ gateway_obj }}" === "None"){
+            GetGWntid();
+        }else{
+            $('#network_id').val("{{ gateway_obj.network_id }}");
+        }
+
+        // 获取网关网络号
+        function GetGWntid() {
             $('#network_id').val('正在获取网关网络号，请稍等...').css('color', 'green');
             $.ajax({
                     url: '/gateway/get-gateway-networkid',
