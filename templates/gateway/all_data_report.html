@@ -1,6 +1,15 @@
 {% extends 'index.html' %}
 {% load staticfiles %}
 
+{% block css %}
+    <style>
+        /* 隐藏id列 */
+        .hiddenCol {
+            display: none;
+        }
+    </style>
+{% endblock %}
+
 {% block main_content %}
 
     <!-- Main content -->
@@ -36,43 +45,19 @@
         </div>
             <!-- /.box-header -->
         <div class="box-body">
-            <table id="all-data" class="table table-bordered table-striped table-hover" style="width: 100%;">
+            <table id="example1" class="table table-bordered table-striped table-hover" style="width: 100%;">
                 <thead>
                     <tr>
+                        <th>ID&nbsp;&nbsp;&nbsp;</th>
                         <th>名&nbsp;称&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
-                        <th style="display: none">id&nbsp;&nbsp;&nbsp;</th>
                         <th>网&nbsp;络&nbsp;号&nbsp;&nbsp;</th>
-                        <th>时&nbsp;间&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
+                        <th>时&nbsp;间&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
                         <th>电&nbsp;量&nbsp;&nbsp;&nbsp;</th>
                         <th>温&nbsp;度&nbsp;&nbsp;&nbsp;</th>
                         <th>厚&nbsp;度&nbsp;值&nbsp;&nbsp;&nbsp;</th>
-                        <th>数&nbsp;据&nbsp;详&nbsp;情&nbsp;</th>
+                        <th>操&nbsp;作&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</th>
                     </tr>
                 </thead>
-                <tbody>
-                    {% for row in data_obj %}
-                        <tr>
-
-                            <td>{{ row.network_id__alias }}</td>
-                            <td style="display: none">{{ row.id }}</td>
-                            <td>{{ row.network_id }}</td>
-                            <td>{{ row.time_tamp }}</td>
-                            <td>{{ row.battery }}</td>
-                            <td>{{ row.temperature }}</td>
-                            <td>{{ row.thickness }}</td>
-                            <td><a href="javascript:;" onclick="GetData(this);"><i class="fa fa-pencil"></i> 数据详情</a></td>
-
-{#                            <td><p style="width: 50px;">{{ row.network_id__alias }}</p></td>#}
-{#                            <td style="display: none;">{{ row.id }}</td>#}
-{#                            <td><p style="width: 70px;">{{ row.network_id }}</p></td>#}
-{#                            <td><p style="width: 75px;">{{ row.time_tamp }}</p></td>#}
-{#                            <td><p style="width: 55px;">{{ row.battery }}</p></td>#}
-{#                            <td><p style="width: 50px;">{{ row.temperature }}</p></td>#}
-{#                            <td><p style="width: 70px;">{{ row.thickness }}</p></td>#}
-{#                            <td><a href="javascript:;" style="cursor: pointer;" onclick="GetData(this);"><p style="width: 80px;"><i class="fa fa-pencil"></i> 数据详情</p></a></td>#}
-                        </tr>
-                    {% endfor %}
-                </tbody>
             </table>
         </div>
         <!-- /.row -->
@@ -90,16 +75,45 @@
     <script>
 
         $(function () {
-          initChart();
+          {#initChart();#}
 
-        $('#all-data').DataTable({
-            order: [[ 3, "desc" ]],  // 初始化倒序排列
-            scrollX: true,          // 固定列
-            fixedColumns: {
-                    leftColumns: 1  // 固定第1列
-                },
+            $('#example1').DataTable({
+                order: [[ 3, "desc" ]],  // 初始化倒序排列
+                //scrollY: "500px",       // 固定行（header）
+                scrollX: true,          // 固定列
+                fixedColumns: {
+                        leftColumns: 2  // 固定第1列
+                    },
+                "paging": true,
+                "searching": true,
+                "processing": true,
+                "serverSide": true,
+                {#"renderer": "bootstrap",//渲染样式：Bootstrap和jquery-ui#}
+                "pagingType": "simple_numbers",//分页样式：simple,simple_numbers,full,full_numbers
+                "autoWidth": true,
+                {#"stateSave": true,//保持翻页状态，和comTable.fnDraw(false);结合使用#}
+                "ajax": {
+                    "url": "/gateway/all-data-report",
+                    "type": "post",
+                 },
+                "columns": [          //若返回的data為字典，需要設置此屬性
+                   { "data": "id", "sClass":"hiddenCol"},
+                   { "data": "network_id__alias" },
+                   { "data": "network_id" },
+                   { "data": "time_tamp" },
+                   { "data": "battery" },
+                   { "data": "temperature" },
+                   { "data": "thickness" },
+                   { "data": "operation" },
+                ],
+                "columnDefs": [
+                    {
+                    "targets": 7,
+                    "orderable": false
+                    },
+                ],
 
-        });
+             });
 
         });
 
@@ -225,7 +239,7 @@
                 ]
             };
             // 数据库中获取 serie
-            var nid = $(ths).parent().parent().children().eq(1).text();
+            var nid = $(ths).parent().parent().children().eq(0).text();
             $.ajax({
                 url: '/gateway/data-json-report-'+nid,
                 type:'GET',

@@ -33,12 +33,38 @@ class Gateway(GatewayCtrl):
         self.serCtrl = SerialCtrl(gser)
         self.delete_data = Delete_data()
 
-    def localCalThickness(self, svrdata, vel_mps):
+    def localCalThickness(self, svrdata, Sound_V):
+        """
+        计算厚度值
+        :param svrdata:
+        :param Sound_V:
+        :return:
+        """
         thick_mm = -19
         if(svrdata["data_len"] == 2048):
-            # thick_mm = calThickness(data=svrdata['data'], gain_db=svrdata['gain'], vel_mps=vel_mps)
-            thick_mm = calThickness(data=svrdata['data'], gain_db=60, vel_mps=vel_mps)
+            # thick_mm = calThickness(data=svrdata['data'], gain_db=svrdata['gain'], Sound_V=Sound_V)
+            thick_mm, Sound_T = calThickness(data=svrdata['data'], gain_db=60, Sound_V=Sound_V)
         return thick_mm
+
+    def handle_deviation_data(self, data):
+        """
+        处理数据偏滞
+        :param data:
+        :return:
+        """
+        if len(data) == 2048:
+            sum_data = sum(data)
+            average = sum_data // len(data)
+            difference = average - 2048
+            print('difference', difference)
+            new_data = []
+            for item in data:
+                if item - difference > 0:
+                    new_data.append(item - difference)
+                else:
+                    new_data.append(0)
+            return new_data
+        return data
 
     def sendData2Server(self, network_id):
         """获取发送给服务器的网关数据"""
@@ -56,18 +82,25 @@ class Gateway(GatewayCtrl):
             ret.status = True
             gwData = snrdata.cvrt2gwData()
             # print(gwData)
+            # 处理偏滞
+            processed_data = self.handle_deviation_data(gwData['data'])
+            gwData['data'] = processed_data
             # 把gwData['time_tamp']转换成结构化时间，为从数据库取数比较做准备
             localTime = time.localtime(gwData['time_tamp'])
             strTime = time.strftime("%Y-%m-%d %H:%M:%S", localTime)
             gwData['time_tamp'] = strTime
-
             # 转换network_id
             network_id = handle_func.str_dec_hex(gwData['network_id'])
             material_id = models.Sensor_data.objects.values('material').get(network_id=network_id)['material']
             # 取出该材料的声速
-            sound_V = models.Material.objects.values('sound_V').get(id=material_id)['sound_V']
+            Material_obj = models.Material.objects.values('sound_V', 'temperature_co').get(id=material_id)
+            sound_V = Material_obj['sound_V']
+            temperature_co = Material_obj['temperature_co']
+            temperature = gwData['temperature']
+            true_sound_V = sound_V - ((temperature - 25) * temperature_co)
+            print('true_sound_V', true_sound_V)
             # 计算厚度值，并把厚度写入网关数据中
-            thickness = self.localCalThickness(svrdata=gwData, vel_mps=sound_V)
+            thickness = self.localCalThickness(svrdata=gwData, Sound_V=true_sound_V)
             gwData['thickness'] = thickness
             sensor_data_obj = models.Sensor_data.objects.filter(network_id=network_id)
             gwData['network_id'] = sensor_data_obj[0]

@@ -7,7 +7,7 @@ from .message import *
 class EMATData():
     def __init__(self):
         self.length = 0  # 2Bytes
-        self.res1 = 0  # 2Bytes
+        self.temperate = 0  # 2Bytes
         self.res2 = 0  # 1Bytes
         self.gain = 0  # 1Bytes
         self.ADSampleDiv = 0  # 1Bytes
@@ -33,7 +33,7 @@ class SensorData(EMATData):
                 gwData["sensor_id"] = str(self.sensorID)
                 gwData["network_id"] = str(self.networkID)
                 gwData["time_tamp"] = time.time()
-                gwData["temperature"] = self.res1
+                gwData["temperature"] = self.temperate
                 gwData["gain"] = self.gain
                 gwData["battery"] = self.Battery
                 gwData["data_len"] = len(self.data)
@@ -106,10 +106,10 @@ class SerialCtrl():
         """串口数据转换成传感器数据"""
         snrdata = SensorData()
 
-        tmp = serdata.split(";")
+        serdata_tmp = serdata.split(";")
         aa = []
-        for i in range(0, len(tmp) - 1):
-            bb = tmp[i].split("=")
+        for i in range(0, len(serdata_tmp) - 1):
+            bb = serdata_tmp[i].split("=")
             aa.append(bb)
         buff = dict(aa)
         # print('buff', buff)
@@ -118,7 +118,7 @@ class SerialCtrl():
         if (buff != {}):
             snrdata.sensorID = int(buff.get('sensorID', 0))
             snrdata.length = int(buff.get('length', 0))
-            snrdata.res1 = int(buff.get('res1', 0))
+            snrdata.temperate = int(buff.get('temperate', 0))
             snrdata.res2 = int(buff.get('res2', 0))
             snrdata.gain = int(buff.get('gain', 0))
             snrdata.ADSampleDiv = int(buff.get('ADSampleDiv', 0))

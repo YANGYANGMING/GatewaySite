@@ -10,6 +10,8 @@ urlpatterns = [
     re_path(r'^sensor-manage$', views.sensor_manage, name="sensor_manage"),
     re_path(r'^set-gateway$', views.set_gateway_page, name="set_gateway_page"),
     re_path(r'^add-sensor/(.*)$', views.add_sensor_page, name="add_sensor_page"),
+    re_path(r'^system-settings$', views.system_settings, name="system_settings"),
+    re_path(r'^delete-gateway/(.*)$', views.delete_gateway, name="delete_gateway"),
     re_path(r'^user-add$', account.user_add, name="user_add"),
     re_path(r'^user-edit/(\d+)$', account.user_edit, name="user_edit"),
     re_path(r'^user-delete/(\d+)$', account.user_delete, name="user_delete"),
@@ -33,11 +35,14 @@ urlpatterns = [
     re_path(r'^edit-sensor/(\d+)$', views.edit_sensor, name="edit_sensor"),
     re_path(r'^edit-sensor-alarm-msg/(\d+)$', views.edit_sensor_alarm_msg, name="edit_sensor_alarm_msg"),
     re_path(r'^get-gateway-networkid$', views.get_gateway_networkid),
+    re_path(r'^set-gateway-networkid$', views.set_gateway_networkid),
     re_path(r'^test-signal-strength/(.*)$', views.test_signal_strength),
     re_path(r'^set-gateway-json$', views.set_gateway_json, name="set_gateway_json"),
     re_path(r'^judge-username-exist-json$', views.judge_username_exist_json),
 
     re_path(r'^show-soundV-json$', views.show_soundV_json),
+    re_path(r'^CAL-Sound-T-json$', views.CAL_Sound_T_json),
+    re_path(r'^CAL-Sound-V-json$', views.CAL_Sound_V_json),
 
     re_path(r'^refresh-gw-status$', views.refresh_gw_status),
 
@@ -45,7 +50,11 @@ urlpatterns = [
 
     re_path(r'^manual-get/(.*)$', views.manual_get, name="manual_get"),
 
-    re_path(r'^check-alias-to-update-sensor$', views.check_alias_to_update_sensor),
+    re_path(r'^check-sensor-params-is-exists$', views.check_sensor_params_is_exists),
+    re_path(r'^check-GW-alias$', views.check_GW_alias),
+
+    re_path(r'^control-upload-data-to-administration$', views.control_upload_data_to_administration),
+    re_path(r'^control-upload-data-to-local-server$', views.control_upload_data_to_local_server),
 
 
 ]

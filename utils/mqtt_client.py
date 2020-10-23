@@ -16,24 +16,26 @@ class MQTT_Client(object):
         self.client.on_message = self.on_message
         self.client.on_subscribe = self.on_subscribe
         # self.client.on_log = self.on_log
-        self.client.tls_set(ca_certs=settings.ca_certs,
-                            certfile=settings.certfile,
-                            keyfile=settings.keyfile,
-                            )
-        self.client.tls_insecure_set(True)
-        self.client.connect(settings.MQTT_HOST, 8883, 30)
-        # self.client.connect(settings.MQTT_HOST, 1883, 30)
+        # self.client.tls_set(ca_certs=settings.ca_certs,
+        #                     certfile=settings.certfile,
+        #                     keyfile=settings.keyfile,
+        #                     )
+        # self.client.tls_insecure_set(True)
+        # self.client.connect(settings.MQTT_HOST, 8883, 30)
+        self.client.connect(settings.MQTT_HOST, 1883, 30)
         self.client.loop_start()
 
     # 在连接成功时的 callback，打印 result code
     def on_connect(self, client, userdata, flags, rc):
         print("Connected with result code " + str(rc))
         Logger().log(True, 'Connection Successful')
-        topic = models.Gateway.objects.values('network_id')[0]['network_id']
-        self.client.subscribe([('pub', 2), (topic, 2)])
-        header = 'connect_status'
-        result = {'status': True, 'gw_nework_id': topic, 'msg': 'Connection Successful'}
-        handle_func.send_gwdata_to_server(client, 'pub', result, header)
+        self.client.subscribe(('pub', 2))
+        if models.Gateway.objects.exists():
+            topic = models.Gateway.objects.values('network_id')[0]['network_id']
+            self.client.subscribe((topic, 2))
+            header = 'connect_status'
+            result = {'status': True, 'gw_nework_id': topic, 'msg': 'Connection Successful'}
+            handle_func.send_gwdata_to_server(client, 'pub', result, header)
 
     # 在连接断开时的 callback，打印 result code
     def on_disconnect(self, client, userdata, rc):

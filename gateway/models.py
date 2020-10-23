@@ -74,6 +74,9 @@ class UserProfile(AbstractBaseUser, PermissionsMixin):
             ('gateway_receive_gw_data_view', '可以保存对传感器进行增删改操作'),
             ('gateway_set_gateway_page_view', '可以可查看设置网关页面'),
             ('gateway_set_gateway_json_view', '可以保存设置网关操作'),
+            ('gateway_system_settings_view', '可以查看系统设置页面'),
+            ('gateway_delete_gateway_page_view', '可以查看删除网关页面'),
+            ('gateway_delete_gateway_view', '可以执行删除网关操作'),
             ('gateway_user_list_view', '可以查看编辑用户列表'),
             ('gateway_user_add_view', '可以查看增加用户页面'),
             ('gateway_user_add_save', '可以保存增加用户操作'),
@@ -125,7 +128,6 @@ class Gateway(models.Model):
     gw_status = models.SmallIntegerField(choices=gw_status_choices, default=1)
     def __str__(self):
         return self.name
-
 
 
 class GWData(models.Model):
@@ -203,9 +205,34 @@ class Sensor_data(models.Model):
     assembly_crewman = models.CharField(max_length=32, null=True, blank=True)
     delete_status = models.CharField(max_length=32, default=0)
 
+    Sensor_MAC = models.CharField(max_length=12, blank=True, null=True, verbose_name="传感器MAC")
+    Time_Cycle = models.CharField(max_length=8, blank=True, null=True, verbose_name="时间校准周期")
+    Environmental_Temp = models.FloatField(max_length=6, blank=True, null=True, verbose_name="环境温度")
+
+    REG_COD = models.CharField(max_length=20, blank=True, null=True, verbose_name="注册代码")
+    USE_COD = models.CharField(max_length=20, blank=True, null=True, verbose_name="使用登记证编号")
+    EQP_TYPE = models.CharField(max_length=4, blank=True, null=True, verbose_name="设备种类")
+    EQP_SORT = models.CharField(max_length=4, blank=True, null=True, verbose_name="设备类别")
+    EQP_VART = models.CharField(max_length=4, blank=True, null=True, verbose_name="设备品类")
+    EQP_MOD = models.CharField(max_length=60, blank=True, null=True, verbose_name="设备型号")
+    FAC_COD = models.CharField(max_length=60, blank=True, null=True, verbose_name="设备出厂编号")
+    Manufacturer = models.CharField(max_length=100, blank=True, null=True, verbose_name="制造单位名称")
+    Manufacturer_COD = models.CharField(max_length=30, blank=True, null=True, verbose_name="制造单位组织机构代码")
+    EQP_Date = models.DateField(max_length=10, blank=True, null=True, verbose_name="设备出厂日期")
+    Installation_Unit = models.CharField(max_length=100, blank=True, null=True, verbose_name="设备安装单位")
+    Installation_Date = models.DateField(max_length=10, blank=True, null=True, verbose_name="设备安装日期")
+    Maintenance_Unit = models.CharField(max_length=100, blank=True, null=True, verbose_name="维护保养单位名称")
+    USE_UNT = models.CharField(max_length=100, blank=True, null=True, verbose_name="使用单位名称")
+
     def __str__(self):
         return self.alias
 
 
+class UploadData(models.Model):
+    """
+    上传数据到管理局和服务器
+    """
+    upload_data_to_administration_server = models.BooleanField(default=False)
+    upload_data_to_local_server = models.BooleanField(default=True)
 
 

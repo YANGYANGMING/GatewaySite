@@ -1,0 +1,211 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+
+{% block main_content %}
+
+    <section class="content">
+        <!-- Modal -->
+        <div class="modal fade" id="delModel" tabindex="-1" role="dialog" aria-labelledby="delModelLabel">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="delModelLabel">删除警告</h4>
+              </div>
+              <div class="modal-body">
+                  <h4 style="color: red;">删除此网关？</h4>
+                  <h4 style="color: red;" id="response-delete-msg"></h4>
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                  <a style="cursor: pointer" class="btn btn-danger" href="{% url 'delete_gateway' gateway_name %}">删除</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="box box-info">
+            <div class="box-header with-border">
+              <h3 class="box-title">系统设置</h3>
+            </div>
+            <!-- /.box-header -->
+
+            <div class="box-body">
+
+                <div class="row">
+                    <div class="col-md-6">
+                            <div class="form-group">
+                                <label>设置网关网络号：</label>
+                                <input type="text" id="s-gwntid" value="">
+                                <button type="submit" class="btn btn-primary" style="display: inline; margin-left: 20px" id="set-gwntid">设置</button>
+                                <label id="s-gwntid-msg" style="color: red;"></label>
+                            </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                            <div class="form-group">
+                                <label>查看网关网络号：</label>
+                                <input type="text" id="g-gwntid" value="" disabled>
+                                <button type="submit" class="btn btn-primary" style="display: inline; margin-left: 20px" id="get-gwntid">获取</button>
+                                <label id="g-gwntid-msg" style="color: red;"></label>
+                            </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="is_active">上传数据到本地服务器：
+                                <input type="checkbox" id="upload-data-to-local-server" class="flat-green">
+                                <p id="upload-data-to-local-server-msg" style="color: red; display: inline-block; "></p>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="is_active">上传数据到特检局：
+                            <input type="checkbox" id="upload-data-to-administration" class="flat-green">
+                                <p id="upload-data-to-local-server-msg" style="color: red; display: inline-block; "></p>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                {% if gateway_obj %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="is_active">删除网关：
+                               <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#delModel">删除网关</button>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+{% endblock %}
+
+{% block script %}
+    <script>
+    //Flat red color scheme for iCheck
+    $('input[type="checkbox"].flat-green').iCheck({
+        checkboxClass: 'icheckbox_flat-green',
+    });
+
+    $(function () {
+        SetGWntid();
+        GetGWntid();
+    });
+
+    $(function () {
+       $('#upload-data-to-administration').on("ifChecked", function (e) {
+        ControlUploadDataToAdministration(true)
+        });
+        $('#upload-data-to-administration').on("ifUnchecked", function (e) {
+            ControlUploadDataToAdministration(false)
+        });
+
+        $('#upload-data-to-local-server').on("ifChecked", function (e) {
+            ControlUploadDataToLocalServer(true);
+        });
+        $('#upload-data-to-local-server').on("ifUnchecked", function (e) {
+            ControlUploadDataToLocalServer(false)
+        });
+    });
+
+    $(function () {
+        var upload_to_administration_status = '{{ upload_to_administration_status }}';
+        var upload_to_local_server_status = '{{ upload_to_local_server_status }}';
+        if (upload_to_administration_status === 'True') {
+            $('#upload-data-to-administration').iCheck('check');
+         }
+        if (upload_to_local_server_status === 'True') {
+            $('#upload-data-to-local-server').iCheck('check');
+         }
+
+    });
+
+
+    function ControlUploadDataToAdministration(upload_to_administration_status) {
+        $.ajax({
+            url: "/gateway/control-upload-data-to-administration",
+            type: "GET",
+            data: {'upload_to_administration_status': upload_to_administration_status},
+            dataType: "JSON",
+            success: function (arg) {
+                {#$('#upload-data-to-local-server-msg').html('设置成功')#}
+            }
+        })
+    }
+
+    function ControlUploadDataToLocalServer(upload_to_local_server_status) {
+        $.ajax({
+            url: "/gateway/control-upload-data-to-local-server",
+            type: "GET",
+            data: {'upload_data_to_local_server': upload_to_local_server_status},
+            dataType: "JSON",
+            success: function (arg) {
+                {#$('#upload-data-to-local-server-msg').html('设置成功')#}
+            }
+        })
+    }
+
+    //设置网关网络号
+    function SetGWntid() {
+        $('#set-gwntid').click(function () {
+            $('#s-gwntid-msg').html('正在设置，请稍等...');
+            var s_gwntid = $('#s-gwntid').val();
+            $.ajax({
+                    url: '/gateway/set-gateway-networkid',
+                    type:'POST',
+                    data: {'s_gwntid': s_gwntid},
+                    dataType:'JSON',
+                    success:function (arg) {
+                        if(arg.status){
+                            $('#s-gwntid-msg').html(arg.msg);
+                        }else {
+                            $('#s-gwntid-msg').css('color', 'red').html(arg.msg);
+                        }
+                    }
+                })
+        })
+    }
+
+    //获取网关网络号
+    function GetGWntid() {
+        $('#get-gwntid').click(function () {
+            $('#g-gwntid-msg').html('正在获取，请稍等...');
+            $.ajax({
+                    url: '/gateway/get-gateway-networkid',
+                    type:'POST',
+                    dataType:'JSON',
+                    success:function (arg) {
+                        if(arg.status){
+                            $('#g-gwntid').val(arg.gw_ntid);
+                            $('#g-gwntid-msg').html('获取成功');
+                        }else {
+                            $('#g-gwntid-msg').css('color', 'red').html(arg.gw_ntid);
+                        }
+                    }
+                })
+        })
+    }
+
+
+
+    </script>
+
+{% endblock %}
+

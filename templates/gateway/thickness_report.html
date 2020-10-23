@@ -25,9 +25,6 @@
                         <label>传感器：</label>
                         <select class="form-control select2" id="selected-network-id" style="width: 50%; display: inline;" data-placeholder="传感器">
                             <option></option>
-{#                            {% for sche_id, sche_alias in sche_job_id_dict.items %}#}
-{#                                <option value="{{ sche_id }}">{{ sche_alias }}</option>#}
-{#                            {% endfor %}#}
                             {% for item in data_obj %}
                                 <option value="{{ item.network_id }}">{{ item.alias }}</option>
                             {% endfor %}

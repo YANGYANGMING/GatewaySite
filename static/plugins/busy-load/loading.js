@@ -5,5 +5,5 @@ function ShowLoading(){
         spinner: "circles",
         animation: "slide",
         //text: "Loading ..."
-    })
-    }
+    });
+}

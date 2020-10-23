@@ -1,6 +1,7 @@
 from django.shortcuts import render, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Q
 from gateway import permissions
 from GatewaySite import settings
 from lib.log import Logger
@@ -10,6 +11,7 @@ from gateway.eelib.eelib.message import *
 from utils.mqtt_client import MQTT_Client
 from utils import handle_func
 from utils.operate_sensor import OperateSensor, OperateGateway
+from utils.socket_client import sign_and_communicate_with_server
 from queue import PriorityQueue
 import serial
 import threading
@@ -183,7 +185,6 @@ def time_job(network_id):
                 break
     except Exception as e:
         print('取数出错！', e)
-
     return gwData
 
 
@@ -263,21 +264,68 @@ def config_time(request):
 
 
 @login_required
-# @permissions.check_permission
+@csrf_exempt
 def all_data_report(request):
     """
     全部数据
     :param request:
     :return:
     """
-    data_obj = models.GWData.objects.values('id', 'network_id__alias', 'network_id', 'battery', 'temperature',
-                                            'thickness', 'time_tamp').order_by('-id')
+    if request.method == "GET":
+        return render(request, 'gateway/all_data_report.html')
+    elif request.method == 'POST':
+        draw = int(request.POST.get('draw'))  # 记录操作次数
+        start = int(request.POST.get('start'))  # 起始位置
+        length = int(request.POST.get('length'))  # 每页显示数据量
+        search_key = request.POST.get('search[value]')  # 搜索关键字
+        order_column_id = request.POST.get('order[0][column]')  # 排序字段索引
+        order_column_rule = request.POST.get('order[0][dir]')  # 排序规则：ase/desc
 
-    return render(request, 'gateway/all_data_report.html', locals())
+        querysets = models.GWData.objects.values('id', 'network_id', 'network_id__alias', 'battery',
+                                                    'time_tamp', 'thickness', 'temperature').all()
+
+        order_column_dict = {'0': 'id', '1': 'network_id__alias', '2': 'network_id', '3': 'time_tamp',
+                             '4': 'battery', '5': 'temperature', '6': 'thickness'}
+        all_count = querysets.count()
+
+        if search_key:
+            querysets = query_filter(search_key, querysets)
+        if order_column_rule == 'desc':
+            querysets = querysets.order_by('-%s' % order_column_dict[order_column_id])
+        if order_column_rule == 'asc':
+            querysets = querysets.order_by(order_column_dict[order_column_id])
+
+        filter_count = querysets.count()
+        querysets = querysets[start: start + length]
+
+        for oper_item in querysets:
+            oper_item['operation'] = '<a href="javascript:;" style="cursor: pointer;" onclick="GetData(this);">' \
+                                     '<i class="fa fa-pencil"></i> 数据详情</a>'
+
+        dic = {
+            'draw': draw,
+            'recordsTotal': all_count,
+            'recordsFiltered': filter_count,
+            'data': list(querysets),
+        }
+
+        return HttpResponse(json.dumps(dic))
+
+
+# 搜索
+def query_filter(search_key, querysets):
+    q = Q()
+    q.connector = "OR"
+    filter_field = ['network_id__network_id', 'network_id__alias', 'time_tamp', 'temperature', 'battery',
+                    'thickness']
+    for filter_item in filter_field:
+        q.children.append(("%s__contains" % filter_item, search_key))
+    result = querysets.filter(q)
+
+    return result
 
 
 @login_required
-# @permissions.check_permission
 def thickness_report(request):
     """
     单个传感器厚度曲线
@@ -602,6 +650,9 @@ def set_gateway_page(request):
     :return:
     """
     gateway_obj = models.Gateway.objects.first()
+    if not gateway_obj:  # 数据库没有网关记录，则查看设置网关的配置文件是否有已经设置的网关网络号
+        with open('set_gwntid', 'r') as f:
+            gwntid = f.read().strip('\n')
     gw_status = {'在线': 1, '离线': 0}
     return render(request, 'gateway/set_gateway.html', locals())
 
@@ -630,20 +681,58 @@ def set_gateway_json(request):
 
 @csrf_exempt
 @login_required
+def set_gateway_networkid(request):
+    """
+    发送命令设置网关网络号
+    :param request:
+    :return:
+    """
+    result = {'status': False, 'msg': '设置网络号失败'}
+    try:
+        gw_ntid = request.POST.get('s_gwntid')
+        check_network_id = handle_func.check_network_id(gw_ntid)
+        if check_network_id:
+            network_id = handle_func.str_hex_dec(gw_ntid)
+            command = "set 78 " + network_id
+            # set_gwntid_response = gw0.serCtrl.getSerialData(command, timeout=5)
+            time.sleep(3)
+            set_gwntid_response = 'ok'
+            print('command', command)
+            print('set_gwntid_response', set_gwntid_response.strip('\n'))
+            if set_gwntid_response == 'ok':
+                with open('set_gwntid', 'w') as f:
+                    f.write(gw_ntid)
+                result = {'status': True, 'msg': '设置网络号成功'}
+        else:
+            result = {'status': False, 'msg': '网络号有误'}
+    except Exception as e:
+        print(e)
+        result = {'status': False, 'msg': '网络号有误'}
+
+    return HttpResponse(json.dumps(result))
+
+
+@csrf_exempt
+@login_required
 def get_gateway_networkid(request):
     """
     发送命令获取网关网络号
     :param request:
     :return:
     """
-    result = {'status': False, 'gw_ntid': '未获取到网关网络号'}
-    command = "get 78 "
-    get_gwntid_response = gw0.serCtrl.getSerialData(command, timeout=5)
-    print('get_gwntid_response', get_gwntid_response.strip('\n'))
-    if get_gwntid_response:
-        get_gwntid_response = handle_func.str_dec_hex(get_gwntid_response)
+    result = {'status': False, 'gw_ntid': '未获取到网络号'}
+    try:
+        command = "get 78 "
+        # get_gwntid_response = gw0.serCtrl.getSerialData(command, timeout=5)
+        time.sleep(3)
+        get_gwntid_response = '768'
         print('get_gwntid_response', get_gwntid_response.strip('\n'))
-        result = {'status': True, 'gw_ntid': get_gwntid_response}
+        if get_gwntid_response:
+            get_gwntid_response = handle_func.str_dec_hex(get_gwntid_response)
+            print('get_gwntid_response', get_gwntid_response.strip('\n'))
+            result = {'status': True, 'gw_ntid': get_gwntid_response}
+    except Exception as e:
+        print(e)
 
     return HttpResponse(json.dumps(result))
 
@@ -667,24 +756,6 @@ def test_signal_strength(request, network_id):
             break
 
     handle_func.test_signal_strength_result = {}
-
-    # resend_num = 0
-    # command = "get 65 " + network_id.rsplit('.', 1)[1]
-    # while resend_num < 2:  # 未收到数据后重发
-    #     online_of_sensor_signal_strength_response = gw0.serCtrl.getSerialData(command, timeout=6)
-    #     response_msg = online_of_sensor_signal_strength_response.strip('\n').split(',')[0]
-    #     if response_msg == 'ok':
-    #         models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=1)
-    #         response_strength = online_of_sensor_signal_strength_response.strip('\n').split(',')[1]
-    #         print('test_signal_strength_response_strength', response_strength)
-    #         msg_of_signal_strength = handle_func.judgment_level_of_test_signal_strength(response_strength)
-    #         result = {'status': True, 'msg': msg_of_signal_strength}
-    #         break
-    #     else:
-    #         models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=0)
-    #         resend_num += 1
-    #         msg_of_signal_strength = handle_func.judgment_level_of_test_signal_strength(-1)
-    #         result = {'status': False, 'msg': msg_of_signal_strength}
 
     return HttpResponse(json.dumps(test_signal_strength_result))
 
@@ -726,6 +797,56 @@ def show_soundV_json(request):
         return HttpResponse(json.dumps(result))
 
 
+@csrf_exempt
+def CAL_Sound_T_json(request):
+    """
+    计算声时
+    :param request:
+    :return:
+    """
+    if request.method == 'POST':
+        result = {'material_name': '', 'Sound_T': 0, 'CAL_msg': ''}
+        selected_material_id = request.POST.get('selected_material_id')
+        network_id = request.POST.get('network_id')
+        material_name = models.Material.objects.values('name').get(id=selected_material_id)['name']
+        result['material_name'] = material_name
+        gwdata_obj = models.GWData.objects.filter(network_id=network_id)
+        if gwdata_obj:
+            gwdata = eval(gwdata_obj.values('data').first()['data'])
+        else:
+            gwdata = []
+            result['CAL_msg'] = '计算声时失败，此传感器未采集任何数据，请先采集一次数据后，再点击校准'
+
+        thick_mm, Sound_T = calThickness(data=gwdata, gain_db=60, nSize=len(gwdata))
+        print('thick_mm', thick_mm)
+        print('Sound_T', Sound_T)
+
+        result['Sound_T'] = Sound_T
+
+        return HttpResponse(json.dumps(result))
+
+
+@csrf_exempt
+def CAL_Sound_V_json(request):
+    """
+    校准声速
+    :param request:
+    :return:
+    """
+    if request.method == 'POST':
+        try:
+            thickness = float(request.POST.get('thickness'))
+            Sound_T = float(request.POST.get('Sound_T'))
+            material_id = request.POST.get('material_id')
+            Sound_V = int(thickness * 40e6 * 2 / Sound_T / 1000)
+            models.Material.objects.filter(id=material_id).update(sound_V=Sound_V)
+            result = {'status': True, 'Sound_V': Sound_V}
+        except:
+            result = {'status': False, 'Sound_V': 0}
+
+        return HttpResponse(json.dumps(result))
+
+
 def refresh_gw_status(request):
     """
     定时刷新网关与服务器连接状态
@@ -733,7 +854,10 @@ def refresh_gw_status(request):
     :return:
     """
     try:
-        gw_status = models.Gateway.objects.values('gw_status').first()['gw_status']
+        if models.Gateway.objects.exists():
+            gw_status = models.Gateway.objects.values('gw_status').first()['gw_status']
+        else:
+            gw_status = False
     except Exception as e:
         print(e)
         gw_status = False
@@ -758,7 +882,7 @@ def receive_gw_data(request):
 
         receive_data = handle_func.handle_img_and_data(request)
 
-        response = {'status': False, 'msg': '操作失败', 'receive_data': receive_data}
+        response = {'status': False, 'msg': '', 'receive_data': receive_data}
         print('receive_data', receive_data)  # {"received_time_data":{"month":[],"day":[],"hour":["1"],"mins":["1"]},"sensor_id":"536876188","alias":"1号传感器","network_id":"0.0.0.1","choice":"update"}
 
         sensor_id = receive_data['sensor_id']
@@ -782,9 +906,15 @@ def receive_gw_data(request):
 
         # 添加
         elif choice == 'add':
+            gateway_status = models.Gateway.objects.values('gw_status').first()['gw_status']
             receive_data["choice"] = "add"
             receive_data["location_img_json"] = location_img_json
-            send_network_id_to_server_queue(network_id, 'add_sensor', receive_data=receive_data, level=2)
+            if gateway_status:
+                send_network_id_to_server_queue(network_id, 'add_sensor', receive_data=receive_data, level=2)
+                response = {'status': True, 'msg': '正在添加中...', 'receive_data': receive_data}
+            else:
+                response = receive_server_data(receive_data)
+                log.log(response['status'], response['msg'], receive_data['network_id'])
 
         # 删除
         elif choice == 'remove':
@@ -816,7 +946,7 @@ def receive_server_data(receive_data):
     location_img_json = receive_data.pop('location_img_json')
 
     received_time_data = receive_data.get('received_time_data')
-    if received_time_data:  # 如果是更新报警信息
+    if received_time_data:  # 如果是更新信息
         if received_time_data['days'] == received_time_data['hours'] == received_time_data['minutes'] == '0':
             response['msg'] = '时间不合法！'
             return HttpResponse(json.dumps(response))
@@ -887,6 +1017,84 @@ def set_sensor_params(request):
     return HttpResponse(json.dumps(result))
 
 
+@login_required
+@permissions.check_permission
+def system_settings(request):
+    """
+    系统设置
+    :param request:
+    :return:
+    """
+    upload_obj = models.UploadData.objects.values('upload_data_to_administration_server', 'upload_data_to_local_server').first()
+    upload_to_administration_status = upload_obj['upload_data_to_administration_server']
+    upload_to_local_server_status = upload_obj['upload_data_to_local_server']
+    gateway_obj = models.Gateway.objects.exists()
+    if gateway_obj:
+        gateway_name = models.Gateway.objects.values('name').first()['name']
+
+    return render(request, 'gateway/system_settings.html', locals())
+
+
+@csrf_exempt
+@login_required
+@permissions.check_permission
+def delete_gateway(request, gateway_name):
+    """
+    删除网关
+    :param request:
+    :param gateway_name:
+    :return:
+    """
+    all_sensor_obj = models.Sensor_data.objects.values('alias').all()
+    all_gwdata_obj = models.GWData.objects.values('time_tamp', 'network_id__alias').all()[:10]
+    sensor_count = models.Sensor_data.objects.count()
+    gwdata_count = models.GWData.objects.count()
+
+    if request.method == 'POST':
+        import copy
+        gateway_obj = models.Gateway.objects.values('name', 'network_id').first()
+        gateway_name = gateway_obj['name']
+        network_id = copy.deepcopy(gateway_obj['network_id'])
+        input_gateway_name = request.POST.get('gateway_name')
+        if gateway_name == input_gateway_name:
+            gateway_data = {'network_id': network_id}
+            result = operate_gateway.delete_gateway(gateway_data, user=str(request.user))
+            log.log(result['status'], result['msg'], network_id, str(request.user))
+            return render(request, "index.html")
+        else:
+            delete_gateway_msg = '网关删除失败，网关名称输入有误！'
+
+    return render(request, "gateway/delete_gateway.html", locals())
+
+
+@login_required
+def control_upload_data_to_administration(request):
+    """
+    设置 上传数据到特检局 的开关
+    :param request:
+    :return:
+    """
+    upload_to_administration_status = json.loads(request.GET.get('upload_to_administration_status'))
+    models.UploadData.objects.update(upload_data_to_administration_server=upload_to_administration_status)
+    result = {'upload_to_administration_status': upload_to_administration_status}
+
+    return HttpResponse(json.dumps(result))
+
+
+@login_required
+def control_upload_data_to_local_server(request):
+    """
+    设置 上传数据到本地服务器 的开关
+    :param request:
+    :return:
+    """
+    upload_data_to_local_server = json.loads(request.GET.get('upload_data_to_local_server'))
+    models.UploadData.objects.update(upload_data_to_local_server=upload_data_to_local_server)
+    result = {'upload_data_to_local_server': upload_data_to_local_server}
+
+    return HttpResponse(json.dumps(result))
+
+
 @csrf_exempt
 @login_required
 @permissions.check_permission
@@ -907,32 +1115,123 @@ def manual_get(request, network_id):
 
 
 @csrf_exempt
-def check_alias_to_update_sensor(request):
+def check_sensor_params_is_exists(request):
     """
-    检查服务器中是否存在alias，为update sensor准备
+    检查服务器中是否已存在sensor: alias, sensor_id, network_id
     :param request:
     :return:
     """
-    ret = {'check_alias_payload': '', 'msg': ''}
+    ret = {'alias_payload': '', 'network_id_payload': '', 'sensor_id_payload': '', 'alias_msg': '', 'network_id_msg': '', 'sensor_id_msg': ''}
     gw_status = models.Gateway.objects.values('Enterprise', 'gw_status').first()['gw_status']
-    if request.method == 'POST' and gw_status:
+    if request.method == 'POST':
         alias = request.POST.get('alias')
         network_id = request.POST.get('network_id')
-        result = {'alias': alias, 'network_id': network_id}
-        header = 'check_alias'
+        sensor_id = request.POST.get('sensor_id')
+        choice = request.POST.get('choice')
+        gwntid = models.Gateway.objects.values('network_id').first()['network_id']
+        if network_id.rsplit('.', 1)[0] + '.0' == gwntid:
+            start_time = time.time()
+            if gw_status:  # 如果链接服务器成功，则发送到服务器端验证
+                is_soft_delete = handle_func.check_soft_delete(network_id)
+                if is_soft_delete:  # 是软删除的sensor
+                    check_alias_payload = False
+                    network_id_payload = False
+                    sensor_id_payload = False
+                    ret = {'alias_payload': check_alias_payload, 'network_id_payload': network_id_payload, 'sensor_id_payload': sensor_id_payload}
+                else:
+                    result = {'alias': alias, 'network_id': network_id, 'sensor_id': sensor_id, 'choice': choice}
+                    header = 'check_sensor_params_is_exists'
+                    handle_func.send_gwdata_to_server(client, 'pub', result, header)
+                    ret = {'alias_payload': '', 'network_id_payload': '', 'sensor_id_payload': '', 'alias_msg': '', 'network_id_msg': '', 'sensor_id_msg': ''}
+                    while (time.time() - start_time) < 2:
+                        if handle_func.check_sensor_params_payload:
+                            check_alias_payload = handle_func.check_sensor_params_payload['alias_is_exist']
+                            network_id_payload = handle_func.check_sensor_params_payload['network_id_is_exist']
+                            sensor_id_payload = handle_func.check_sensor_params_payload['sensor_id_is_exist']
+                            ret = {'alias_payload': check_alias_payload, 'network_id_payload': network_id_payload, 'sensor_id_payload': sensor_id_payload}
+                            break
+                    if ret['alias_payload']:
+                        ret['alias_msg'] = '已存在此名称！'
+                    else:
+                        ret['alias_msg'] = ''
+                    if ret['network_id_payload']:
+                        ret['network_id_msg'] = '已存在此网络号！'
+                    else:
+                        ret['network_id_msg'] = ''
+                    if ret['sensor_id_payload']:
+                        ret['sensor_id_msg'] = '已存在此ID！'
+                    else:
+                        ret['sensor_id_msg'] = ''
+                    handle_func.check_sensor_params_payload = {}
+
+            else:  # 如果链接服务器失败，则发到网关端验证
+                if choice == 'update':
+                    check_alias_payload = models.Sensor_data.objects.filter(alias=alias).exclude(network_id=network_id).exists()
+                    network_id_payload = False
+                    sensor_id_payload = False
+                    ret = {'alias_payload': check_alias_payload, 'network_id_payload': network_id_payload, 'sensor_id_payload': sensor_id_payload}
+                elif choice == 'add':
+                    is_soft_delete = handle_func.check_soft_delete(network_id)
+                    if is_soft_delete:  # 是软删除的sensor
+                        check_alias_payload = False
+                        network_id_payload = False
+                        sensor_id_payload = False
+                    else:
+                        check_alias_payload = models.Sensor_data.objects.filter(alias=alias).exists()
+                        network_id_payload = models.Sensor_data.objects.filter(network_id=network_id).exists()
+                        sensor_id_payload = models.Sensor_data.objects.filter(sensor_id=sensor_id).exists()
+                    ret = {'alias_payload': check_alias_payload, 'network_id_payload': network_id_payload, 'sensor_id_payload': sensor_id_payload}
+                if ret['alias_payload']:
+                    ret['alias_msg'] = '已存在此名称！'
+                else:
+                    ret['alias_msg'] = ''
+                if ret['network_id_payload']:
+                    ret['network_id_msg'] = '已存在此网络号！'
+                else:
+                    ret['network_id_msg'] = ''
+                if ret['sensor_id_payload']:
+                    ret['sensor_id_msg'] = '已存在此ID！'
+                else:
+                    ret['sensor_id_msg'] = ''
+
+        else:
+            ret['network_id_payload'] = 1
+            ret['network_id_msg'] = '网络号错误！'
+        print('ret=-======================================================', ret)
+
+    return HttpResponse(json.dumps(ret))
+
+
+@csrf_exempt
+def check_GW_alias(request):
+    """
+    检查服务器中是否存在网关alias，为update/add gateway准备
+    :param request:
+    :return:
+    """
+    ret = {'check_GW_alias_payload': '', 'msg': ''}
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        network_id = request.POST.get('network_id')
+        old_gateway_name = request.POST.get('old_gateway_name')
+        result = {'name': name, 'network_id': network_id}
+        gateway_exist = models.Gateway.objects.exists()
+        result['gateway_exist'] = gateway_exist
+        result['old_gateway_name'] = old_gateway_name
+        header = 'check_GW_alias'
         handle_func.send_gwdata_to_server(client, 'pub', result, header)
         start_time = time.time()
-        ret = {'check_alias_payload': '', 'msg': ''}
+        ret = {'check_GW_alias_payload': '', 'msg': ''}
         while (time.time() - start_time) < 2:
-            if handle_func.check_alias_payload:
-                check_alias_payload = handle_func.check_alias_payload['alias_is_exist']
-                ret = {'check_alias_payload': check_alias_payload}
-                if ret['check_alias_payload']:
-                    ret['msg'] = '已存在此名称！'
+            if handle_func.check_GW_alias_payload:
+                check_GW_alias_payload = handle_func.check_GW_alias_payload['GW_alias_is_exist']
+                ret = {'check_GW_alias_payload': check_GW_alias_payload}
+                if ret['check_GW_alias_payload']:
+                    ret['msg'] = '已存在此网关名称！'
                 else:
                     ret['msg'] = ''
                 break
-        handle_func.check_alias_payload = {}
+        handle_func.check_GW_alias_payload = {}
 
     return HttpResponse(json.dumps(ret))
 
@@ -943,7 +1242,7 @@ def server_get_data(network_id):
     :param network_id:
     :return:
     """
-    result = {'status': False, 'msg': '[%s]获取失败，传感器未响应' % network_id, 'gwData': {}, 'network_id': network_id}
+    result = {'status': False, 'msg': '', 'gwData': {}, 'network_id': network_id}
 
     try:
         if network_id == '':
@@ -951,8 +1250,19 @@ def server_get_data(network_id):
         else:
             # 需要返回网关数据
             gwData = time_job(network_id)
+            alias = models.Sensor_data.objects.values('alias').get(network_id=network_id)['alias']
             if gwData != {}:
-                result = {'status': True, 'msg': "[%s]获取成功" % network_id, 'gwData': gwData, 'network_id': network_id}
+                result = {'status': True, 'msg': "[%s]获取成功" % alias, 'gwData': gwData, 'network_id': network_id}
+                # 判断是否把数据发送给特检局
+                upload_data_to_administration_server_status = models.UploadData.objects.values('upload_data_to_administration_server').first()['upload_data_to_administration_server']
+                print('判断是否把数据发送给特检局', upload_data_to_administration_server_status)
+                if upload_data_to_administration_server_status:
+                    gwData['network_id'] = network_id
+                    send_data = handle_func.handle_data_to_send_administration(data=gwData)
+                    threading.Thread(target=sign_and_communicate_with_server, args=(send_data,)).start()
+            else:
+                result['msg'] = '[%s]获取失败，传感器未响应' % alias
+
     except Exception as e:
         print(e)
 
@@ -971,7 +1281,17 @@ def gw_get_data_func():
         true_header = gw_queue_1.get('true_header')
         network_id = gw_queue_1.get('network_id')
         if true_header == "gwdata":
-            time_job(network_id)
+            gwData = time_job(network_id)
+            if gwData != {}:
+                pass
+                # 判断是否把数据发送给特检局
+                upload_data_to_administration_server_status = models.UploadData.objects.values('upload_data_to_administration_server').first()['upload_data_to_administration_server']
+                print('判断是否把数据发送给特检局', upload_data_to_administration_server_status)
+                if upload_data_to_administration_server_status:
+                    gwData['network_id'] = network_id
+                    send_data = handle_func.handle_data_to_send_administration(data=gwData)
+                    print('send_data', send_data)
+                    threading.Thread(target=sign_and_communicate_with_server, args=(send_data,)).start()
         elif true_header == "add_sensor":
             receive_server_data(gw_queue_1.get('receive_data'))
         elif true_header == "set_sensor_params":

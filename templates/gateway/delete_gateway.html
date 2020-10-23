@@ -1,0 +1,66 @@
+{% extends 'index.html' %}
+{% load staticfiles %}
+
+{% block main_content %}
+
+    <!-- Main content -->
+    <section class="content">
+
+      <!-- Default box -->
+      <div class="box">
+        <div class="box-header with-border">
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip"
+                    title="Collapse">
+              <i class="fa fa-minus"></i></button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove" data-toggle="tooltip" title="Remove">
+              <i class="fa fa-times"></i></button>
+          </div>
+        </div>
+        <div class="box-body">
+            <h2>你确定吗？</h2>
+            <h4>你确认想要删除网关：<b style="color: red;">{{ gateway_name }}</b>？下列所有相关的项目都将被删除:</h4>
+            <h3>相关项：传感器，共计{{ sensor_count }}条</h3>
+            <ul>
+                {% for item in all_sensor_obj %}
+                    <li>{{ item.alias }}</li>
+                {% endfor %}
+                <li>......</li>
+            </ul>
+            <h3>相关项：采集数据，共计{{ gwdata_count }}条</h3>
+            <ul>
+                {% for item in all_gwdata_obj %}
+                    <li>{{ item.network_id__alias }}所采集的数据{{ item.time_tamp }}</li>
+                {% endfor %}
+                <li>......</li>
+            </ul>
+
+        </div>
+        <!-- /.box-body -->
+        <div class="box-footer">
+            <form method="POST">{% csrf_token %}
+                <label for="gateway-name">请填写网关名，确认删除此网关：</label>
+                <input type="text" id="gateway-name" name="gateway_name">
+                <label style="color: red;">{{ delete_gateway_msg }}</label>
+                <div>
+                    <input type="submit" class="btn btn-danger" value="确认删除">
+                    <a class="btn btn-info" href="javascript:history.go(-1);">返回</a>
+                </div>
+            </form>
+        </div>
+        <!-- /.box-footer-->
+      </div>
+      <!-- /.box -->
+
+    </section>
+
+{% endblock %}
+
+{% block script %}
+<script>
+
+
+</script>
+
+{% endblock %}
+

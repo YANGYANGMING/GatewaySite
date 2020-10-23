@@ -91,9 +91,11 @@ class OperateSensor(object):
                 hex_network_id = handle_func.str_hex_dec(network_id)
                 command = "set 74 " + sensor_id + " " + hex_network_id
                 print('command', command)
-                add_sensor_response = views.gw0.serCtrl.getSerialData(command, timeout=6)
-                print('add_sensor_response', add_sensor_response.strip('\n'))
-                # add_sensor_response = 'ok'
+                import time
+                time.sleep(3)
+                # add_sensor_response = views.gw0.serCtrl.getSerialData(command, timeout=6)
+                # print('add_sensor_response', add_sensor_response.strip('\n'))
+                add_sensor_response = 'ok'
                 if add_sensor_response.strip('\n') == 'ok':
                     models.Sensor_data.objects.create(**receive_data)
                     response['status'] = True
@@ -146,9 +148,26 @@ class OperateGateway(object):
         result = {'status': False, 'msg': '更新网关失败'}
         try:
             models.Gateway.objects.create(**gateway_data)
+            # 添加网关时，订阅mqtt的此网关主题
+            topic = models.Gateway.objects.values('network_id')[0]['network_id']
+            views.client.subscribe((topic, 2))
             header = 'add_gateway'
             result = {'status': True, 'msg': '添加网关成功', 'gateway_data': gateway_data, 'user': user}
             handle_func.send_gwdata_to_server(views.client, 'pub', result, header)
+        except Exception as e:
+            print(e)
+        return result
+
+    def delete_gateway(self, gateway_data, user):
+        result = {'status': False, 'msg': '删除网关失败'}
+        try:
+            models.Gateway.objects.all().delete()
+            models.Sensor_data.objects.all().delete()
+            header = 'delete_gateway'
+            result = {'status': True, 'msg': '删除网关成功', 'gateway_data': gateway_data, 'user': user}
+            handle_func.send_gwdata_to_server(views.client, 'pub', result, header)
+            with open('set_gwntid', 'w') as f:
+                f.write('')
         except Exception as e:
             print(e)
         return result

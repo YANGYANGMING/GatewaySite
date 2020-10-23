@@ -6,7 +6,8 @@ from gateway import models
 from PIL import Image
 
 
-check_alias_payload = {}
+check_sensor_params_payload = {}
+check_GW_alias_payload = {}
 test_signal_strength_result = {}
 
 
@@ -26,12 +27,12 @@ class HandleFunc(object):
         views.heart_timeout_sche.modify_job('cal_heart_timeout', trigger=temp_trigger)
         # After updating the data, you need to resume_job()
         views.heart_timeout_sche.resume_job('cal_heart_timeout')
-        # 接收到心跳后赋值：gw_status=1
-        models.Gateway.objects.update(gw_status=1)
-
-        gwntid = models.Gateway.objects.values('network_id')[0]['network_id']
-        result = {'gwntid': gwntid}
-        send_gwdata_to_server(views.client, 'pub', result, headers_dict['heart_ping'])
+        if models.Gateway.objects.exists():
+            # 接收到心跳后赋值：gw_status=1
+            models.Gateway.objects.update(gw_status=1)
+            gwntid = models.Gateway.objects.values('network_id')[0]['network_id']
+            result = {'gwntid': gwntid}
+            send_gwdata_to_server(views.client, 'pub', result, headers_dict['heart_ping'])
 
     def get_data(self, topic, payload):
         """
@@ -42,9 +43,13 @@ class HandleFunc(object):
         """
         print('取数.......')
         result = views.server_get_data(payload.get('data'))
-        views.log.log(result['status'], result['msg'], result.get('network_id'))
-        send_gwdata_to_server(views.client, 'pub', result, headers_dict['gwdata'])
-        send_gwdata_to_server(views.client, topic, result, headers_dict['gwdata']) # 发送给MQTT websocket，用于显示给指定订阅用户界面
+        # 检查是否允许发送采集到的数据给本地服务器
+        if models.UploadData.objects.values('upload_data_to_local_server').first()['upload_data_to_local_server']:
+            views.log.log(result['status'], result['msg'], result.get('network_id'))
+            send_gwdata_to_server(views.client, 'pub', result, headers_dict['gwdata'])
+            # MQTT websocket传输通道未加密，删除获取的数据信息gwData，只返回提示信息
+            del result['gwData']
+            send_gwdata_to_server(views.client, topic, result, headers_dict['gwdata'])  # 发送给MQTT websocket，用于显示给指定订阅用户界面
 
     def update_sensor(self, topic, payload):
         """
@@ -59,6 +64,9 @@ class HandleFunc(object):
         print('response....', response)
         response['user'] = payload.get('user')
         send_gwdata_to_server(views.client, 'pub', response, headers_dict['update_sensor'])  # 发送给MQTT后端服务器，用于处理数据
+        # # MQTT websocket传输通道未加密，删除获取的数据信息receive_data，只返回提示信息
+        response['network_id'] = response['receive_data']['network_id']
+        del response['receive_data']
         send_gwdata_to_server(views.client, topic, response, headers_dict['update_sensor'])  # 发送给MQTT websocket，用于显示给指定订阅用户界面
 
     def add_sensor(self, topic, payload):
@@ -75,6 +83,9 @@ class HandleFunc(object):
         views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'))
         response['user'] = payload.get('user')
         send_gwdata_to_server(views.client, 'pub', response, headers_dict['add_sensor'])
+        # # MQTT websocket传输通道未加密，删除获取的数据信息receive_data，只返回提示信息
+        response['network_id'] = response['receive_data']['network_id']
+        del response['receive_data']
         send_gwdata_to_server(views.client, topic, response, headers_dict['add_sensor'])  # 发送给MQTT websocket，用于显示给指定订阅用户界面
 
     def remove_sensor(self, topic, payload):
@@ -89,6 +100,9 @@ class HandleFunc(object):
         views.log.log(response['status'], response['msg'], payload.get('data').get('network_id'), payload.get('user'))
         response['user'] = payload.get('user')
         send_gwdata_to_server(views.client, 'pub', response, headers_dict['remove_sensor'])
+        # # MQTT websocket传输通道未加密，删除获取的数据信息receive_data，只返回提示信息
+        response['network_id'] = response['receive_data']['network_id']
+        del response['receive_data']
         send_gwdata_to_server(views.client, topic, response, headers_dict['remove_sensor'])  # 发送给MQTT websocket，用于显示给指定订阅用户界面
 
     def resume_sensor(self, topic, payload):
@@ -148,6 +162,8 @@ class HandleFunc(object):
             result = set_sensor_params_func(network_id, val_dict)
 
             send_gwdata_to_server(views.client, 'pub', result, "set_sensor_params")
+            # # MQTT websocket传输通道未加密，删除获取的数据信息params_dict，只返回提示信息
+            del result['params_dict']
             send_gwdata_to_server(views.client, topic, result, "set_sensor_params")  # 发送给MQTT websocket，用于显示给指定订阅用户界面
         except Exception as e:
             print(e, '设置参数失败')
@@ -162,15 +178,25 @@ class HandleFunc(object):
         ret = views.operate_gateway.update_gateway(payload['gateway_data'], payload.get('user'))
         views.log.log(ret['status'], ret['msg'], topic, payload.get('user'))
 
-    def check_alias(self, topic, payload):
+    def check_sensor_params_is_exists(self, topic, payload):
         """
         接收服务器检查的alias是否存在的结果
         :param topic:
         :param payload:
         :return:
         """
-        global check_alias_payload
-        check_alias_payload = payload
+        global check_sensor_params_payload
+        check_sensor_params_payload = payload
+
+    def check_GW_alias(self, topic, payload):
+        """
+        接收服务器检查的alias是否存在的结果
+        :param topic:
+        :param payload:
+        :return:
+        """
+        global check_GW_alias_payload
+        check_GW_alias_payload = payload
 
     def test_signal_strength(self, topic, payload):
         """
@@ -301,6 +327,7 @@ def set_sensor_params_func(network_id, val_dict):
     设置参数功能函数
     :return:
     """
+    alias = models.Sensor_data.objects.values('alias').get(network_id=network_id)['alias']
     # 准备发送的命令字符串  cmd_str = "set 0001 2 60 4 2 2 500"
     cmd_str = str(" " + val_dict['cHz'] + " " + val_dict['gain'] + " " + val_dict[
         'avg_time'] + " " + val_dict['Hz'] + " " + val_dict['Sample_depth'] + " " + val_dict['Sample_Hz'])
@@ -312,9 +339,9 @@ def set_sensor_params_func(network_id, val_dict):
     if set_val_response.strip('\n') == 'ok':
         update_sensor_data(val_dict)
         models.Sensor_data.objects.filter(network_id=network_id).update(**val_dict)
-        result = {'status': True, 'network_id': network_id, 'msg': '设置参数成功', 'params_dict': val_dict}
+        result = {'status': True, 'network_id': network_id, 'msg': '[%s]设置参数成功' % alias, 'params_dict': val_dict}
     else:
-        result = {'status': False, 'network_id': network_id, 'msg': '设置参数失败', 'params_dict': val_dict}
+        result = {'status': False, 'network_id': network_id, 'msg': '[%s]设置参数失败' % alias, 'params_dict': val_dict}
 
     views.log.log(result['status'], result['msg'], network_id)
 
@@ -380,7 +407,6 @@ def check_online_of_sensor_status():
                 models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=1)
                 response_strength = online_of_sensor_status_response.strip('\n').split(',')[1]
                 print('online_of_sensor_status_response_strength', response_strength)
-                break
             else:
                 models.Sensor_data.objects.filter(network_id=network_id).update(sensor_online_status=0)
 
@@ -432,14 +458,37 @@ def str_dec_hex(network_id):
     :param network_id:
     :return:
     """
-    network_id_hex = str(hex(int(network_id))).split('x')[1]  # 103
+    network_id_hex = str(hex(int(network_id))).split('x')[1]  # 103  assdfsssdfsfsdfsdfs
     network_id_str = (8 - len(network_id_hex)) * '0' + network_id_hex
     pattern = re.compile('.{2}')
     network_id_str_list = pattern.findall(network_id_str)
-    network_id_list = [str(int(item)) for item in network_id_str_list]
+    network_id_list = [str(int(item, 16)) for item in network_id_str_list]
     network_id = '.'.join(network_id_list)
 
     return network_id
+
+
+def check_network_id(network_id):
+    """
+    检查network_id合法性
+    :param network_id:
+    :return:
+    """
+    try:
+        ntid_split_list = network_id.split('.')
+        a = ntid_split_list[0]
+        b = ntid_split_list[1]
+        c = ntid_split_list[2]
+        d = ntid_split_list[3]
+        if 0 <= int(a) < 255 and 0 <= int(b) < 255 and 0 <= int(c) < 255 and 0 <= int(d) < 255 and len(ntid_split_list) == 4:
+            return True
+        else:
+            return False
+
+    except Exception as e:
+        print('network_id不合法', e)
+        return False
+
 
 
 def update_sensor_data(all_vals):
@@ -582,6 +631,58 @@ def list_dict_duplicate_removal(distinct_list):
     """
     run_function = lambda x, y: x if y in x else x + [y]
     return reduce(run_function, [[], ] + distinct_list)
+
+
+def handle_data_to_send_administration(data):
+    """
+    处理发送给特检局的数据
+    :param data:
+    :return:
+    """
+    network_id = data['network_id']
+    Sensor_obj = models.Sensor_data.objects.values('sensor_id', 'material', 'sensor_run_status', 'received_time_data',
+                                              'Hz', 'alarm_battery', 'battery').get(network_id=network_id)
+    material_id = Sensor_obj['material']
+    sensor_id = Sensor_obj['sensor_id']
+    Sensor_Mac = sensor_id[-10:]
+    material_obj = models.Material.objects.values('name', 'sound_V', 'temperature_co').get(id=material_id)
+    material_name = material_obj['name']
+    temperature = round(float(data['temperature']), 2)
+    thickness = round(float(data['thickness']), 2)
+    # 计算true_sound_V
+    sound_V = material_obj['sound_V']
+    temperature_co = material_obj['temperature_co']
+    true_sound_V = float(sound_V - ((temperature - 25) * temperature_co))
+    # 设备开闭状态
+    sensor_status = True if Sensor_obj['sensor_run_status'] else False
+    # 计算当前时间
+    Current_T = data['time_tamp']
+    # 超声频率
+    Ultrasonic_Freq = float(Sensor_obj['Hz']) * 1000
+    # 转定时时间格式
+    received_time_data = eval(Sensor_obj['received_time_data'])
+    Gauge_Cycle = str(int(received_time_data['days']) * 24 + int(received_time_data['hours'])) + ":00:00"
+    # 电量 --> 电压
+    battery = 5.0 + round(float(Sensor_obj['battery']) / 100, 1)
+    alarm_battery = 5.0 + round(float(Sensor_obj['alarm_battery']) / 100, 1)
+    DATA = {
+        "Current_T": Current_T,
+        "Sensor_Mac": Sensor_Mac,
+        "Gauge_Cycle": Gauge_Cycle,
+        "Material_Type": "45",
+        "Material_Temp": temperature,
+        "Environmental_Temp": 30.00,
+        "Sound_Velocity": true_sound_V,
+        "Voltage": battery,
+        "LIM_Voltage": alarm_battery,
+        "Ultrasonic_Freq": Ultrasonic_Freq,
+        "Time_Cycle": "72:00:00",
+        "Status": sensor_status,
+        "Thickness": [
+            {"Sensor_NO": sensor_id, "Thickness": thickness},
+        ]
+    }
+    return DATA
 
 
 ##########################################################
