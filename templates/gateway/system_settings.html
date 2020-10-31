@@ -31,17 +31,19 @@
             <!-- /.box-header -->
 
             <div class="box-body">
-
-                <div class="row">
-                    <div class="col-md-6">
-                            <div class="form-group">
-                                <label>设置网关网络号：</label>
-                                <input type="text" id="s-gwntid" value="">
-                                <button type="submit" class="btn btn-primary" style="display: inline; margin-left: 20px" id="set-gwntid">设置</button>
-                                <label id="s-gwntid-msg" style="color: red;"></label>
-                            </div>
+                {% if gateway_obj %}
+                {% else %}
+                    <div class="row">
+                        <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>设置网关网络号：</label>
+                                    <input type="text" id="s-gwntid" value="">
+                                    <button type="submit" class="btn btn-primary" style="display: inline; margin-left: 20px" id="set-gwntid">设置</button>
+                                    <label id="s-gwntid-msg" style="color: red;"></label>
+                                </div>
+                        </div>
                     </div>
-                </div>
+                {% endif %}
 
                 <div class="row">
                     <div class="col-md-6">

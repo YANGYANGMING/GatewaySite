@@ -6,7 +6,6 @@ from gateway import models
 from GatewaySite import settings
 
 
-# ip_port = ('192.168.0.153', 8080)
 ip_port = ('121.36.220.210', 8080)
 # ip_port = ('39.98.229.50', 9696)
 back_log = 5
@@ -31,23 +30,23 @@ OPERATION_TYPE_ACK_CHOICE = {
     '40': '命令接收成功，但校准失败',
 }
 
-DATA = {
-    "Current_T": "2020-8-3 13:18:28",
-    "Sensor_Mac": "123-456-789",
-    "Gauge_Cycle": "48:00:00",
-    "Material_Type": "45",
-    "Material_Temp": 35.00,
-    "Environmental_Temp": 30.00,
-    "Sound_Velocity": 3249.0,
-    "Voltage": 6.0,
-    "LIM_Voltage": 4.0,
-    "Ultrasonic_Freq": 10.0,
-    "Time_Cycle": "72:00:00",
-    "Status": True,
-    "Thickness": [
-        {"Sensor_NO": "10010001201906019001", "Thickness": 5.35},
-    ]
-}
+# DATA = {
+#     "Current_T": "2020-8-3 13:18:28",
+#     "Sensor_Mac": "123-456-789",
+#     "Gauge_Cycle": "48:00:00",
+#     "Material_Type": "45",
+#     "Material_Temp": 35.00,
+#     "Environmental_Temp": 30.00,
+#     "Sound_Velocity": 3249.0,
+#     "Voltage": 6.0,
+#     "LIM_Voltage": 4.0,
+#     "Ultrasonic_Freq": 10.0,
+#     "Time_Cycle": "72:00:00",
+#     "Status": True,
+#     "Thickness": [
+#         {"Sensor_NO": "10010001201906019001", "Thickness": 5.35},
+#     ]
+# }
 
 
 class HandleSocketOperation:

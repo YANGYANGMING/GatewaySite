@@ -75,7 +75,6 @@
     <script>
 
         $(function () {
-          {#initChart();#}
 
             $('#example1').DataTable({
                 order: [[ 3, "desc" ]],  // 初始化倒序排列
@@ -117,127 +116,8 @@
 
         });
 
-        function initChart() {
-            var chart = Highcharts.chart('container',{
-                chart: {
-                    type: 'spline',
-                    shadow: true,
-                    zoomType: 'x',
-                    panning: true,
-                    panKey: 'shift',
-                },
-                tooltip: {
-                    followTouchMove: true,
-                },
-                title: {
-                    text: null
-                },
-                xAxis: {
-                    type: 'linear'
-                },
-                yAxis: {
-                    endOnTick: false, //对数Y轴不强制结束于标线
-                    title: {
-                        text: null
-                    },
-                },
-                plotOptions: {
-                  series: {
-                      lineWidth: 1.5,
-                  }
-                },
-                tooltip: {
-                    formatter: function () {
-                        return '<b>' + this.series.name + '</b><br/>' +
-                                Highcharts.numberFormat(this.x) + '<br/>' +
-                                Highcharts.numberFormat(this.y, 2);
-                    }
-                },
-                legend: {
-                    enabled: false
-                },
-                lang:{
-                   contextButtonTitle:"图表导出菜单",
-                   downloadJPEG:"下载JPEG图片",
-                   downloadPDF:"下载PDF文件",
-                   downloadPNG:"下载PNG文件",
-                   downloadSVG:"下载SVG文件",
-                   printChart:"打印图表",
-                   resetZoom:"恢复缩放",
-                   resetZoomTitle:"恢复图表",
-                },
-                exporting: {
-                    enabled: true
-                },
-                series: [
-                    {
-                        name: '',
-                        data: [
-                        ]
-                    },
-                ]
-            });
-
-        }
-
         function GetData(ths) {
-            var config = {
-                chart: {
-                    type: 'spline',
-                    shadow: true,
-                    zoomType: 'x',
-                    panning: true,
-			        panKey: 'shift',
-                },
-                title: {
-                    text: null
-                },
-                xAxis: {
-                    type: 'linear'
-                },
-                yAxis: {
-                    endOnTick: false, //对数Y轴不强制结束于标线
-                    title: {
-                        text: null
-                    },
-                },
-                plotOptions: {
-                  series: {
-                      lineWidth: 1.5,
-                  }
-                },
-                tooltip: {
-                    followTouchMove: true,
-                    formatter: function () {
-                        return '<b>' + this.series.name + '</b><br/>' +
-                                Highcharts.numberFormat(this.x) + '<br/>' +
-                                Highcharts.numberFormat(this.y, 2);
-                    }
-                },
-                legend: {
-                    enabled: false
-                },
-                lang:{
-                   contextButtonTitle:"图表导出菜单",
-                   downloadJPEG:"下载JPEG图片",
-                   downloadPDF:"下载PDF文件",
-                   downloadPNG:"下载PNG文件",
-                   downloadSVG:"下载SVG文件",
-                   printChart:"打印图表",
-                   resetZoom:"恢复缩放",
-                   resetZoomTitle:"恢复图表",
-                },
-                exporting: {
-                    enabled: true
-                },
-                series: [
-                    {
-                        name: '',
-                        data: [
-                        ]
-                    },
-                ]
-            };
+
             // 数据库中获取 serie
             var nid = $(ths).parent().parent().children().eq(0).text();
             $.ajax({
@@ -245,9 +125,61 @@
                 type:'GET',
                 dataType: 'JSON',
                 success:function(arg){
-                    config['series'] = arg;
-                    config['title']['text'] = arg[0]['name'];
-                    $('#container').highcharts(config);
+                    var config = Highcharts.chart('container', {
+                        chart: {
+                            type: 'spline',
+                            shadow: true,
+                            zoomType: 'x',
+                            panning: true,
+                            panKey: 'shift',
+                        },
+                        title: {
+                            text: arg[0][0]['name']
+                        },
+                        xAxis: {
+                            type: 'linear'
+                        },
+                        yAxis: {
+                            endOnTick: false, //对数Y轴不强制结束于标线
+                            title: {
+                                text: null
+                            },
+                        },
+                        plotOptions: {
+                          series: {
+                              lineWidth: 1.5,
+                          }
+                        },
+                        tooltip: {
+                            followTouchMove: true,
+                            formatter: function () {
+                                return '<b>' + this.series.name + '</b><br/>' +
+                                        Highcharts.numberFormat(this.x) + '<br/>' +
+                                        Highcharts.numberFormat(this.y, 2);
+                            }
+                        },
+                        legend: {
+                            enabled: false
+                        },
+                        lang:{
+                           contextButtonTitle:"图表导出菜单",
+                           downloadJPEG:"下载JPEG图片",
+                           downloadPDF:"下载PDF文件",
+                           downloadPNG:"下载PNG文件",
+                           downloadSVG:"下载SVG文件",
+                           printChart:"打印图表",
+                           resetZoom:"恢复缩放",
+                           resetZoomTitle:"恢复图表",
+                        },
+                        exporting: {
+                            enabled: true
+                        },
+                        series: arg[0]
+                    });
+
+                    config.series[0].data[arg[1]].select(true, true);
+                    config.series[0].data[arg[2]].select(true, true);
+
                 }
              })
         }

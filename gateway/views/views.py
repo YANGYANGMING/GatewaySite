@@ -34,6 +34,7 @@ try:
     client = mqtt_client.client
 except Exception as e:
     print(e)
+    log.log(False, e)
 
 num = 0
 
@@ -84,7 +85,6 @@ def send_network_id_to_server_queue(network_id, true_header, val_dict=None, rece
     gateway_obj = models.Gateway.objects.values('Enterprise', 'gw_status').first()
     gw_status = gateway_obj['gw_status']
     enterprise = gateway_obj['Enterprise']
-    print('gateway_obj', gateway_obj)
     header = 'send_network_id_to_queue'
     result = {'status': True, 'network_id_list': network_id_list, 'Enterprise': enterprise, 'level': level,
               'true_header': true_header, 'val_dict': val_dict, 'receive_data': receive_data}
@@ -156,6 +156,7 @@ def auto_Timing_time(network_id=None):
         scheduler.print_jobs()
     except Exception as e:
         print('auto_Timing_time:', e)
+        log.log(False, 'auto_Timing_time出错！%s' % e, network_id)
 
 
 def time_job(network_id):
@@ -185,6 +186,7 @@ def time_job(network_id):
                 break
     except Exception as e:
         print('取数出错！', e)
+        log.log(False, '取数出错！%s' % e, network_id)
     return gwData
 
 
@@ -231,7 +233,6 @@ def index(request):
     latest_data = models.GWData.objects.values('id', 'network_id', 'network_id__alias', 'battery', 'temperature', 'thickness').order_by('-id')[:10]
     sensor_nums = models.Sensor_data.objects.all().count()
     all_sensor_list = models.Sensor_data.objects.values('network_id', 'alias', 'sensor_run_status', 'sensor_online_status').filter(delete_status=0)
-    print('all_sensor_list', all_sensor_list)
 
     return render(request, 'index.html', locals())
 
@@ -335,7 +336,6 @@ def thickness_report(request):
     # db中存在的数据
     # data_obj = models.GWData.objects.filter().values('network_id', 'network_id__alias').distinct()
     data_obj = models.Sensor_data.objects.filter(delete_status=0).values('network_id', 'alias').distinct()
-    print(data_obj)
     return render(request, 'gateway/thickness_report.html', locals())
 
 
@@ -397,7 +397,6 @@ def set_timing_time(request):
         arr = request.POST.getlist('TimingDateList')
         if any(list(map(int, arr))):
             time_dict = handle_func.handle_data(arr)  # 处理数据
-            print('time_dict', time_dict)
             models.Set_Time.objects.filter(id=1).update(**time_dict)
             start_Timing_time(request)
             auto_Timing_time()
@@ -407,7 +406,8 @@ def set_timing_time(request):
         else:
             ret['message'] = '时间不合法！'
     except Exception as e:
-        print('set_Timing_time', e)
+        print('设置轮询定时时间', e)
+        log.log(False, '设置轮询定时时间失败！%s' % e)
         return HttpResponse(json.dumps(ret))
 
     return HttpResponse(json.dumps(ret))
@@ -425,11 +425,11 @@ def save_status(request):
     try:
         data_list = request.POST.get('data')
         data_list = json.loads(data_list)
-        print('data_list', data_list)
         models.TimeStatus.objects.filter(id=1).update(**data_list)
         ret = {'status': True, 'message': 'success'}
     except Exception as e:
         print(e)
+        log.log(False, "save_status: %s" % e)
     return HttpResponse(json.dumps(ret))
 
 
@@ -440,11 +440,9 @@ def start_Timing_time(request, reset=False):
     :param reset: 重置按钮标志位，如果为true，把定时模式暂停
     :return:
     """
-    print('aaaaaaaa')
     st_temp = models.Set_Time.objects.filter(id=1).values('days', 'hours', 'minutes')[0]
     for k, v in st_temp.items():
         st_temp[k] = int(v)
-    print('st_temp', st_temp)
     try:
         temp_trigger = scheduler._create_trigger(trigger='interval', trigger_args=st_temp)
         scheduler.modify_job('interval_time 0.0.0.0', trigger=temp_trigger)
@@ -452,11 +450,11 @@ def start_Timing_time(request, reset=False):
             scheduler.pause_job('interval_time 0.0.0.0')
         else:
             scheduler.resume_job('interval_time 0.0.0.0')
-            print('resume_job........')
 
         scheduler.get_job('interval_time 0.0.0.0')
     except Exception as e:
         print('start_Timing_time:', e)
+        log.log(False, "start_Timing_time: %s" % e)
         scheduler.shutdown()
 
 
@@ -473,9 +471,9 @@ def pause_Timing_time(request):
             scheduler.pause_job('interval_time 0.0.0.0')
             scheduler.get_job('interval_time 0.0.0.0')
             ret = {'status': True, 'message': 'success'}
-        print(TimingStatus)
     except Exception as e:
         print(e)
+        log.log(False, "pause_Timing_time: %s" % e)
     return HttpResponse(json.dumps(ret))
 
 
@@ -493,9 +491,9 @@ def resume_Timing_time(request):
             # scheduler.pause_job('interval_time 0.0.0.0')
             scheduler.get_job('interval_time 0.0.0.0')
             ret = {'status': True, 'message': 'success'}
-        print(TimingStatus)
     except Exception as e:
         print(e)
+        log.log(False, "resume_Timing_time: %s" % e)
     return HttpResponse(json.dumps(ret))
 
 
@@ -518,6 +516,7 @@ def reset_Timing_time(request):
         TimingStatus = False
     except Exception as e:
         print(e)
+        log.log(False, "reset_Timing_time: %s" % e)
     return HttpResponse(json.dumps(ret))
 
 
@@ -538,9 +537,13 @@ def data_json_report(request, nid):
             'name': "--名称：" + data_dict['network_id__alias'] + ' --厚度：' + data_dict['thickness'],
             'data': data_list
         }
-        response.append(temp)
+        thick_mm, Sound_T, PeakIndex1, PeakIndex2 = calThickness(data=eval(data_dict['data']), gain_db=60, nSize=len(eval(data_dict['data'])))
+        response.append([temp])
+        response.append(PeakIndex1)
+        response.append(PeakIndex2)
     except Exception as e:
         print(e)
+        log.log(False, "data_json_report: %s" % e)
 
     return HttpResponse(json.dumps(response))
 
@@ -570,6 +573,7 @@ def thickness_json_report(request):
         response['thickness_avg'] = thickness_avg
     except Exception as e:
         print(e)
+        log.log(False, "thickness_json_report: %s" % e)
 
     return HttpResponse(json.dumps(response))
 
@@ -667,7 +671,7 @@ def set_gateway_json(request):
     """
     gateway_data = json.loads(request.POST.get('gateway_data'))
     gateway_obj = models.Gateway.objects.first()
-    print(gateway_data)  # {'Enterprise': '中石油', 'name': '中石油1号网关', 'network_id': '0.0.1.0', 'gw_status': '1'}
+    # print(gateway_data)  # {'Enterprise': '中石油', 'name': '中石油1号网关', 'network_id': '0.0.1.0', 'gw_status': '1'}
     if gateway_obj:
         # update gateway
         result = operate_gateway.update_gateway(gateway_data, user=str(request.user))
@@ -694,9 +698,7 @@ def set_gateway_networkid(request):
         if check_network_id:
             network_id = handle_func.str_hex_dec(gw_ntid)
             command = "set 78 " + network_id
-            # set_gwntid_response = gw0.serCtrl.getSerialData(command, timeout=5)
-            time.sleep(3)
-            set_gwntid_response = 'ok'
+            set_gwntid_response = gw0.serCtrl.getSerialData(command, timeout=7)
             print('command', command)
             print('set_gwntid_response', set_gwntid_response.strip('\n'))
             if set_gwntid_response == 'ok':
@@ -707,6 +709,7 @@ def set_gateway_networkid(request):
             result = {'status': False, 'msg': '网络号有误'}
     except Exception as e:
         print(e)
+        log.log(False, "set_gateway_networkid: %s" % e)
         result = {'status': False, 'msg': '网络号有误'}
 
     return HttpResponse(json.dumps(result))
@@ -723,16 +726,14 @@ def get_gateway_networkid(request):
     result = {'status': False, 'gw_ntid': '未获取到网络号'}
     try:
         command = "get 78 "
-        # get_gwntid_response = gw0.serCtrl.getSerialData(command, timeout=5)
-        time.sleep(3)
-        get_gwntid_response = '768'
+        get_gwntid_response = gw0.serCtrl.getSerialData(command, timeout=7)
         print('get_gwntid_response', get_gwntid_response.strip('\n'))
         if get_gwntid_response:
             get_gwntid_response = handle_func.str_dec_hex(get_gwntid_response)
-            print('get_gwntid_response', get_gwntid_response.strip('\n'))
             result = {'status': True, 'gw_ntid': get_gwntid_response}
     except Exception as e:
         print(e)
+        log.log(False, "get_gateway_networkid: %s" % e)
 
     return HttpResponse(json.dumps(result))
 
@@ -817,9 +818,7 @@ def CAL_Sound_T_json(request):
             gwdata = []
             result['CAL_msg'] = '计算声时失败，此传感器未采集任何数据，请先采集一次数据后，再点击校准'
 
-        thick_mm, Sound_T = calThickness(data=gwdata, gain_db=60, nSize=len(gwdata))
-        print('thick_mm', thick_mm)
-        print('Sound_T', Sound_T)
+        thick_mm, Sound_T, PeakIndex1, PeakIndex2 = calThickness(data=gwdata, gain_db=60, nSize=len(gwdata))
 
         result['Sound_T'] = Sound_T
 
@@ -883,7 +882,7 @@ def receive_gw_data(request):
         receive_data = handle_func.handle_img_and_data(request)
 
         response = {'status': False, 'msg': '', 'receive_data': receive_data}
-        print('receive_data', receive_data)  # {"received_time_data":{"month":[],"day":[],"hour":["1"],"mins":["1"]},"sensor_id":"536876188","alias":"1号传感器","network_id":"0.0.0.1","choice":"update"}
+        # print('receive_data', receive_data)  # {"received_time_data":{"month":[],"day":[],"hour":["1"],"mins":["1"]},"sensor_id":"536876188","alias":"1号传感器","network_id":"0.0.0.1","choice":"update"}
 
         sensor_id = receive_data['sensor_id']
         network_id = receive_data.get('network_id')
@@ -894,7 +893,6 @@ def receive_gw_data(request):
         if choice == 'update':
             response = operate_sensor.update_sensor(receive_data, response)
             log.log(response['status'], response['msg'], network_id, request.user)
-            print('response', response)
             if response['status']:
                 receive_data['location_img_json'] = location_img_json
                 data = {'id': 'client', 'header': 'update_sensor', 'status': response['status'], 'msg': response['msg'],
@@ -903,6 +901,7 @@ def receive_gw_data(request):
                     client.publish('pub', json.dumps(data))  # 把网关更新的sensor数据发送给server
                 except Exception as e:
                     print(e)
+                    log.log(False, "receive_gw_data  update sensor: %s" % e)
 
         # 添加
         elif choice == 'add':
@@ -928,6 +927,7 @@ def receive_gw_data(request):
                     client.publish('pub', json.dumps(data))  # 把网关删除的sensor数据发送给server
                 except Exception as e:
                     print(e)
+                    log.log(False, "receive_gw_data  remove sensor: %s" % e)
 
         return HttpResponse(json.dumps(response))
 
@@ -939,7 +939,7 @@ def receive_server_data(receive_data):
     :return:
     """
     response = {'status': False, 'msg': '操作失败', 'receive_data': receive_data}
-    print('receive_data=------------', receive_data)  # {"received_time_data":{"month":[],"day":[],"hour":["1"],"mins":["1"]},"sensor_id":"536876188","alias":"1号传感器","network_id":"0.0.0.1","choice":"update"}
+    # print('receive_data=------------', receive_data)  # {"received_time_data":{"month":[],"day":[],"hour":["1"],"mins":["1"]},"sensor_id":"536876188","alias":"1号传感器","network_id":"0.0.0.1","choice":"update"}
 
     sensor_id = receive_data['sensor_id']
     choice = receive_data.pop('choice')
@@ -1000,7 +1000,7 @@ def set_sensor_params(request):
     result = {'status': False, 'msg': '设置参数中...'}
     val_dict = json.loads(request.POST.get('val_dict'))
     network_id = val_dict.pop('network_id')
-    print('val_dict', val_dict)
+    # print('val_dict', val_dict)
     try:
         # 判断Sample_Hz参数是否合法
         if int(val_dict['Sample_Hz']) < 200 or int(val_dict['Sample_Hz']) > 5000:
@@ -1011,6 +1011,7 @@ def set_sensor_params(request):
 
     except Exception as e:
         print(e, '设置参数失败')
+        log.log(False, "set_sensor_params: %s" % e)
 
     # log.log(result['status'], result['msg'], network_id, str(request.user))
 
@@ -1197,7 +1198,6 @@ def check_sensor_params_is_exists(request):
         else:
             ret['network_id_payload'] = 1
             ret['network_id_msg'] = '网络号错误！'
-        print('ret=-======================================================', ret)
 
     return HttpResponse(json.dumps(ret))
 
@@ -1265,6 +1265,7 @@ def server_get_data(network_id):
 
     except Exception as e:
         print(e)
+        log.log(False, "server_get_data: %s" % e)
 
     return result
 
@@ -1300,7 +1301,6 @@ def gw_get_data_func():
         elif true_header == "test_signal_strength":
             network_id = gw_queue_1.get('network_id')
             handle_func.handle_test_signal_strength(network_id)
-            print("test_signal_strength.......................................", network_id)
 
 
 # 网关取数队列线程

@@ -355,7 +355,7 @@ def handle_test_signal_strength(network_id):
     :return:
     """
     command = "get 65 " + network_id.rsplit('.', 1)[1]
-    online_of_sensor_signal_strength_response = views.gw0.serCtrl.getSerialData(command, timeout=6)
+    online_of_sensor_signal_strength_response = views.gw0.serCtrl.getSerialData(command, timeout=7)
     # online_of_sensor_signal_strength_response = 'ok, 40'
     response_msg = online_of_sensor_signal_strength_response.strip('\n').split(',')[0]
     if response_msg == 'ok':
@@ -400,7 +400,7 @@ def check_online_of_sensor_status():
             network_id = sensor_obj['network_id']
             command = "get 65 " + network_id.rsplit('.', 1)[1]
             print('command', command)
-            online_of_sensor_status_response = views.gw0.serCtrl.getSerialData(command, timeout=6)
+            online_of_sensor_status_response = views.gw0.serCtrl.getSerialData(command, timeout=7)
             response_msg = online_of_sensor_status_response.strip('\n').split(',')[0]
             print('online_of_sensor_status_response_msg', response_msg)
             if response_msg == 'ok':
@@ -458,7 +458,7 @@ def str_dec_hex(network_id):
     :param network_id:
     :return:
     """
-    network_id_hex = str(hex(int(network_id))).split('x')[1]  # 103  assdfsssdfsfsdfsdfs
+    network_id_hex = str(hex(int(network_id))).split('x')[1]  # 103
     network_id_str = (8 - len(network_id_hex)) * '0' + network_id_hex
     pattern = re.compile('.{2}')
     network_id_str_list = pattern.findall(network_id_str)
@@ -488,7 +488,6 @@ def check_network_id(network_id):
     except Exception as e:
         print('network_id不合法', e)
         return False
-
 
 
 def update_sensor_data(all_vals):

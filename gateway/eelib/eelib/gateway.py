@@ -43,7 +43,7 @@ class Gateway(GatewayCtrl):
         thick_mm = -19
         if(svrdata["data_len"] == 2048):
             # thick_mm = calThickness(data=svrdata['data'], gain_db=svrdata['gain'], Sound_V=Sound_V)
-            thick_mm, Sound_T = calThickness(data=svrdata['data'], gain_db=60, Sound_V=Sound_V)
+            thick_mm, Sound_T, PeakIndex1, PeakIndex2 = calThickness(data=svrdata['data'], gain_db=60, Sound_V=Sound_V)
         return thick_mm
 
     def handle_deviation_data(self, data):
