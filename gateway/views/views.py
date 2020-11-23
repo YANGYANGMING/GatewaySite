@@ -1225,9 +1225,12 @@ def check_GW_alias(request):
         while (time.time() - start_time) < 2:
             if handle_func.check_GW_alias_payload:
                 check_GW_alias_payload = handle_func.check_GW_alias_payload['GW_alias_is_exist']
-                ret = {'check_GW_alias_payload': check_GW_alias_payload}
+                check_GW_network_id_payload = handle_func.check_GW_alias_payload['GW_network_id_is_exist']
+                ret = {'check_GW_alias_payload': check_GW_alias_payload, 'check_GW_network_id_payload': check_GW_network_id_payload}
                 if ret['check_GW_alias_payload']:
                     ret['msg'] = '已存在此网关名称！'
+                elif ret['check_GW_network_id_payload']:
+                    ret['msg'] = '已存在此网关网络号！'
                 else:
                     ret['msg'] = ''
                 break

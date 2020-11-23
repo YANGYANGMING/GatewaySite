@@ -41,6 +41,7 @@
                         <div class="form-group">
                             <label for="network_id">网关网络号</label>
                             <a href="/gateway/system-settings"><input type="text" class="form-control" name="network_id" id="network_id" value="" disabled></a>
+                            <p id="network-id-msg" style="color: red"></p>
                         </div>
                     </div>
                       <div class="col-xs-6 col-md-4 col-md-offset-1">
@@ -124,6 +125,7 @@
             old_gateway_name = $('#name').val();
 
             GW_alias_is_exist = false;
+            GW_network_id_is_exist = false;
 
             ShowOriginData();
 
@@ -132,7 +134,7 @@
         // 通过判断条件来获取网关网络号
         if ("{{ gateway_obj }}" === "None"){
             if ("{{ gwntid }}" === ""){
-                $('#network_id').val('暂无网关，请点击设置').css('color', 'red');
+                $('#network_id').val('暂无网关，请点击系统设置').css('color', 'red');
             }else{
                 $('#network_id').val("{{ gwntid }}");
             }
@@ -169,6 +171,9 @@
                 } else if (GW_alias_is_exist) {
                     $('#update-gateway').html('已存在此网关名称！');
                     $('#loading').busyLoad("hide");
+                } else if (GW_network_id_is_exist) {
+                    $('#update-gateway').html('已存在此网关网络号！');
+                    $('#loading').busyLoad("hide");
                 } else{
                     $.ajax({
                         url: '/gateway/set-gateway-json',
@@ -202,8 +207,17 @@
                 dataType: "JSON",
                 success:function (arg) {
                     GW_alias_is_exist = arg.check_GW_alias_payload;
+                    GW_network_id_is_exist = arg.check_GW_network_id_payload;
                     console.log(GW_alias_is_exist);
-                    $('#name-msg').html(arg.msg);
+                    console.log(GW_network_id_is_exist);
+                    if (GW_alias_is_exist) {
+                        $('#name-msg').html(arg.msg);
+                    }else if(GW_network_id_is_exist) {
+                        $('#network-id-msg').html(arg.msg);
+                    } else {
+                        $('#name-msg').html(arg.msg);
+                        $('#network-id-msg').html(arg.msg);
+                    }
 
                 }
             })

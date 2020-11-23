@@ -77,9 +77,10 @@ WSGI_APPLICATION = 'GatewaySite.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        # 'NAME': os.path.join(BASE_DIR, 'db1haoGW.sqlite3'),
+        # 'NAME': os.path.join(BASE_DIR, 'db2down.sqlite3'),
         'NAME': os.path.join(BASE_DIR, 'ORISONIC_GW_db.sqlite3'),
     }
+
 }
 
 
@@ -157,12 +158,16 @@ MQTT_USERNAME = "ORISONIC"
 MQTT_PASSWORD = "ORISONIC2020"
 MQTT_HOST = "121.36.220.210"
 # MQTT_HOST = "47.93.190.54"
-crtPath = BASE_DIR + r"/crt_47.93.190.54"
+crtPath = BASE_DIR + r"/crt"
+
+
 ca_certs = "%s/ca/MyRootCA.pem" % crtPath
 certfile = "%s/client/MyClient1.pem" % crtPath
 keyfile = "%s/client/MyClient1.key" % crtPath
 
 # SM2
+private_key = ''
+ID = ''
 
 # 错误日志
 ERROR_LOG_FILE = os.path.join(BASE_DIR, "log", 'error.log')
