@@ -78,5 +78,4 @@ def calThickness(data, gain_db, nSize=2048, Sound_V=3240, freq_Hz=40e6):
         print('PeakIndex2.params', PeakIndex2.params[0])
         print('PeakNum.params', PeakNum.params[0])
 
-
     return thick_mm, Sound_T, PeakIndex1.params[0], PeakIndex2.params[0]

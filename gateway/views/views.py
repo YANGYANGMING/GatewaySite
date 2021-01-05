@@ -537,10 +537,10 @@ def data_json_report(request, nid):
             'name': "--名称：" + data_dict['network_id__alias'] + ' --厚度：' + data_dict['thickness'],
             'data': data_list
         }
-        thick_mm, Sound_T, PeakIndex1, PeakIndex2 = calThickness(data=eval(data_dict['data']), gain_db=60, nSize=len(eval(data_dict['data'])))
+        # thick_mm, Sound_T, PeakIndex1, PeakIndex2 = calThickness(data=eval(data_dict['data']), gain_db=60, nSize=len(eval(data_dict['data'])))
         response.append([temp])
-        response.append(PeakIndex1)
-        response.append(PeakIndex2)
+        # response.append(PeakIndex1)
+        # response.append(PeakIndex2)
     except Exception as e:
         print(e)
         log.log(False, "data_json_report: %s" % e)
@@ -589,9 +589,9 @@ def edit_sensor(request, sensor_id):
     received_time_data = eval(models.Sensor_data.objects.filter(sensor_id=sensor_id).values('received_time_data')[0]['received_time_data'])
     sensor_obj = models.Sensor_data.objects.get(sensor_id=sensor_id)
     date_of_installation = str(sensor_obj.date_of_installation)
-    sensor_type = {'ETM-100': 0}
+    sensor_type = {'ETM-100': 1}
     Importance = {'重要': 1, '一般': 0}
-    material = models.Material.objects.values('id', 'name').all().order_by('id')
+    material = models.Material.objects.values('name').all().order_by('id')
     context = {
         "day_interval": [i for i in range(0, 32)],
         "hour_interval": [i for i in range(0, 24)],
@@ -627,9 +627,9 @@ def add_sensor_page(request, network_id):
     if gateway_obj:
         gwntid = models.Gateway.objects.values('network_id')[0]['network_id']
         gwntid_prefix = gwntid.rsplit('.', 1)[0]
-        sensor_type = {'ETM-100': 0}
+        sensor_type = {'ETM-100': 1}
         Importance = {'一般': 0, '重要': 1}
-        material = models.Material.objects.values('id', 'name').all().order_by('id')
+        material = models.Material.objects.values('name').all().order_by('id')
         longitude = 0.0
         latitude = 0.0
         context = {
@@ -791,8 +791,12 @@ def show_soundV_json(request):
     :return:
     """
     if request.method == 'POST':
-        selected_material_id = json.loads(request.POST.get('selected_material_id'))
-        soundV = models.Material.objects.values('sound_V').get(id=selected_material_id)['sound_V']
+        selected_material = request.POST.get('selected_material')
+        soundV_obj = models.Material.objects.values('sound_V').filter(name=selected_material)
+        if soundV_obj:
+            soundV = soundV_obj[0]['sound_V']
+        else:
+            soundV = 3249
         result = {'soundV': soundV}
 
         return HttpResponse(json.dumps(result))
@@ -807,9 +811,8 @@ def CAL_Sound_T_json(request):
     """
     if request.method == 'POST':
         result = {'material_name': '', 'Sound_T': 0, 'CAL_msg': ''}
-        selected_material_id = request.POST.get('selected_material_id')
         network_id = request.POST.get('network_id')
-        material_name = models.Material.objects.values('name').get(id=selected_material_id)['name']
+        material_name = models.Sensor_data.objects.values('material').get(network_id=network_id)['material']
         result['material_name'] = material_name
         gwdata_obj = models.GWData.objects.filter(network_id=network_id)
         if gwdata_obj:
@@ -836,9 +839,9 @@ def CAL_Sound_V_json(request):
         try:
             thickness = float(request.POST.get('thickness'))
             Sound_T = float(request.POST.get('Sound_T'))
-            material_id = request.POST.get('material_id')
+            network_id = request.POST.get('network_id')
             Sound_V = int(thickness * 40e6 * 2 / Sound_T / 1000)
-            models.Material.objects.filter(id=material_id).update(sound_V=Sound_V)
+            models.Sensor_data.objects.filter(network_id=network_id).update(sound_V=Sound_V)
             result = {'status': True, 'Sound_V': Sound_V}
         except:
             result = {'status': False, 'Sound_V': 0}
@@ -882,7 +885,7 @@ def receive_gw_data(request):
         receive_data = handle_func.handle_img_and_data(request)
 
         response = {'status': False, 'msg': '', 'receive_data': receive_data}
-        # print('receive_data', receive_data)  # {"received_time_data":{"month":[],"day":[],"hour":["1"],"mins":["1"]},"sensor_id":"536876188","alias":"1号传感器","network_id":"0.0.0.1","choice":"update"}
+        print('receive_data', receive_data)  # {"received_time_data":{"month":[],"day":[],"hour":["1"],"mins":["1"]},"sensor_id":"536876188","alias":"1号传感器","network_id":"0.0.0.1","choice":"update"}
 
         sensor_id = receive_data['sensor_id']
         network_id = receive_data.get('network_id')

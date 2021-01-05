@@ -5,7 +5,104 @@
 {% block main_content %}
 
     <!-- Main content -->
-    <section class="content">
+    <section class="content" id="loading">
+
+        <!-- models -->
+      <div class="modal fade" id="CALModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title"></h4>
+          </div>
+          <div class="modal-body">
+              <form class="form-horizontal">
+                <div class="box-body">
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">网络号：</label>
+                        <div class="col-sm-5">
+                            <input type="text" class="form-control" id="modal-network-id"  value="" disabled>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">材料名：</label>
+                        <div class="col-sm-5">
+                            <input type="text" class="form-control" id="modal-material" value="" disabled>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">厚度值：</label>
+                        <div class="col-sm-5">
+                            <input type="text" class="form-control" id="modal-thickness" value="">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-4 control-label">声时：</label>
+                        <div class="col-sm-5">
+                            <input type="text" class="form-control" id="modal-sound-T" value="" disabled>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                          <label class="col-sm-4 control-label"></label>
+                          <div class="col-sm-5">
+                            <span id="CAL-response-msg" style="color: red;"></span>
+                          </div>
+                    </div>
+              </div>
+              </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default pull-left" data-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" id="CAL-Sound-V">确认校准</button>
+          </div>
+        </div>
+        <!-- /.modal-content -->
+      </div>
+      <!-- /.modal-dialog -->
+    </div>
+      <!-- /.modal -->
+
+    <!-- Modal -->
+    <div class="modal fade" id="delModel" tabindex="-1" role="dialog" aria-labelledby="delModelLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="delModelLabel">删除警告</h4>
+          </div>
+          <div class="modal-body">
+              <h4 style="color: red;">删除{{ sensor_obj.alias }}(保留其已采集的数据)</h4>
+              <h4 style="color: red;" id="response-delete-msg"></h4>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <a onclick="Delete(forcedelete=false)" type="button" class="btn btn-primary">确认删除</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal -->
+    <div class="modal fade" id="ForcedelModel" tabindex="-1" role="dialog" aria-labelledby="ForcedelModelLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="ForcedelModelLabel">强制删除警告</h4>
+          </div>
+          <div class="modal-body">
+              <h4 style="color: red;">强制删除{{ sensor_obj.alias }}(同时删除其已采集的数据)</h4>
+              <h4 style="color: red;" id="response-force-delete-msg"></h4>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+            <a onclick="Delete(forcedelete=true)" type="button" class="btn btn-primary">确认删除</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
 
       <!-- /.table -->
       <div class="box">
@@ -19,66 +116,159 @@
             <!-- /.box-header -->
         <div class="box-body">
               <div class="row">
-                <div class="col-xs-4 col-md-offset-1">
+                  <div class="col-xs-6 col-md-4 col-md-offset-1">
                     <div class="form-group">
                         <label for="sensor-id">传感器ID</label>
-                        <input type="text" class="form-control" name="sensor-id" id="sensor-id" value="{{ sensor_id }}" disabled>
+                        <input type="text" class="form-control" name="sensor-id" id="sensor-id" value="{{ sensor_obj.sensor_id }}" disabled>
                     </div>
                 </div>
-                <div class="col-xs-4 col-md-offset-1">
+                <div class="col-xs-6 col-md-4 col-md-offset-1">
                     <div class="form-group">
                         <label for="alias">传感器名称</label>
-                        <input type="text" class="form-control" name="alias" id="alias" value="{{ alias }}">
+                        <input type="text" class="form-control" name="alias" id="alias" value="{{ sensor_obj.alias }}" onblur="CheckAliasToUpdateSensor()">
+{#                        <input type="text" class="form-control" name="alias" id="alias" value="{{ sensor_obj.alias }}" onmousemove="CheckAliasToUpdateSensor()">#}
+                        <p id="alias-msg" style="color: red"></p>
+                    </div>
+                </div>
+                <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="network_id">传感器网络号</label>
+                        <input type="text" class="form-control" name="network-id" id="network-id" value="{{ sensor_obj.network_id }}" disabled>
+                    </div>
+                </div>
+                  <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="sensor-type">传感网类型</label>
+                        <select class="form-control select2" name="sensor-type" id="sensor-type" style="width: 100%;">
+                          {% for k, v in sensor_type.items %}
+                              <option value="{{ v }}">{{ k }}</option>
+                          {% endfor %}
+                        </select>
+                    </div>
+                </div>
+              <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="Importance">重要性</label>
+                        <select class="form-control select2" name="Importance" id="Importance" style="width: 100%;">
+                          {% for k, v in Importance.items %}
+                              <option value="{{ v }}">{{ k }}</option>
+                          {% endfor %}
+                        </select>
+                    </div>
+                      <!-- /.form-group -->
+                </div>
+{#                <div class="col-xs-3 col-md-2 col-md-offset-1">#}
+{#                    <div class="form-group">#}
+{#                        <label for="material">材料</label>#}
+{#                        <select class="form-control select2" name="material" id="material" style="width: 100%;">#}
+{#                          {% for item in material %}#}
+{#                              <option value="{{ item.id }}">{{ item.name }}</option>#}
+{#                          {% endfor %}#}
+{#                        </select>#}
+{#                    </div>#}
+{#                  </div>#}
+                <div class="col-xs-3 col-md-2 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="material">材料</label>
+                        <input class="form-control" id="material" type="text" list="materiallist" value="" onchange="SelectToShowSoundV()">
+                        <datalist id="materiallist">
+                          {% for item in material %}
+                              <option>{{ item.name }}</option>
+                          {% endfor %}
+                        </datalist>
+                    </div>
+                  </div>
+                  <div class="col-xs-3 col-md-2">
+                    <div class="form-group">
+                        <label for="sound-V">声速(m/s)&nbsp;&nbsp;&nbsp;&nbsp;<a href="" data-toggle="modal" data-target="#CALModal" onclick="ShowCALModel();">校准</a></label>
+                        <input type="text" class="form-control" name="sound-V" id="sound-V" value="">
+                    </div>
+                </div>
+                  <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="area">所在区域</label>
+                        <input type="text" class="form-control" name="area" id="area" value="{{ sensor_obj.area }}">
+                    </div>
+                </div>
+                  <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="location">所在位置</label>
+                        <input type="text" class="form-control" name="location" id="location" value="{{ sensor_obj.location }}">
+                    </div>
+                </div>
+                  <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="longitude">所在位置经度</label>
+                        <input type="text" class="form-control" name="longitude" id="longitude" value="{{ sensor_obj.longitude }}">
+                    </div>
+                </div>
+                  <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="latitude">所在位置纬度</label>
+                        <input type="text" class="form-control" name="latitude" id="latitude" value="{{ sensor_obj.latitude }}">
+                    </div>
+                </div>
+                  <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="date-of-installation">安装日期</label>
+                        <input type="text" class="form-control" name="date-of-installation" id="date-of-installation" value="{{ date_of_installation }}">
+                    </div>
+                </div>
+                  <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="assembly-crewman">安装人员</label>
+                        <input type="text" class="form-control" name="assembly-crewman" id="assembly-crewman" value="{{ sensor_obj.assembly_crewman }}">
+                    </div>
+                </div>
+                  <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="description">描述</label>
+{#                        <input type="text" class="form-control" name="description" id="description" value="{{ sensor_obj.description }}">#}
+                        <textarea style="height: 80px; width: 100%;" name="description" id="description" value="{{ sensor_obj.description }}">{{ sensor_obj.description }}</textarea>
+                    </div>
+                </div>
+                  <div class="col-xs-6 col-md-4 col-md-offset-1">
+                    <div class="form-group">
+                        <label for="location_img_path">所在位置图片</label>
+                        <div style="position: relative">
+                            <img id="exist-img-path" src="/{{ sensor_obj.location_img_path }}" alt="" style="display: inline-block; width: 100px;">
+                            <input type="file" name="location-img-path" id="location-img-path" style="display: inline-block">
+                        </div>
                     </div>
                 </div>
               </div>
-            <!-- /.col -->
               <div class="row">
-                <div class="col-xs-4 col-md-offset-1">
-                    <div class="form-group">
-                        <label for="month">月份：</label>
-                        <select class="form-control select2" multiple="multiple"
-                               name="month" id="month" style="width: 100%;">
-                          {% for item in context.month_cron %}
-                              <option value="{{ item }}">{{ item }}</option>
-                          {% endfor %}
-                        </select>
-                    </div>
-                      <!-- /.form-group -->
-                </div>
-                <div class="col-xs-4 col-md-offset-1">
-                    <div class="form-group">
-                        <label for="day">天：</label>
-                        <select class="form-control select2" multiple="multiple"
-                               name="day" id="day" style="width: 100%;">
-                          {% for item in context.day_cron %}
-                              <option value="{{ item }}">{{ item }}</option>
-                          {% endfor %}
-                        </select>
-                    </div>
-                      <!-- /.form-group -->
-                </div>
+                  <h4 style="font-weight: bolder" class="col-xs-12 col-md-12 col-md-offset-1">设置传感器采样时间 <b style="color: red;">*</b></h4>
               </div>
             <!-- /.col -->
               <div class="row">
-                <div class="col-xs-4 col-md-offset-1">
+                <div class="col-xs-4 col-md-3 col-md-offset-1">
                     <div class="form-group">
-                        <label for="hour">小时：</label>
-                        <select class="form-control select2" multiple="multiple"
-                               name="hour" id="hour" style="width: 100%;">
-                          {% for item in context.hour_cron %}
+                        <label for="days">天：</label>
+                        <select class="form-control select2" name="days" id="days" style="width: 100%;">
+                          {% for item in context.day_interval %}
                               <option value="{{ item }}">{{ item }}</option>
                           {% endfor %}
                         </select>
                     </div>
                       <!-- /.form-group -->
                 </div>
-                <div class="col-xs-4 col-md-offset-1">
+                <div class="col-xs-4 col-md-3">
                     <div class="form-group">
-                        <label for="mins">分钟：</label>
-                        <select class="form-control select2" multiple="multiple"
-                               name="mins" id="mins" style="width: 100%;">
-                          {% for item in context.minute_cron %}
+                        <label for="hours">小时：</label>
+                        <select class="form-control select2" name="hours" id="hours" style="width: 100%;">
+                          {% for item in context.hour_interval %}
+                              <option value="{{ item }}">{{ item }}</option>
+                          {% endfor %}
+                        </select>
+                    </div>
+                      <!-- /.form-group -->
+                </div>
+                <div class="col-xs-4 col-md-3">
+                    <div class="form-group">
+                        <label for="minutes">分钟：</label>
+                        <select class="form-control select2" name="minutes" id="minutes" style="width: 100%;">
+                          {% for item in context.minute_interval %}
                               <option value="{{ item }}">{{ item }}</option>
                           {% endfor %}
                         </select>
@@ -88,9 +278,14 @@
               </div>
             <!-- /.col -->
             <div class="row">
-                <div class="col-md-3 col-md-offset-5">
+                <div class="col-md-3 col-md-offset-3">
                   <div class="form-group" style="margin-top: 10px">
-                      <span id="timing-save-msg" style="color: red;"></span>
+                      <span id="response-msg" style="color: red;"></span>
+                  </div>
+                </div>
+                <div class="col-md-1">
+                  <div class="form-group">
+                      <a href="javascript:history.go(-1);" type="button" class="btn btn-default">取消</a>
                   </div>
                 </div>
                 <div class="col-md-1">
@@ -100,7 +295,16 @@
                 </div>
                 <div class="col-md-1">
                   <div class="form-group">
-                      <button type="button" class="btn btn-danger" onclick="Delete()">删除</button>
+                      <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#delModel">
+                          删除
+                      </button>
+                  </div>
+                </div>
+                <div class="col-md-1">
+                  <div class="form-group">
+                      <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#ForcedelModel">
+                          强制删除
+                      </button>
                   </div>
                 </div>
         </div>
@@ -120,87 +324,252 @@
         $(function () {
             $('.select2').select2();
 
-            ShowOriginData()
+            // 当材料被选中时，显示其对应的声速
+
+            ShowOriginData();
+
+            SaveCALModal()
+
         });
 
         //刷新页面保留上次数据
         function ShowOriginData() {
 
-            var month = "{{ received_time_data.month }}";
-            month = month.split(',');
-            $('#month').val(month).trigger("change");
-            var day = "{{ received_time_data.day }}";
-            day = day.split(',');
-            $('#day').select2("val", [day]);
-            var hour = "{{ received_time_data.hour }}";
-            hour = hour.split(',');
-            $('#hour').select2("val", [hour]);
-            var mins = "{{ received_time_data.mins }}";
-            mins = mins.split(',');
-            $('#mins').select2("val", [mins]);
+            var days = "{{ received_time_data.days }}";
+            $('#days').select2("val", [days]);
+            var hours = "{{ received_time_data.hours }}";
+            $('#hours').select2("val", [hours]);
+            var minutes = "{{ received_time_data.minutes }}";
+            $('#minutes').select2("val", [minutes]);
+
+            var sensor_type = "{{ sensor_obj.sensor_type }}";
+            sensor_type = sensor_type.split(',');
+            $('#sensor-type').select2("val", [sensor_type]);
+            var Importance = "{{ sensor_obj.Importance }}";
+            Importance = Importance.split(',');
+            $('#Importance').select2("val", [Importance]);
+            var material = "{{ sensor_obj.material }}";
+            $('#material').val(material);
+            var sound_V = "{{ sensor_obj.sound_V }}";
+            $('#sound-V').val(sound_V);
+            {#ShowSoundV(material)#}
 
         }
 
         function Update() {
-            var sensor_id = $('#sensor-id').val();
-            var alias = $('#alias').val();
-            var month = $('#month').val();
-            var day = $('#day').val();
-            var hour = $('#hour').val();
-            var mins = $('#mins').val();
-            var time_data = {'month': month, 'day': day, 'hour': hour, 'mins': mins};
-            var data = [JSON.stringify({'time_data': time_data}), JSON.stringify({'sensor_id': sensor_id}),
-                JSON.stringify({'alias': alias}), JSON.stringify({'choice': 'update'})];
-            $.ajax({
-                url: '/gateway/receive-server-data',
-                type:'POST',
-                data: {'data': data},
-                traditional: true,
-                dataType:'JSON',
-                success:function (arg) {
-                    if(arg.status){
-                        console.log(arg.msg);
-                        {#window.history.back(-1);#}
-                        window.location.href="/gateway/set-sensor-time";
-                    }else {
-                        $('#timing-save-msg').text(arg.msg);
-                        ClearMSG('timing-save-msg');
-                    }
-                }
-            })
 
+            ShowLoading();
+            CheckAliasToUpdateSensor();
+
+            setTimeout(function () {
+
+                var fd = new FormData();
+                var sensor_id = $('#sensor-id').val();
+                var alias = $('#alias').val();
+                var network_id = $('#network-id').val();
+                var sensor_type = $('#sensor-type').val();
+                var Importance = $('#Importance').val();
+                var material = $('#material').val();
+                var sound_V = $('#sound-V').val();
+                var date_of_installation = $('#date-of-installation').val();
+                var area = $('#area').val();
+                var location = $('#location').val();
+                var longitude = $('#longitude').val();
+                var latitude = $('#latitude').val();
+                var assembly_crewman = $('#assembly-crewman').val();
+                var location_img_obj = $('#location-img-path')[0].files[0];
+                var description = $('#description').val();
+                var days = $('#days').val();
+                var hours = $('#hours').val();
+                var minutes = $('#minutes').val();
+                var received_time_data = {'days': days, 'hours': hours, 'minutes': minutes};
+
+                // 判断scr是否为空
+                var exist_img_path = '';
+                if ($('#exist-img-path').attr("src").length !== 0) {
+                    exist_img_path = $('#exist-img-path')[0].src;
+                }
+
+                var data = JSON.stringify({'received_time_data': received_time_data, 'sensor_id': sensor_id, 'alias': alias,
+                    'network_id': network_id, 'choice': 'update', 'sensor_type': sensor_type, 'Importance': Importance,
+                    'material': material, 'sound_V': sound_V, 'date_of_installation': date_of_installation, 'area': area, 'location': location,
+                    'longitude': longitude, 'latitude': latitude, 'assembly_crewman': assembly_crewman,
+                    'description': description, 'exist_img_path': exist_img_path});
+                fd.append('data', data);
+                fd.append('location_img_obj', location_img_obj);
+
+                if (location_img_obj) {
+                    $('#response-msg').html('正在压缩上传图片,请稍等...');
+                 }
+
+                if (received_time_data.days === '0' && received_time_data.hours === '0' && received_time_data.minutes === '0'){
+                    $('#response-msg').html('时间不合法！');
+                    $('#loading').busyLoad("hide");
+                } else if (received_time_data.days === '0' && parseInt(received_time_data.hours) <= 11){
+                    $('#response-msg').html('时间不能小于12小时！');
+                    $('#loading').busyLoad("hide");
+                    ClearMSG('#response-msg');
+                }  else if (alias_is_exist) {
+                    $('#response-msg').html('已存在此传感器名称！');
+                    $('#loading').busyLoad("hide");
+                } else if (alias === ""){
+                    $('#response-msg').html('传感器名称不能为空！');
+                    $('#loading').busyLoad("hide");
+                    ClearMSG('#response-msg');
+                } else{
+                    $.ajax({
+                        url: '/gateway/receive-gw-data',
+                        type:'POST',
+                        data: fd,
+                        processData : false, // 使数据不做处理
+                        contentType : false, // 不要设置Content-Type请求头
+                        success:function (arg) {
+                            $('#loading').busyLoad("hide");
+                            var args = JSON.parse(arg);
+                            console.log(args);
+                            $('#response-msg').html(args.msg);
+                            if(args.status){
+                                ClearMSG('#response-msg');
+                            }
+                        }
+                    })
+                }
+
+            }, 1500);
         }
 
         // 删除传感器
-        function Delete() {
+        function Delete(forcedelete) {
+            ShowLoading();
+
+            var fd = new FormData();
+            var location_img_obj = '';
             var sensor_id = $('#sensor-id').val();
-            var alias = '';
-            var time_data = {'month': [], 'day': [], 'hour': [], 'mins': []};
-            var data = [JSON.stringify({'time_data': time_data}), JSON.stringify({'sensor_id': sensor_id}),
-                JSON.stringify({'alias': alias}), JSON.stringify({'choice': 'remove'})];
+            var network_id = $('#network-id').val();
+            var exist_img_path = '';
+            var data = JSON.stringify({'sensor_id': sensor_id, 'network_id': network_id, 'choice': 'remove', 'exist_img_path': exist_img_path,
+                'forcedelete': forcedelete});
+            fd.append('data', data);
+            fd.append('location_img_obj', location_img_obj);
             $.ajax({
-                url: "/gateway/receive-server-data",
+                url: "/gateway/receive-gw-data",
                 type:'POST',
-                data: {'data': data},
-                traditional: true,
-                dataType:'JSON',
+                data: fd,
+                processData : false, // 使数据不做处理
+                contentType : false, // 不要设置Content-Type请求头
                 success:function (arg) {
+                    $('#loading').busyLoad("hide");
+                    arg = JSON.parse(arg);
+                    console.log(arg);
+                    $('#response-delete-msg').html(arg.msg);
+                    $('#response-force-delete-msg').html(arg.msg);
                     if(arg.status){
-                        $('#timing-save-msg').text(arg.msg);
-                        Sleep()
-                    }else {
-                        $('#timing-save-msg').text(arg.msg);
-                        ClearMSG('timing-save-msg');
+                    if (forcedelete){
+                        ClearMSG('#response-force-delete-msg');
+                    }
+                        ClearMSG('#response-delete-msg');
                     }
                 }
             })
         }
 
+        //检查服务器中的传感器alias，为update sensor准备
+        function CheckAliasToUpdateSensor() {
+            var alias = $('#alias').val();
+            var network_id = $('#network-id').val();
+            var sensor_id = $('#sensor-id').val();
+            $.ajax({
+                url: "/gateway/check-sensor-params-is-exists",
+                type:'POST',
+                data: {'alias': alias, 'network_id': network_id, 'sensor_id': sensor_id, 'choice': 'update'},
+                dataType: "JSON",
+                success:function (arg) {
+                    alias_is_exist = arg.alias_payload;
+                    $('#alias-msg').html(arg.alias_msg);
+
+                }
+            })
+        }
+
+        // 选中材料显示声速
+        function SelectToShowSoundV(){
+            var selected_material = $('#material').val();
+            ShowSoundV(selected_material);
+        }
+
+        // 显示声速
+        function ShowSoundV(selected_material) {
+            $.ajax({
+                url: '/gateway/show-soundV-json',
+                data: {'selected_material': selected_material},
+                type: 'POST',
+                dataType: 'JSON',
+                success: function (arg) {
+                    var soundV = arg['soundV'];
+                    $('#sound-V').val(soundV)
+                }
+            })
+        }
+
+        // 显示校准模态框
+      function ShowCALModel() {
+          var network_id = $('#network-id').val();
+
+          $("#modal-network-id").val(network_id);
+
+          $.ajax({
+              url: '/gateway/CAL-Sound-T-json',
+              data: {'network_id': network_id},
+              type: 'POST',
+              dataType: 'JSON',
+              success: function (arg) {
+                  console.log(arg);
+                  $(".modal-title").html("校准【" + arg.material_name + "】声速");
+                  $('#modal-material').val(arg.material_name);
+                  if (arg.Sound_T){
+                      $('#modal-sound-T').val(arg.Sound_T);
+                  }else{
+                      $('#modal-sound-T').val('计算失败');
+                  }
+                  $('#CAL-response-msg').html(arg.CAL_msg);
+
+              }
+          });
+
+      }
+
+      function SaveCALModal() {
+          $('#CAL-Sound-V').click(function () {
+
+          $('#CAL-response-msg').html('校准中...');
+          var thickness = $("#modal-thickness").val();
+          var sound_T = $("#modal-sound-T").val();
+          var network_id = $('#modal-network-id').val();
+
+          $.ajax({
+               url: '/gateway/CAL-Sound-V-json',
+               type: 'POST',
+               data: {'thickness': thickness, 'Sound_T': sound_T, 'network_id': network_id},
+               dataType: 'JSON',
+               success: function (arg) {
+                   if (arg.status){
+                       $('#CAL-response-msg').html('校准成功：校准为' + arg.Sound_V);
+                   }else{
+                       $('#CAL-response-msg').html('校准失败');
+                   }
+
+               }
+            });
+          })
+      }
+
+
         //清除提示信息
-        function ClearMSG(nid) {
+        function ClearMSG(ele_id) {
             setTimeout(function () {
-                $("#"+nid).text('')
-            }, 3000);
+                $(ele_id).html('');
+                window.location.href="/gateway/sensor-manage";
+            }, 1500);
         }
 
         //睡眠2秒

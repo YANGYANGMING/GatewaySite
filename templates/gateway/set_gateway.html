@@ -67,7 +67,7 @@
                 <div class="col-xs-6 col-md-4 col-md-offset-1">
                     <div class="form-group">
                         <label for="Enterprise">公司名称</label>
-                        <input type="text" class="form-control" name="Enterprise" id="Enterprise" value="{{ gateway_obj.Enterprise }}" disabled>
+                        <input type="text" class="form-control" name="Enterprise" id="Enterprise" value="{{ gateway_obj.Enterprise }}">
                     </div>
                 </div>
                 <div class="col-xs-6 col-md-4 col-md-offset-1">
@@ -79,7 +79,7 @@
                   <div class="col-xs-6 col-md-4 col-md-offset-1">
                     <div class="form-group">
                         <label for="gw_status">网关在线状态</label>
-                        <select class="form-control select2" name="gw_status" id="gw_status" style="width: 100%;">
+                        <select class="form-control select2" name="gw_status" id="gw_status" style="width: 100%;" disabled>
                           {% for k, v in gw_status.items %}
                               <option value="{{ v }}">{{ k }}</option>
                           {% endfor %}
@@ -153,8 +153,8 @@
         }
 
         function Conform() {
-            ShowLoading();
             CheckGWAlias();
+            ShowLoading();
 
             setTimeout(function () {
 
@@ -193,7 +193,7 @@
                         }
                     })
                 }
-            }, 1500);
+            }, 3000);
         }
 
         //检查服务器中的网关name，为update/add gateway准备

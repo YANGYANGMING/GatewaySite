@@ -1,55 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <title>可编辑可选择的下拉框</title>
+ <meta charset="utf-8">
+    <style>
+        {#div.changeDiv input {#}
+        {#    font-size: 1em;#}
+        {#    font-family: 仿宋, serif;#}
+        {#    width: 60%;#}
+        {#    display: block;#}
+        {#    margin-left: 10%;#}
+        {#    opacity: 0.8;#}
+        {#    padding: 0.2em;#}
+        {#    color: #000000;#}
+        {#    border-radius: 10px;#}
+        {#    background-color: #bed8df;#}
+        {# }#}
+    </style>
+</head>
+<body>
+<div class="changeDiv">
+    <a>性别:</a>
+    <input id="sex" type="text" list="sexlist">
+    <datalist id="sexlist">
+        <option>男</option>
+        <option>女</option>
+    </datalist>
+</div>
 
-{% extends 'index.html' %}
-{% load staticfiles %}
-
-{% block main_content %}
-
-    <!-- Main content -->
-    <section class="content">
-
-
-    <div style="height: 100px; width: 100px;">
-        <input type="text" name="user" id="user" value="">
-{#        <img src="/static/location_imgs/1.png" alt="">#}
-{#        <input type="file" name="location-img-path" id="location-img-path" >#}
-        <button onclick="subs()">提交</button>
-    </div>
-
-
-
-    </section>
-    <!-- /.content -->
-
-
-{% endblock %}
-
-{% block script %}
-
-    <script>
-
-    {#function subs(){#}
-        {#var fd = new FormData();#}
-    {#    var user = JSON.stringify({'aaa': 23, 'bbb': 'bb'});#}
-        {#var img_obj = $('#location-img-path')[0].files[0];#}
-        {#console.log(img_obj);#}
-        {#fd.append('user', user);#}
-        {#fd.append('img_obj', img_obj);#}
-    {#    $.ajax({#}
-    {#        url: '/gateway/test-json',#}
-    {#        type: 'POST',#}
-    {#        dataType: 'JSON',#}
-    {#        data: {'user': user, 'aaa': true},#}
-            {#processData : false, // 使数据不做处理#}
-            {#contentType : false, // 不要设置Content-Type请求头#}
-    {#        success: function (arg) {#}
-    {#            console.log(arg)#}
-    {#        }#}
-    {#    })#}
-    {##}
-    {# }#}
-
-    </script>
-
-{% endblock %}
-
-
+ <script>
+  var listName = document.getElementById('list-name-for-select');
+  document.getElementById('list-select').onchange = function(e){
+   if(this.value){
+    listName.value = this.value + ' | ' + this.options[this.selectedIndex].text;
+   }else{
+    listName.value = ''
+   }
+  };
+ </script>
+</body>
+</html>

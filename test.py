@@ -106,3 +106,9 @@ from gateway import models
 #         scheduler.print_jobs()
 #
 # test()
+# import struct, json
+# length = 202345328
+# data_length = struct.pack('i', length)
+# print(data_length)
+# print(struct.unpack('i', data_length))
+

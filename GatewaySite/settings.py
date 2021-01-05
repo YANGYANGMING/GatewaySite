@@ -133,7 +133,7 @@ LOGIN_URL = '/login/'
 # 初始化时间
 initial_time = {'days': 30, 'hours': 0, 'minutes': 0}
 
-heart_timeout = {'minutes': 1, 'seconds': 30}
+heart_timeout = {'minutes': 1, 'seconds': 0}
 
 headers_dict = {
     'gwntid': 'gwntid',

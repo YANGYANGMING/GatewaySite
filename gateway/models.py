@@ -134,6 +134,7 @@ class GWData(models.Model):
     """网关数据"""
     network_id = models.ForeignKey(to='Sensor_data', to_field='network_id', on_delete=models.CASCADE)
     com_version = models.CharField(max_length=32)
+
     time_tamp = models.CharField(max_length=32)
     temperature = models.IntegerField(null=True, blank=True)
     gain = models.IntegerField()
@@ -174,13 +175,18 @@ class Sensor_data(models.Model):
     Hz = models.CharField(max_length=32, default='4')
     Sample_depth = models.CharField(max_length=32, default='0')
     Sample_Hz = models.CharField(max_length=32, default='500')
-    sensor_type_choices = ((0, 'ETM-100'),
+    sensor_type_choices = ((1, 'ETM-100'),
                            )
-    sensor_type = models.SmallIntegerField(choices=sensor_type_choices, default=0)
+    sensor_type = models.SmallIntegerField(choices=sensor_type_choices, default=1)
     Importance_choices = ((0, '一般'),
                           (1, '重要'),
                           )
-    material = models.SmallIntegerField(default=1)
+    # material = models.SmallIntegerField(default=1)
+
+    material = models.CharField(max_length=64, default="碳钢")
+    sound_V = models.IntegerField(default=3249)
+    temperature_co = models.FloatField(default=0.53)
+
     Importance = models.SmallIntegerField(choices=Importance_choices, default=0)
     sensor_online_status_choices = ((1, '在线'),
                                     (0, '离线')

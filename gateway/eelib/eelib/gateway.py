@@ -91,11 +91,15 @@ class Gateway(GatewayCtrl):
             gwData['time_tamp'] = strTime
             # 转换network_id
             network_id = handle_func.str_dec_hex(gwData['network_id'])
-            material_id = models.Sensor_data.objects.values('material').get(network_id=network_id)['material']
+            # material_id = models.Sensor_data.objects.values('material').get(network_id=network_id)['material']
+            # Material_obj = models.Material.objects.values('sound_V', 'temperature_co').get(id=material_id)
+            # sound_V = Material_obj['sound_V']
+            # temperature_co = Material_obj['temperature_co']
             # 取出该材料的声速
-            Material_obj = models.Material.objects.values('sound_V', 'temperature_co').get(id=material_id)
+            Material_obj = models.Sensor_data.objects.values('sound_V', 'temperature_co').get(network_id=network_id)
             sound_V = Material_obj['sound_V']
             temperature_co = Material_obj['temperature_co']
+
             temperature = gwData['temperature']
             true_sound_V = sound_V - ((temperature - 25) * temperature_co)
             print('true_sound_V', true_sound_V)

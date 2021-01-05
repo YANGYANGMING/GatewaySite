@@ -470,7 +470,7 @@ def str_dec_hex(network_id):
 
 def check_network_id(network_id):
     """
-    检查network_id合法性
+    检查网关network_id合法性
     :param network_id:
     :return:
     """
@@ -480,7 +480,7 @@ def check_network_id(network_id):
         b = ntid_split_list[1]
         c = ntid_split_list[2]
         d = ntid_split_list[3]
-        if 0 <= int(a) < 255 and 0 <= int(b) < 255 and 0 <= int(c) < 255 and 0 <= int(d) < 255 and len(ntid_split_list) == 4:
+        if int(a) == 0 and 0 <= int(b) < 255 and 0 <= int(c) < 255 and int(d) == 0 and len(ntid_split_list) == 4:
             return True
         else:
             return False
@@ -639,18 +639,16 @@ def handle_data_to_send_administration(data):
     :return:
     """
     network_id = data['network_id']
-    Sensor_obj = models.Sensor_data.objects.values('sensor_id', 'material', 'sensor_run_status', 'received_time_data',
+    Sensor_obj = models.Sensor_data.objects.values('sensor_id', 'material', 'sound_V', 'temperature_co', 'sensor_run_status', 'received_time_data',
                                               'Hz', 'alarm_battery', 'battery').get(network_id=network_id)
-    material_id = Sensor_obj['material']
+    material_name = Sensor_obj['material']
     sensor_id = Sensor_obj['sensor_id']
     Sensor_Mac = sensor_id[-10:]
-    material_obj = models.Material.objects.values('name', 'sound_V', 'temperature_co').get(id=material_id)
-    material_name = material_obj['name']
     temperature = round(float(data['temperature']), 2)
     thickness = round(float(data['thickness']), 2)
     # 计算true_sound_V
-    sound_V = material_obj['sound_V']
-    temperature_co = material_obj['temperature_co']
+    sound_V = Sensor_obj['sound_V']
+    temperature_co = Sensor_obj['temperature_co']
     true_sound_V = float(sound_V - ((temperature - 25) * temperature_co))
     # 设备开闭状态
     sensor_status = True if Sensor_obj['sensor_run_status'] else False
@@ -668,7 +666,7 @@ def handle_data_to_send_administration(data):
         "Current_T": Current_T,
         "Sensor_Mac": Sensor_Mac,
         "Gauge_Cycle": Gauge_Cycle,
-        "Material_Type": "45",
+        "Material_Type": material_name,
         "Material_Temp": temperature,
         "Environmental_Temp": 30.00,
         "Sound_Velocity": true_sound_V,

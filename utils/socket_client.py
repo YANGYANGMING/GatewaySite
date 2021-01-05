@@ -64,16 +64,14 @@ class HandleSocketOperation:
         print('GET.....................................')
         Sensor_Mac = sensor_id[-10:]
         cur_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-        sensor_obj = models.Sensor_data.objects.values('received_time_data', 'material', 'Hz', 'network_id', 'battery',
+        sensor_obj = models.Sensor_data.objects.values('received_time_data', 'material', 'sound_V', 'Hz', 'network_id', 'battery',
                                                        'alarm_battery').get(sensor_id=sensor_id)
         try:
-            material_id = sensor_obj['material']
             # 转定时时间格式
             received_time_data = eval(sensor_obj['received_time_data'])
             Gauge_Cycle = str(int(received_time_data['days']) * 24 + int(received_time_data['hours'])) + ":00:00"
             # 计算true_sound_V
-            material_obj = models.Material.objects.values('sound_V').get(id=material_id)
-            sound_V = float(material_obj['sound_V'])
+            sound_V = float(sensor_obj['sound_V'])
             # 超声频率
             Ultrasonic_Freq = float(sensor_obj['Hz']) * 1000
             # 此传感器采数量
